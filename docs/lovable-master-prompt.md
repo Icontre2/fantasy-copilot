@@ -1,15 +1,37 @@
 # Prompt maestro para Lovable
 
-Construye el primer frontend funcional de **Fantasy Copilot**, una aplicación web móvil-first para ayudar a usuarios de LALIGA Fantasy a tomar decisiones sobre su plantilla.
+Continúa el proyecto existente **Fantasy Copilot**. No regeneres desde cero ni sustituyas el código funcional del repositorio. Es una aplicación web móvil-first para ayudar a usuarios de LALIGA Fantasy a tomar mejores decisiones sobre su plantilla.
 
-## Contexto técnico
+## Fuente de verdad
 
+- Repositorio: `Icontre2/fantasy-copilot`.
+- Revisa el código actual, el PR del MVP y toda la documentación de `docs/` antes de editar.
 - Conecta con el proyecto Supabase existente `ggqealkrogfgbykicmfo`.
 - Supabase Auth y RLS ya están configurados.
-- Usa solo la clave pública/publishable de Supabase.
-- No pidas ni almacenes credenciales de LALIGA Fantasy.
-- No crees ni cambies tablas, migraciones o políticas RLS sin aprobación.
+- Usa solo la clave pública/publishable de Supabase en el cliente.
 - Usa los nombres exactos del esquema existente.
+- No crees ni cambies tablas, migraciones, funciones o políticas RLS sin mostrar primero el cambio exacto y obtener aprobación.
+
+## Prioridad del siguiente bloque
+
+Añade el flujo **Conectar LALIGA Fantasy** en modo solo lectura para traer:
+
+- ligas y clasificación;
+- plantilla y alineación;
+- saldo;
+- mercado, precios y actividad.
+
+Lee primero `docs/laliga-readonly-integration.md` y la documentación más reciente de Notion. Si el contrato real de autenticación o endpoints no está confirmado, construye la interfaz, estados, adaptador y mocks tipados, pero no inventes endpoints ni declares la conexión como funcional.
+
+## Seguridad de la conexión
+
+- La contraseña de LALIGA nunca se guarda en Supabase, logs, analítica, repositorio ni estado persistente del navegador.
+- El frontend nunca llama directamente a la API privada de LALIGA ni recibe secretos internos.
+- Autenticación, tokens y sesiones de terceros se tratan únicamente en backend/Edge Function.
+- No uses `service_role` en el cliente.
+- No implementes compras, ventas, pujas ni cambios de alineación automáticos.
+- Añade expiración, revocación, rate limiting, timeouts, errores seguros y una feature flag para desactivar el conector.
+- Mantén carga manual y CSV como respaldo.
 
 ## Diseño
 
@@ -19,43 +41,36 @@ Construye el primer frontend funcional de **Fantasy Copilot**, una aplicación w
 - Navegación inferior: Inicio, Plantilla, Mercado y Perfil.
 - No copies logos, identidad ni interfaz oficial de LALIGA Fantasy.
 
-## Autenticación
+## Pantallas nuevas
 
-Incluye registro por email y contraseña, inicio y cierre de sesión, recuperación de contraseña, rutas privadas y lectura del perfil desde `profiles`. No implementes todavía proveedores sociales.
+1. Tarjeta principal en onboarding y Perfil: **Conectar LALIGA Fantasy**.
+2. Explicación previa: solo lectura, qué datos se importan y qué no puede hacer Fantasy Copilot.
+3. Formulario seguro con credenciales efímeras, solo cuando el backend real esté validado.
+4. Selección de liga si la cuenta tiene varias.
+5. Progreso de sincronización por fases: cuenta, liga, plantilla, mercado.
+6. Resultado con fecha de última sincronización.
+7. Estados de sesión caducada, credenciales incorrectas, límite temporal, proveedor caído y reconexión.
+8. Alternativas visibles: carga manual y CSV.
 
-## Onboarding
+## MVP existente que debe preservarse
 
-Después del primer acceso, usa `onboarding_progress` para mostrar cuatro pasos:
+- Registro, inicio y cierre de sesión con email y contraseña.
+- Recuperación de contraseña.
+- Onboarding y creación del equipo.
+- Dashboard, plantilla, mercado y perfil.
+- Modo demo.
+- Estados de carga, error y vacío.
+- Persistencia Supabase con aislamiento por usuario.
 
-1. Bienvenida: explicar que no se necesita la contraseña de LALIGA.
-2. Datos del equipo: nombre, saldo y valor total opcional. Crear `fantasy_teams` con `source = manual`.
-3. Plantilla: buscar jugadores en `players`, agruparlos por posición, indicar precio de compra y valor actual y guardar en `squad_players`. La opción CSV puede mostrarse como próxima función; no borres su infraestructura existente.
-4. Confirmación: resumen por posición, saldo, número de jugadores y acceso al dashboard.
+## Calidad
 
-## Inicio
-
-Muestra nombre del equipo, saldo, valor estimado, disponibilidad de jugadores, hasta tres recomendaciones recientes desde `recommendations` y el próximo partido relevante mediante `fixtures`. Si faltan datos, muestra estados vacíos elegantes y accionables.
-
-## Plantilla
-
-Lista por GK, DEF, MID y FWD con nombre, club, posición, estado, valor, titular y capitán. Permite añadir, editar y eliminar. Usa `fantasy_teams`, `squad_players`, `players`, `clubs` y `player_availability`.
-
-## Mercado
-
-Permite entrada manual de jugador, precio solicitado, valor de mercado, vendedor opcional y fecha de expiración opcional. Guarda en `market_entries` y ordena las tarjetas por precio.
-
-## Perfil
-
-Muestra nombre, email de sesión y estado del onboarding. Incluye reinicio de importación sin borrar la cuenta y cierre de sesión.
-
-## Seguridad y calidad
-
-- Respeta todas las políticas RLS.
-- Vincula cada consulta privada al usuario autenticado.
-- No uses `service_role` en el cliente ni crees políticas abiertas.
+- TypeScript estricto y dependencias fijadas.
+- Componentes reutilizables.
+- Formularios accesibles y validados.
 - No generes datos falsos permanentes.
-- Usa TypeScript estricto, componentes reutilizables, formularios validados y estados de carga, error y vacío.
+- Ejecuta lint y build después de cada bloque.
+- Resume archivos modificados, pruebas realizadas y cualquier bloqueo real.
 
 ## Resultado esperado
 
-Una aplicación navegable y conectada a Supabase en la que el usuario pueda registrarse, crear su equipo, introducir su plantilla, ver el dashboard y añadir jugadores manualmente al mercado.
+Una evolución segura del MVP existente con el flujo completo y comprobable de conexión en solo lectura. Si la API privada aún no puede validarse, debe quedar un vertical slice listo para enchufar el adaptador real sin exponer credenciales ni romper las vías manuales.

@@ -1,48 +1,54 @@
 # Fantasy Copilot
 
-Aplicación móvil-first para ayudar a usuarios de LALIGA Fantasy a tomar mejores decisiones sobre plantilla y mercado.
+Asistente móvil-first para gestionar una plantilla de fantasy fútbol, priorizar decisiones de mercado y recibir recomendaciones explicadas.
 
-## Estado
+## MVP disponible
 
-Base técnica preparada. El primer build se realizará en Lovable sobre este repositorio y se conectará al proyecto Supabase existente.
+- Autenticación con email y contraseña mediante Supabase.
+- Onboarding guiado y creación del equipo.
+- Dashboard, plantilla, mercado y perfil.
+- Modo demo completo para revisar el producto sin datos reales.
+- Modo conectado con persistencia Supabase y aislamiento por usuario.
+- Carga manual y futura importación CSV como vías de respaldo.
 
-## MVP
+Versión navegable: https://fantasy-copilot.icontre97.chatgpt.site
 
-- Registro e inicio de sesión con email y contraseña.
-- Onboarding y creación del equipo.
-- Carga manual de plantilla.
-- Dashboard con estado del equipo y recomendaciones.
-- Gestión manual del mercado.
-- Importación CSV preparada para una iteración posterior.
+## Prioridad actual: conexión con LALIGA Fantasy
 
-## Stack
+El siguiente bloque debe permitir que el usuario conecte su cuenta y lea, en modo solo lectura:
 
-- Frontend: Lovable, React y TypeScript
-- Backend, base de datos y autenticación: Supabase
-- Repositorio: GitHub
-- Despliegue: Vercel
-- IA: OpenAI
-- Emails: Resend
+- ligas y clasificación;
+- plantilla y alineación;
+- saldo;
+- mercado, precios y actividad.
 
-## Estructura
+La integración se hará mediante un adaptador exclusivamente del lado servidor. La contraseña de LALIGA no se guardará en la base de datos, no se expondrán tokens en el navegador y no se ejecutarán compras, ventas ni pujas. Como la API no es pública, el conector debe estar desacoplado, protegido por feature flag y preparado para fallar sin romper la carga manual/CSV.
 
-- `src/`: frontend y lógica de aplicación
-- `supabase/migrations/`: migraciones SQL
-- `supabase/functions/`: Edge Functions
-- `docs/`: decisiones y documentación técnica
-- `.env.example`: variables públicas requeridas, sin secretos
+Consulta [Integración LALIGA Fantasy en modo lectura](docs/laliga-readonly-integration.md).
 
-## Seguridad
+## Desarrollo local
 
-- No se almacenan credenciales ni sesiones de LALIGA Fantasy.
-- Nunca se expone la clave `service_role` en el cliente.
-- Los datos privados se protegen mediante RLS y se vinculan al usuario autenticado.
-- No se suben secretos al repositorio.
+1. Copia `.env.example` a `.env.local`.
+2. Completa la URL y la clave publicable de Supabase.
+3. Instala dependencias con `npm ci`.
+4. Ejecuta `npm run dev`.
+
+Comprobaciones:
+
+```bash
+npm run lint
+npm run build
+```
+
+## Estado de datos
+
+Supabase tiene el esquema preparado, pero todavía no hay usuarios ni catálogo real cargado. La conexión con LALIGA Fantasy será la fuente prioritaria para los datos específicos de cada usuario. El catálogo y las métricas externas seguirán detrás de una capa de ingesta desacoplada.
 
 ## Documentación
 
 - [Arquitectura](docs/architecture.md)
 - [Modelo de datos](docs/data-model.md)
-- [Prompt maestro para Lovable](docs/lovable-master-prompt.md)
+- [Integración LALIGA Fantasy en modo lectura](docs/laliga-readonly-integration.md)
+- [Prompt maestro de Lovable](docs/lovable-master-prompt.md)
 
-La fuente de verdad operativa y el diario de decisiones se mantienen en Notion.
+Nunca se incluyen claves privadas ni credenciales de terceros en el frontend o el repositorio.
