@@ -2,42 +2,51 @@
 
 Aplicación móvil-first para ayudar a usuarios de LALIGA Fantasy a tomar mejores decisiones sobre plantilla y mercado.
 
-## Estado
+## MVP navegable
 
-Base técnica preparada. El primer build se realizará en Lovable sobre este repositorio y se conectará al proyecto Supabase existente.
+La primera versión está construida y desplegada de forma privada:
 
-## MVP
-
+- Demo completa con datos realistas.
 - Registro e inicio de sesión con email y contraseña.
-- Onboarding y creación del equipo.
-- Carga manual de plantilla.
-- Dashboard con estado del equipo y recomendaciones.
+- Onboarding y creación manual del equipo.
+- Carga y gestión manual de plantilla.
+- Dashboard con patrimonio, disponibilidad y recomendaciones.
 - Gestión manual del mercado.
-- Importación CSV preparada para una iteración posterior.
+- Perfil, recuperación de acceso y cierre de sesión.
+
+**Aplicación:** https://fantasy-copilot.icontre97.chatgpt.site
 
 ## Stack
 
-- Frontend: Lovable, React y TypeScript
-- Backend, base de datos y autenticación: Supabase
-- Repositorio: GitHub
-- Despliegue: Vercel
-- IA: OpenAI
-- Emails: Resend
+- Frontend: React 19, TypeScript, Vinext y Tailwind CSS.
+- Backend, base de datos y autenticación: Supabase.
+- Despliegue: ChatGPT Sites sobre Cloudflare Workers.
+- Iconos: Lucide React.
 
-## Estructura
+## Estado de los datos
 
-- `src/`: frontend y lógica de aplicación
-- `supabase/migrations/`: migraciones SQL
-- `supabase/functions/`: Edge Functions
-- `docs/`: decisiones y documentación técnica
-- `.env.example`: variables públicas requeridas, sin secretos
+El esquema real de Supabase está conectado y tipado. La base todavía no contiene catálogo de jugadores, por lo que el modo real muestra ese bloqueo de datos de forma explícita. La demo permite revisar toda la experiencia mientras se elige y configura el proveedor externo.
+
+La importación CSV tiene infraestructura de backend preparada, pero queda aplazada intencionadamente para una iteración posterior. El MVP utiliza carga manual.
 
 ## Seguridad
 
 - No se almacenan credenciales ni sesiones de LALIGA Fantasy.
-- Nunca se expone la clave `service_role` en el cliente.
+- El navegador utiliza únicamente la clave pública de Supabase.
+- Nunca se expone `service_role`.
 - Los datos privados se protegen mediante RLS y se vinculan al usuario autenticado.
-- No se suben secretos al repositorio.
+- Todas las versiones de dependencias están fijadas y se incluye el lockfile.
+
+## Validación
+
+La versión actual pasa:
+
+- compilación de producción;
+- TypeScript estricto;
+- ESLint;
+- prueba de renderizado;
+- validación del artefacto desplegable;
+- revisión visual e interacción de portada, demo, plantilla, mercado, perfil y registro.
 
 ## Documentación
 
