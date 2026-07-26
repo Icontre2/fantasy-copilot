@@ -1,58 +1,60 @@
 # Prompt maestro para Lovable
 
-Continúa el proyecto existente **Fantasy Copilot**. No regeneres desde cero ni sustituyas el código funcional del repositorio. Es una aplicación web móvil-first para ayudar a usuarios de LALIGA Fantasy a tomar mejores decisiones sobre su plantilla.
+Continúa el proyecto existente **Fantasy Copilot**. No regeneres desde cero ni sustituyas el código funcional. Es una aplicación web móvil-first para ayudar a usuarios de fantasy fútbol a gestionar su plantilla.
 
 ## Fuente de verdad
 
 - Repositorio: `Icontre2/fantasy-copilot`.
-- Revisa el código actual, el PR del MVP y toda la documentación de `docs/` antes de editar.
-- Conecta con el proyecto Supabase existente `ggqealkrogfgbykicmfo`.
+- Rama de trabajo actual: `agent/manual-csv-import` hasta que su PR se fusione en `main`.
+- Lee `README.md` y toda la documentación de `docs/` antes de editar.
+- Proyecto Supabase existente: `ggqealkrogfgbykicmfo`.
 - Supabase Auth y RLS ya están configurados.
 - Usa solo la clave pública/publishable de Supabase en el cliente.
 - Usa los nombres exactos del esquema existente.
-- No crees ni cambies tablas, migraciones, funciones o políticas RLS sin mostrar primero el cambio exacto y obtener aprobación.
+- No crees ni cambies tablas, migraciones, Edge Functions o políticas RLS en este bloque.
 
-## Prioridad del siguiente bloque
+## Decisión obligatoria sobre LALIGA Fantasy
 
-Añade el flujo **Conectar LALIGA Fantasy** en modo solo lectura para traer:
+La conexión privada está **bloqueada hasta obtener autorización escrita de LALIGA**. Las condiciones oficiales revisadas son: https://www.laliga.com/informacion-legal/condiciones-de-uso-fantasy
 
-- ligas y clasificación;
-- plantilla y alineación;
-- saldo;
-- mercado, precios y actividad.
+No hagas ninguna de estas acciones:
 
-Lee primero `docs/laliga-readonly-integration.md` y la documentación más reciente de Notion. Si el contrato real de autenticación o endpoints no está confirmado, construye la interfaz, estados, adaptador y mocks tipados, pero no inventes endpoints ni declares la conexión como funcional.
+- pedir email o contraseña de LALIGA;
+- crear un formulario de credenciales, aunque sea efímero;
+- implementar Azure B2C ROPC;
+- llamar, adivinar o documentar endpoints privados;
+- guardar tokens o sesiones de terceros;
+- reutilizar código del repositorio de referencia sin licencia;
+- comprar, vender, pujar o cambiar alineaciones;
+- afirmar que la conexión automática funciona o está aprobada.
 
-## Seguridad de la conexión
+Preserva `app/laliga-provider.ts` como contrato tipado y estado `blocked_by_terms`. La tarjeta de conexión debe explicar con claridad que la función necesita autorización y ofrecer manual/CSV.
 
-- La contraseña de LALIGA nunca se guarda en Supabase, logs, analítica, repositorio ni estado persistente del navegador.
-- El frontend nunca llama directamente a la API privada de LALIGA ni recibe secretos internos.
-- Autenticación, tokens y sesiones de terceros se tratan únicamente en backend/Edge Function.
-- No uses `service_role` en el cliente.
-- No implementes compras, ventas, pujas ni cambios de alineación automáticos.
-- Añade expiración, revocación, rate limiting, timeouts, errores seguros y una feature flag para desactivar el conector.
-- Mantén carga manual y CSV como respaldo.
+## Prioridad del bloque
+
+Pulir y verificar el flujo real **manual + CSV** ya implementado:
+
+1. Onboarding con tres opciones comprensibles: CSV, manual y conexión bloqueada.
+2. Alta manual sin catálogo: nombre, posición, club opcional, valor y flags.
+3. Selector de archivo CSV, ejemplo de formato y validación antes de importar.
+4. Cabeceras en español o inglés, separadores coma, punto y coma o tabulador.
+5. Vista previa, advertencias por fila, límite de tamaño y prevención de duplicados.
+6. Registro de lote e ítems en Supabase.
+7. Plantilla que combine jugadores canónicos e importados.
+8. Tarjeta informativa en Perfil con enlace a las condiciones oficiales.
+9. Estados vacíos y errores útiles en iPhone.
+10. Pruebas, lint y build.
 
 ## Diseño
 
 - Estética deportiva premium y tecnológica.
-- Fondo claro, tarjetas limpias, tipografía contundente y jerarquía visual fuerte.
+- Fondo claro, tarjetas limpias, tipografía contundente y jerarquía fuerte.
 - Prioridad absoluta a iPhone.
 - Navegación inferior: Inicio, Plantilla, Mercado y Perfil.
 - No copies logos, identidad ni interfaz oficial de LALIGA Fantasy.
+- No ocultes el bloqueo: conviértelo en una explicación breve y honesta.
 
-## Pantallas nuevas
-
-1. Tarjeta principal en onboarding y Perfil: **Conectar LALIGA Fantasy**.
-2. Explicación previa: solo lectura, qué datos se importan y qué no puede hacer Fantasy Copilot.
-3. Formulario seguro con credenciales efímeras, solo cuando el backend real esté validado.
-4. Selección de liga si la cuenta tiene varias.
-5. Progreso de sincronización por fases: cuenta, liga, plantilla, mercado.
-6. Resultado con fecha de última sincronización.
-7. Estados de sesión caducada, credenciales incorrectas, límite temporal, proveedor caído y reconexión.
-8. Alternativas visibles: carga manual y CSV.
-
-## MVP existente que debe preservarse
+## MVP que debe preservarse
 
 - Registro, inicio y cierre de sesión con email y contraseña.
 - Recuperación de contraseña.
@@ -61,16 +63,17 @@ Lee primero `docs/laliga-readonly-integration.md` y la documentación más recie
 - Modo demo.
 - Estados de carga, error y vacío.
 - Persistencia Supabase con aislamiento por usuario.
+- Carga manual y CSV como vías funcionales.
 
 ## Calidad
 
 - TypeScript estricto y dependencias fijadas.
-- Componentes reutilizables.
-- Formularios accesibles y validados.
+- Componentes reutilizables y accesibles.
 - No generes datos falsos permanentes.
-- Ejecuta lint y build después de cada bloque.
-- Resume archivos modificados, pruebas realizadas y cualquier bloqueo real.
+- No expongas `service_role`.
+- Ejecuta `npm run lint`, `npm test` y `npm run build`.
+- Resume archivos modificados, pruebas y bloqueos.
 
 ## Resultado esperado
 
-Una evolución segura del MVP existente con el flujo completo y comprobable de conexión en solo lectura. Si la API privada aún no puede validarse, debe quedar un vertical slice listo para enchufar el adaptador real sin exponer credenciales ni romper las vías manuales.
+Una evolución visual y funcional del MVP en la que cualquier usuario pueda construir su plantilla mediante manual/CSV sin depender de una API privada. La integración LALIGA debe quedar representada únicamente como capacidad futura bloqueada.
