@@ -2,49 +2,63 @@
 
 ## Principio
 
-Arquitectura simple, barata, móvil-first, fácil de mantener desde un teléfono y resistente a cambios en proveedores no oficiales.
+Arquitectura simple, barata, móvil-first y utilizable aunque no exista ningún proveedor externo. Manual/CSV es el camino canónico; cualquier conector privado es opcional y no puede romper el producto.
 
-## Flujo del producto
+## Flujo activo
 
 1. El usuario crea una cuenta de Fantasy Copilot.
-2. Conecta LALIGA Fantasy en modo lectura o utiliza carga manual/CSV.
-3. Un adaptador del lado servidor obtiene y normaliza liga, plantilla, saldo y mercado.
-4. Los datos privados normalizados se guardan en Supabase con RLS por propietario.
-5. Un motor de reglas calcula señales básicas.
-6. La IA convierte las señales en recomendaciones explicadas.
-7. El dashboard muestra acciones prioritarias; el usuario mantiene siempre el control.
+2. Crea su equipo.
+3. Añade jugadores manualmente o importa un CSV.
+4. El cliente valida y normaliza el contenido.
+5. Supabase guarda el lote, sus filas y la plantilla con RLS por propietario.
+6. El dashboard usa los datos privados disponibles.
+7. Las métricas compartidas y recomendaciones se incorporarán mediante fuentes autorizadas.
+
+```mermaid
+flowchart TD
+  USER["Usuario"] --> WEB["App móvil"]
+  WEB --> IMPORT["Manual / CSV"]
+  IMPORT --> SUPA["Supabase + RLS"]
+  SUPA --> INSIGHTS["Dashboard"]
+```
 
 ## Componentes
 
-- Lovable genera y mantiene el frontend.
-- Supabase proporciona autenticación, Postgres, RLS y Edge Functions.
-- Un adaptador de proveedor encapsula la API privada de LALIGA Fantasy.
-- La capa de ingesta está desacoplada del proveedor.
-- La carga manual/CSV permanece como respaldo.
-- Vercel alojará la aplicación.
-- OpenAI generará explicaciones y recomendaciones, sin sustituir reglas deterministas.
+- Next.js y React para el frontend móvil-first.
+- Supabase para autenticación, Postgres, RLS y funciones de servidor.
+- `csv-import.ts` para parseo, normalización y validación determinista.
+- `import_batches` e `import_items` para trazabilidad de importaciones.
+- `squad_players` para combinar referencias canónicas con jugadores importados.
+- `laliga-provider.ts` como interfaz futura, sin implementación privada.
+- Lovable para iteraciones visuales sobre el repositorio existente.
+- OpenAI para explicaciones futuras, sin sustituir reglas deterministas.
 
 ## Decisiones del MVP
 
 - Email y contraseña para Fantasy Copilot; acceso social después.
-- Conexión con LALIGA Fantasy en modo exclusivamente lectura como prioridad.
-- La contraseña de LALIGA no se persiste, registra ni envía al frontend después del formulario.
-- Tokens o sesiones de terceros solo pueden tratarse en backend, con expiración, revocación y cifrado cuando deban persistirse.
-- Ninguna compra, venta, puja o cambio de alineación se automatiza.
-- Entrada manual y CSV se conservan como fallback.
-- No se crean nuevas tablas o políticas desde Lovable sin revisar el esquema real.
+- Entrada manual y CSV funcionales y permanentes.
+- Conexión automática con LALIGA bloqueada hasta autorización escrita.
+- No se solicitan credenciales de LALIGA.
+- No se implementan compras, ventas, pujas ni cambios de alineación.
+- No se crean tablas o políticas desde el generador visual.
+- Las claves publicables pueden vivir en cliente; `service_role` nunca.
 
-## Límites de confianza
+## Límite futuro del proveedor
 
-El frontend nunca llama directamente a la API privada de LALIGA Fantasy. Solo llama a endpoints propios autenticados. Esos endpoints deben:
+```mermaid
+flowchart TD
+  FLAG["Autorización + flag"] --> API["Endpoint propio"]
+  API --> ADAPTER["Adaptador tipado"]
+  ADAPTER --> SOURCE["Fuente autorizada"]
+  API --> SUPA["Datos normalizados"]
+```
 
-- validar al usuario de Supabase;
-- aplicar límites de frecuencia y timeouts;
-- no registrar contraseñas, tokens ni cabeceras sensibles;
-- normalizar respuestas antes de guardarlas;
-- aislar los datos por propietario;
-- devolver errores accionables sin filtrar secretos.
+Este camino permanece desactivado. Si algún día se habilita, el endpoint deberá validar al usuario de Supabase, aplicar límites y timeouts, no registrar secretos, normalizar respuestas y ofrecer desconexión inmediata.
 
 ## Riesgo principal
 
-La API de LALIGA Fantasy no es pública y puede cambiar o restringir cuentas. Por ello, el conector se implementará detrás de un adaptador y una feature flag. La aplicación debe seguir siendo utilizable mediante modo demo y carga manual/CSV si el proveedor falla o deja de ser viable.
+Los endpoints investigados no son públicos, cambian por temporada y el login local usa ROPC. Además, las condiciones oficiales revisadas exigen consentimiento escrito para uso comercial. Por eso el conector no forma parte del MVP aprobado.
+
+## V2
+
+El piloto automático solo puede empezar después de una integración autorizada y estable. Tendrá primero modo simulación, después confirmación por acción y solo finalmente reglas automáticas con límites, auditoría y parada inmediata.
