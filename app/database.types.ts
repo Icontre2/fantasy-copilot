@@ -168,33 +168,40 @@ export type Database = {
         Row: {
           id: string;
           fantasy_team_id: string;
-          player_id: string;
+          player_id: string | null;
           purchase_price: number | null;
           current_value: number | null;
           is_starter: boolean;
           is_captain: boolean;
           imported_name: string | null;
+          imported_position: "GK" | "DEF" | "MID" | "FWD" | null;
+          imported_club: string | null;
           created_at: string;
           updated_at: string;
         };
         Insert: {
           id?: string;
           fantasy_team_id: string;
-          player_id: string;
+          player_id?: string | null;
           purchase_price?: number | null;
           current_value?: number | null;
           is_starter?: boolean;
           is_captain?: boolean;
           imported_name?: string | null;
+          imported_position?: "GK" | "DEF" | "MID" | "FWD" | null;
+          imported_club?: string | null;
           created_at?: string;
           updated_at?: string;
         };
         Update: {
+          player_id?: string | null;
           purchase_price?: number | null;
           current_value?: number | null;
           is_starter?: boolean;
           is_captain?: boolean;
           imported_name?: string | null;
+          imported_position?: "GK" | "DEF" | "MID" | "FWD" | null;
+          imported_club?: string | null;
           updated_at?: string;
         };
         Relationships: Relationship[];
