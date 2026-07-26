@@ -204,6 +204,7 @@ export function parseSquadCsv(input: string): CsvSquadParseResult {
 
   const warnings: string[] = [];
   const rows: CsvSquadRow[] = [];
+  const seenNames = new Set<string>();
 
   records.slice(1).forEach((record, index) => {
     const rowNumber = index + 2;
@@ -212,6 +213,15 @@ export function parseSquadCsv(input: string): CsvSquadParseResult {
       warnings.push(`Fila ${rowNumber}: ignorada porque no tiene nombre.`);
       return;
     }
+
+    const normalizedName = normalizePlayerName(name);
+    if (seenNames.has(normalizedName)) {
+      warnings.push(
+        `Fila ${rowNumber}: "${name}" está duplicado y se ha ignorado.`,
+      );
+      return;
+    }
+    seenNames.add(normalizedName);
 
     const rawPosition =
       positionIndex >= 0 ? (record[positionIndex] ?? "").trim() : "";
