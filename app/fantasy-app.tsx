@@ -12,10 +12,11 @@ import {
   Coins,
   Crown,
   Eye,
+  ExternalLink,
+  FileText,
   Goal,
   Home,
   Info,
-  LayoutGrid,
   ListFilter,
   LoaderCircle,
   LockKeyhole,
@@ -32,6 +33,7 @@ import {
   Trash2,
   TrendingDown,
   TrendingUp,
+  Upload,
   UserRound,
   Users,
   WalletCards,
@@ -40,6 +42,7 @@ import {
 } from "lucide-react";
 import type { Session, User } from "@supabase/supabase-js";
 import {
+  ChangeEvent,
   FormEvent,
   ReactNode,
   useCallback,
@@ -48,6 +51,12 @@ import {
   useState,
 } from "react";
 import type { Database } from "./database.types";
+import {
+  normalizePlayerName,
+  parseSquadCsv,
+  type CsvSquadRow,
+} from "./csv-import";
+import { getLaligaConnectorState } from "./laliga-provider";
 import { supabase } from "./supabase";
 
 type Tab = "home" | "squad" | "market" | "profile";
@@ -795,6 +804,7 @@ function Onboarding({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [showAdd, setShowAdd] = useState(false);
+  const [showCsv, setShowCsv] = useState(false);
 
   const updateStep = async (nextStep: number, completed = false) => {
     setSaving(true);
@@ -946,16 +956,20 @@ function Onboarding({
               </div>
               <Check size={19} />
             </div>
-            <div className="import-choice disabled">
+            <button
+              type="button"
+              className="import-choice"
+              onClick={() => setShowCsv(true)}
+            >
               <span>
-                <LayoutGrid size={21} />
+                <Upload size={21} />
               </span>
               <div>
                 <strong>Importar CSV</strong>
-                <small>Infraestructura preparada · Próximamente</small>
+                <small>Nombre, posición, club y valor · Ya disponible</small>
               </div>
-              <LockKeyhole size={18} />
-            </div>
+              <ChevronRight size={18} />
+            </button>
 
             {data.squad.length > 0 ? (
               <div className="onboarding-squad">
@@ -983,7 +997,6 @@ function Onboarding({
             <button
               className="secondary-button full"
               onClick={() => setShowAdd(true)}
-              disabled={data.players.length === 0}
             >
               <Plus size={18} /> Añadir jugador
             </button>
@@ -1008,6 +1021,19 @@ function Onboarding({
                 onClose={() => setShowAdd(false)}
                 onSaved={() => {
                   setShowAdd(false);
+                  onRefresh();
+                }}
+              />
+            )}
+            {showCsv && (
+              <CsvImportModal
+                user={user}
+                team={data.team}
+                players={data.players}
+                existingSquad={data.squad}
+                onClose={() => setShowCsv(false)}
+                onSaved={() => {
+                  setShowCsv(false);
                   onRefresh();
                 }}
               />
@@ -1153,7 +1179,12 @@ function AppShell({
             <Dashboard demoMode={demoMode} data={data} onTabChange={onTabChange} />
           )}
           {activeTab === "squad" && (
-            <SquadView demoMode={demoMode} data={data} onRefresh={onRefresh} />
+            <SquadView
+              demoMode={demoMode}
+              user={user}
+              data={data}
+              onRefresh={onRefresh}
+            />
           )}
           {activeTab === "market" && (
             <MarketView demoMode={demoMode} data={data} onRefresh={onRefresh} />
@@ -1428,15 +1459,18 @@ function EmptyCard({
 
 function SquadView({
   demoMode,
+  user,
   data,
   onRefresh,
 }: {
   demoMode: boolean;
+  user: User | null;
   data: LiveData;
   onRefresh: () => void;
 }) {
   const [filter, setFilter] = useState("ALL");
   const [showAdd, setShowAdd] = useState(false);
+  const [showCsv, setShowCsv] = useState(false);
   const [busyId, setBusyId] = useState("");
   const [error, setError] = useState("");
 
@@ -1449,15 +1483,22 @@ function SquadView({
     [data.players],
   );
 
-  const liveRows = data.squad
-    .map((entry) => ({
+  const liveRows = data.squad.map((entry) => {
+    const player = entry.player_id ? playersById[entry.player_id] : null;
+    const club = player?.club_id ? clubsById[player.club_id] : null;
+
+    return {
       entry,
-      player: playersById[entry.player_id],
-      club: playersById[entry.player_id]?.club_id
-        ? clubsById[playersById[entry.player_id].club_id!]
-        : null,
-    }))
-    .filter((row) => row.player);
+      name: player?.full_name ?? entry.imported_name ?? "Jugador sin nombre",
+      position: player?.position ?? entry.imported_position ?? "MID",
+      status: player?.status ?? "unknown",
+      clubName:
+        club?.short_name ??
+        club?.name ??
+        entry.imported_club ??
+        "Sin club",
+    };
+  });
 
   const toggleSquadFlag = async (
     entry: SquadPlayer,
@@ -1505,13 +1546,19 @@ function SquadView({
           <span className="muted-kicker">Gestión del equipo</span>
           <h1>Mi plantilla</h1>
         </div>
-        <button
-          className="add-button"
-          onClick={() => setShowAdd(true)}
-          disabled={!demoMode && data.players.length === 0}
-        >
-          <Plus size={18} /> Añadir
-        </button>
+        <div className="squad-actions">
+          {!demoMode && (
+            <button
+              className="secondary-button compact-button"
+              onClick={() => setShowCsv(true)}
+            >
+              <Upload size={17} /> CSV
+            </button>
+          )}
+          <button className="add-button" onClick={() => setShowAdd(true)}>
+            <Plus size={18} /> Añadir
+          </button>
+        </div>
       </section>
 
       <div className="squad-summary">
@@ -1590,7 +1637,7 @@ function SquadView({
             .filter((position) => filter === "ALL" || filter === position)
             .map((position) => {
               const rows = liveRows.filter(
-                ({ player }) => player.position === position,
+                (row) => row.position === position,
               );
               if (!rows.length) return null;
               return (
@@ -1599,22 +1646,22 @@ function SquadView({
                     <h2>{positionLabel[position]}</h2>
                     <span>{rows.length}</span>
                   </div>
-                  {rows.map(({ entry, player, club }) => (
+                  {rows.map(({ entry, name, status, clubName }) => (
                     <article className="player-row" key={entry.id}>
-                      <PlayerAvatar name={player.full_name} status={player.status} />
+                      <PlayerAvatar name={name} status={status} />
                       <div className="player-main">
                         <div>
-                          <strong>{player.full_name}</strong>
+                          <strong>{name}</strong>
                           {entry.is_captain && (
                             <span className="captain-chip">C</span>
                           )}
                         </div>
-                        <span>{club?.short_name ?? club?.name ?? "Sin club"}</span>
+                        <span>{clubName}</span>
                       </div>
                       <div className="player-value">
                         <strong>{formatMoney(entry.current_value)}</strong>
-                        <span className={`status-text ${player.status}`}>
-                          {statusLabel[player.status]}
+                        <span className={`status-text ${status}`}>
+                          {statusLabel[status] ?? "Sin datos"}
                         </span>
                       </div>
                       <div className="row-actions">
@@ -1648,13 +1695,11 @@ function SquadView({
               );
             })}
         </div>
-      ) : data.players.length === 0 ? (
-        <CatalogEmpty />
       ) : (
         <EmptyCard
           icon={<Users size={22} />}
           title="Tu plantilla está vacía"
-          detail="Añade tu primer jugador para empezar a analizar el equipo."
+          detail="Añade jugadores manualmente o importa un CSV; no necesitas esperar al catálogo."
           action="Añadir jugador"
           onAction={() => setShowAdd(true)}
         />
@@ -1668,6 +1713,19 @@ function SquadView({
           onClose={() => setShowAdd(false)}
           onSaved={() => {
             setShowAdd(false);
+            onRefresh();
+          }}
+        />
+      )}
+      {showCsv && !demoMode && user && data.team && (
+        <CsvImportModal
+          user={user}
+          team={data.team}
+          players={data.players}
+          existingSquad={data.squad}
+          onClose={() => setShowCsv(false)}
+          onSaved={() => {
+            setShowCsv(false);
             onRefresh();
           }}
         />
@@ -1692,8 +1750,8 @@ function CatalogEmpty({ compact = false }: { compact?: boolean }) {
       <div>
         <strong>Catálogo pendiente de sincronizar</strong>
         <p>
-          La app está lista, pero Supabase todavía no contiene jugadores. Falta
-          activar la fuente externa con su clave.
+          El catálogo externo todavía está vacío. Puedes añadir jugadores
+          manualmente o importar un CSV y completar la plantilla igualmente.
         </p>
       </div>
     </div>
@@ -1759,8 +1817,15 @@ function AddSquadModal({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const [mode, setMode] = useState<"catalog" | "manual">(
+    players.length > 0 ? "catalog" : "manual",
+  );
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<Player | null>(null);
+  const [manualName, setManualName] = useState("");
+  const [manualPosition, setManualPosition] =
+    useState<"GK" | "DEF" | "MID" | "FWD">("MID");
+  const [manualClub, setManualClub] = useState("");
   const [purchasePrice, setPurchasePrice] = useState("");
   const [currentValue, setCurrentValue] = useState("");
   const [starter, setStarter] = useState(true);
@@ -1777,18 +1842,31 @@ function AddSquadModal({
 
   const save = async (event: FormEvent) => {
     event.preventDefault();
-    if (!selected) return;
+    if (mode === "catalog" && !selected) return;
+    if (mode === "manual" && !manualName.trim()) return;
+
     setSaving(true);
     setError("");
+
     const { error: insertError } = await supabase.from("squad_players").insert({
       fantasy_team_id: team.id,
-      player_id: selected.id,
+      player_id: mode === "catalog" ? selected?.id ?? null : null,
       purchase_price: purchasePrice ? parseEuropeanNumber(purchasePrice) : null,
       current_value: currentValue ? parseEuropeanNumber(currentValue) : null,
       is_starter: starter,
       is_captain: captain,
-      imported_name: selected.full_name,
+      imported_name:
+        mode === "catalog" ? selected?.full_name ?? null : manualName.trim(),
+      imported_position:
+        mode === "catalog" ? selected?.position ?? null : manualPosition,
+      imported_club:
+        mode === "catalog"
+          ? selected?.club_id
+            ? clubsById[selected.club_id]?.name ?? null
+            : null
+          : manualClub.trim() || null,
     });
+
     setSaving(false);
     if (insertError) {
       setError(
@@ -1806,7 +1884,76 @@ function AddSquadModal({
       <form className="modal-form" onSubmit={save}>
         <span className="modal-kicker">Plantilla</span>
         <h2>Añadir jugador</h2>
-        {!selected ? (
+
+        <div className="toggle-grid import-mode-toggle">
+          <label>
+            <input
+              type="radio"
+              name="player-mode"
+              checked={mode === "manual"}
+              onChange={() => {
+                setMode("manual");
+                setSelected(null);
+              }}
+            />
+            <span>
+              <FileText size={16} /> Manual
+            </span>
+          </label>
+          <label className={players.length === 0 ? "disabled-option" : ""}>
+            <input
+              type="radio"
+              name="player-mode"
+              checked={mode === "catalog"}
+              onChange={() => setMode("catalog")}
+              disabled={players.length === 0}
+            />
+            <span>
+              <Search size={16} /> Catálogo
+            </span>
+          </label>
+        </div>
+
+        {mode === "manual" ? (
+          <>
+            <label>
+              Nombre del jugador
+              <input
+                autoFocus
+                value={manualName}
+                onChange={(event) => setManualName(event.target.value)}
+                placeholder="Ej. Oihan Sancet"
+                required
+              />
+            </label>
+            <div className="two-column-fields">
+              <label>
+                Posición
+                <select
+                  value={manualPosition}
+                  onChange={(event) =>
+                    setManualPosition(
+                      event.target.value as "GK" | "DEF" | "MID" | "FWD",
+                    )
+                  }
+                >
+                  <option value="GK">Portero</option>
+                  <option value="DEF">Defensa</option>
+                  <option value="MID">Centrocampista</option>
+                  <option value="FWD">Delantero</option>
+                </select>
+              </label>
+              <label>
+                Club <small>opcional</small>
+                <input
+                  value={manualClub}
+                  onChange={(event) => setManualClub(event.target.value)}
+                  placeholder="Ej. Athletic"
+                />
+              </label>
+            </div>
+          </>
+        ) : !selected ? (
           <>
             <label>
               Buscar en el catálogo
@@ -1843,43 +1990,48 @@ function AddSquadModal({
             </div>
           </>
         ) : (
+          <button
+            type="button"
+            className="selected-player"
+            onClick={() => setSelected(null)}
+          >
+            <PlayerAvatar name={selected.full_name} status={selected.status} />
+            <span>
+              <strong>{selected.full_name}</strong>
+              <small>{selected.position} · Cambiar</small>
+            </span>
+            <RefreshCw size={17} />
+          </button>
+        )}
+
+        {(mode === "manual" || selected) && (
           <>
-            <button
-              type="button"
-              className="selected-player"
-              onClick={() => setSelected(null)}
-            >
-              <PlayerAvatar name={selected.full_name} status={selected.status} />
-              <span>
-                <strong>{selected.full_name}</strong>
-                <small>{selected.position} · Cambiar</small>
-              </span>
-              <RefreshCw size={17} />
-            </button>
-            <label>
-              Precio de compra
-              <div className="input-with-suffix">
-                <input
-                  value={purchasePrice}
-                  onChange={(event) => setPurchasePrice(event.target.value)}
-                  inputMode="decimal"
-                  placeholder="Opcional"
-                />
-                <span>€</span>
-              </div>
-            </label>
-            <label>
-              Valor actual
-              <div className="input-with-suffix">
-                <input
-                  value={currentValue}
-                  onChange={(event) => setCurrentValue(event.target.value)}
-                  inputMode="decimal"
-                  placeholder="Opcional"
-                />
-                <span>€</span>
-              </div>
-            </label>
+            <div className="two-column-fields">
+              <label>
+                Precio de compra <small>opcional</small>
+                <div className="input-with-suffix">
+                  <input
+                    value={purchasePrice}
+                    onChange={(event) => setPurchasePrice(event.target.value)}
+                    inputMode="decimal"
+                    placeholder="0"
+                  />
+                  <span>€</span>
+                </div>
+              </label>
+              <label>
+                Valor actual <small>opcional</small>
+                <div className="input-with-suffix">
+                  <input
+                    value={currentValue}
+                    onChange={(event) => setCurrentValue(event.target.value)}
+                    inputMode="decimal"
+                    placeholder="0"
+                  />
+                  <span>€</span>
+                </div>
+              </label>
+            </div>
             <div className="toggle-grid">
               <label>
                 <input
@@ -1888,7 +2040,7 @@ function AddSquadModal({
                   onChange={(event) => setStarter(event.target.checked)}
                 />
                 <span>
-                  <Star size={17} /> Titular
+                  <Star size={16} /> Titular
                 </span>
               </label>
               <label>
@@ -1898,17 +2050,300 @@ function AddSquadModal({
                   onChange={(event) => setCaptain(event.target.checked)}
                 />
                 <span>
-                  <Crown size={17} /> Capitán
+                  <Crown size={16} /> Capitán
                 </span>
               </label>
             </div>
-            {error && <div className="form-alert error">{error}</div>}
-            <button className="primary-button full" disabled={saving}>
-              {saving ? <LoaderCircle className="spin" size={18} /> : "Guardar jugador"}
-            </button>
           </>
         )}
+
+        {error && <div className="form-alert error">{error}</div>}
+        <button
+          className="primary-button full"
+          disabled={
+            saving ||
+            (mode === "catalog" ? !selected : !manualName.trim())
+          }
+        >
+          {saving ? <LoaderCircle className="spin" size={18} /> : "Guardar jugador"}
+        </button>
       </form>
+    </ModalShell>
+  );
+}
+
+function CsvImportModal({
+  user,
+  team,
+  players,
+  existingSquad,
+  onClose,
+  onSaved,
+}: {
+  user: User;
+  team: Team;
+  players: Player[];
+  existingSquad: SquadPlayer[];
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [fileName, setFileName] = useState("");
+  const [parsed, setParsed] =
+    useState<ReturnType<typeof parseSquadCsv> | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const readFile = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setFileName(file.name);
+    setParsed(null);
+    setError("");
+
+    try {
+      const text = await file.text();
+      setParsed(parseSquadCsv(text));
+    } catch (parseError) {
+      setError(
+        parseError instanceof Error
+          ? parseError.message
+          : "No se ha podido leer el CSV.",
+      );
+    }
+  };
+
+  const importRows = async () => {
+    if (!parsed) return;
+    setSaving(true);
+    setError("");
+
+    let batchId: string | null = null;
+
+    try {
+      const { data: batch, error: batchError } = await supabase
+        .from("import_batches")
+        .insert({
+          user_id: user.id,
+          fantasy_team_id: team.id,
+          import_type: "squad",
+          method: "csv",
+          status: "processing",
+          rows_total: parsed.rows.length,
+          rows_matched: 0,
+          rows_unmatched: 0,
+        })
+        .select("id")
+        .single();
+
+      if (batchError || !batch) {
+        throw batchError ?? new Error("No se ha podido crear la importación.");
+      }
+      batchId = batch.id;
+
+      const playersByName = new Map(
+        players.map((player) => [
+          normalizePlayerName(player.full_name),
+          player,
+        ]),
+      );
+      const existingPlayerIds = new Set(
+        existingSquad
+          .map((entry) => entry.player_id)
+          .filter((id): id is string => Boolean(id)),
+      );
+      const existingImportedNames = new Set(
+        existingSquad
+          .map((entry) =>
+            entry.imported_name
+              ? normalizePlayerName(entry.imported_name)
+              : "",
+          )
+          .filter(Boolean),
+      );
+
+      let catalogMatches = 0;
+      const items = parsed.rows.map((row) => {
+        const matched = playersByName.get(normalizePlayerName(row.name)) ?? null;
+        if (matched) catalogMatches += 1;
+        return {
+          import_batch_id: batch.id,
+          row_number: row.rowNumber,
+          raw_name: row.name,
+          raw_position: row.position,
+          raw_club: row.club,
+          raw_value: row.value,
+          matched_player_id: matched?.id ?? null,
+          match_confidence: matched ? 1 : null,
+          review_status: matched ? "matched" as const : "confirmed" as const,
+          notes: matched
+            ? "Coincidencia exacta con el catálogo"
+            : "Importado como jugador manual",
+        };
+      });
+
+      const { error: itemsError } = await supabase
+        .from("import_items")
+        .insert(items);
+      if (itemsError) throw itemsError;
+
+      const squadRows = parsed.rows.flatMap((row) => {
+        const normalizedName = normalizePlayerName(row.name);
+        const matched = playersByName.get(normalizedName) ?? null;
+
+        if (matched && existingPlayerIds.has(matched.id)) return [];
+        if (!matched && existingImportedNames.has(normalizedName)) return [];
+
+        return [{
+          fantasy_team_id: team.id,
+          player_id: matched?.id ?? null,
+          purchase_price: null,
+          current_value: row.value,
+          is_starter: false,
+          is_captain: false,
+          imported_name: row.name,
+          imported_position: matched?.position ?? row.position,
+          imported_club: row.club,
+        }];
+      });
+
+      if (squadRows.length > 0) {
+        const { error: squadError } = await supabase
+          .from("squad_players")
+          .insert(squadRows);
+        if (squadError) throw squadError;
+      }
+
+      const { error: completeError } = await supabase
+        .from("import_batches")
+        .update({
+          status: "completed",
+          rows_matched: catalogMatches,
+          rows_unmatched: parsed.rows.length - catalogMatches,
+          completed_at: new Date().toISOString(),
+        })
+        .eq("id", batch.id);
+      if (completeError) throw completeError;
+
+      await supabase
+        .from("onboarding_progress")
+        .update({
+          selected_import_method: "csv",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("user_id", user.id);
+
+      onSaved();
+    } catch (importError) {
+      if (batchId) {
+        await supabase
+          .from("import_batches")
+          .update({
+            status: "failed",
+            error_message:
+              importError instanceof Error
+                ? importError.message
+                : "Error de importación",
+          })
+          .eq("id", batchId);
+      }
+      setError(
+        importError instanceof Error
+          ? importError.message
+          : "No se ha podido completar la importación.",
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <ModalShell onClose={onClose}>
+      <div className="modal-form">
+        <span className="modal-kicker">Plantilla</span>
+        <h2>Importar CSV</h2>
+        <p className="modal-intro">
+          Incluye una cabecera con <strong>Nombre</strong> o{" "}
+          <strong>Jugador</strong>. Posición, club y valor son opcionales.
+        </p>
+
+        <label className="csv-dropzone">
+          <Upload size={24} />
+          <strong>{fileName || "Selecciona un archivo CSV"}</strong>
+          <span>Máximo 200 jugadores y 256 KB</span>
+          <input
+            type="file"
+            accept=".csv,text/csv,text/plain"
+            onChange={(event) => void readFile(event)}
+          />
+        </label>
+
+        <div className="csv-example">
+          <span>Ejemplo</span>
+          <code>Nombre;Posición;Club;Valor</code>
+          <code>Oihan Sancet;MED;Athletic;18.400.000</code>
+        </div>
+
+        {parsed && (
+          <>
+            <div className="csv-summary">
+              <div>
+                <strong>{parsed.rows.length}</strong>
+                <span>jugadores válidos</span>
+              </div>
+              <div>
+                <strong>{parsed.warnings.length}</strong>
+                <span>avisos</span>
+              </div>
+            </div>
+            <div className="csv-preview">
+              {parsed.rows.slice(0, 6).map((row: CsvSquadRow) => (
+                <div key={row.rowNumber}>
+                  <span className="player-avatar compact-avatar">
+                    {row.name
+                      .split(" ")
+                      .slice(0, 2)
+                      .map((part) => part[0])
+                      .join("")}
+                  </span>
+                  <span>
+                    <strong>{row.name}</strong>
+                    <small>
+                      {row.position ?? "Sin posición"} · {row.club ?? "Sin club"}
+                    </small>
+                  </span>
+                  <strong>{formatMoney(row.value)}</strong>
+                </div>
+              ))}
+            </div>
+            {parsed.warnings.length > 0 && (
+              <details className="csv-warnings">
+                <summary>Ver avisos ({parsed.warnings.length})</summary>
+                <ul>
+                  {parsed.warnings.slice(0, 8).map((warning) => (
+                    <li key={warning}>{warning}</li>
+                  ))}
+                </ul>
+              </details>
+            )}
+          </>
+        )}
+
+        {error && <div className="form-alert error">{error}</div>}
+        <button
+          className="primary-button full"
+          onClick={() => void importRows()}
+          disabled={!parsed || saving}
+        >
+          {saving ? (
+            <LoaderCircle className="spin" size={18} />
+          ) : (
+            <>
+              <Upload size={18} /> Importar plantilla
+            </>
+          )}
+        </button>
+      </div>
     </ModalShell>
   );
 }
@@ -2210,6 +2645,8 @@ function ProfileView({
   const [name, setName] = useState(data.profile?.display_name ?? "");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [showCsv, setShowCsv] = useState(false);
+  const [showConnector, setShowConnector] = useState(false);
 
   const saveProfile = async () => {
     if (!user) return;
@@ -2273,6 +2710,8 @@ function ProfileView({
         <span className="plan-chip">MVP</span>
       </div>
 
+      <LaligaConnectionCard onOpen={() => setShowConnector(true)} />
+
       {!demoMode && (
         <section className="settings-card">
           <h2>Datos del perfil</h2>
@@ -2313,7 +2752,7 @@ function ProfileView({
           <span className="setting-icon warning"><Activity size={18} /></span>
           <div>
             <strong>Fuente externa</strong>
-            <small>Pendiente de clave API</small>
+            <small>Contexto deportivo pendiente de activación</small>
           </div>
           <ChevronRight size={18} />
         </div>
@@ -2322,6 +2761,16 @@ function ProfileView({
       {!demoMode && (
         <section className="settings-card">
           <h2>Importación</h2>
+          {data.team && (
+            <button className="setting-button" onClick={() => setShowCsv(true)}>
+              <Upload size={18} />
+              <span>
+                <strong>Importar plantilla CSV</strong>
+                <small>Nombre, posición, club y valor</small>
+              </span>
+              <ChevronRight size={18} />
+            </button>
+          )}
           <button className="setting-button" onClick={() => void resetOnboarding()} disabled={saving}>
             <RefreshCw size={18} />
             <span>
@@ -2350,7 +2799,86 @@ function ProfileView({
         <ShieldCheck size={15} />
         Fantasy Copilot no almacena credenciales de LALIGA Fantasy.
       </p>
+
+      {showConnector && (
+        <LaligaConnectionModal onClose={() => setShowConnector(false)} />
+      )}
+      {showCsv && !demoMode && user && data.team && (
+        <CsvImportModal
+          user={user}
+          team={data.team}
+          players={data.players}
+          existingSquad={data.squad}
+          onClose={() => setShowCsv(false)}
+          onSaved={() => {
+            setShowCsv(false);
+            onRefresh();
+          }}
+        />
+      )}
     </div>
+  );
+}
+
+function LaligaConnectionCard({ onOpen }: { onOpen: () => void }) {
+  const state = getLaligaConnectorState();
+
+  return (
+    <section className="connection-card">
+      <span className="connection-icon">
+        <LockKeyhole size={22} />
+      </span>
+      <div>
+        <span className="modal-kicker">Conexión LALIGA Fantasy</span>
+        <strong>{state.title}</strong>
+        <p>
+          Mientras no exista permiso escrito, la app no pedirá tu contraseña ni
+          llamará a endpoints privados.
+        </p>
+      </div>
+      <button className="secondary-button compact-button" onClick={onOpen}>
+        Ver estado
+      </button>
+    </section>
+  );
+}
+
+function LaligaConnectionModal({ onClose }: { onClose: () => void }) {
+  const state = getLaligaConnectorState();
+
+  return (
+    <ModalShell onClose={onClose}>
+      <div className="connection-modal">
+        <span className="connection-hero-icon">
+          <ShieldCheck size={28} />
+        </span>
+        <span className="modal-kicker">Decisión de seguridad</span>
+        <h2>{state.title}</h2>
+        <p>{state.detail}</p>
+        <ul className="check-list compact-list">
+          <li>
+            <Check size={17} /> Manual y CSV siguen disponibles
+          </li>
+          <li>
+            <Check size={17} /> Adaptador preparado sin endpoints copiados
+          </li>
+          <li>
+            <Check size={17} /> Piloto automático desactivado
+          </li>
+        </ul>
+        <a
+          className="secondary-button full"
+          href={state.legalSourceUrl}
+          target="_blank"
+          rel="noreferrer"
+        >
+          Leer condiciones oficiales <ExternalLink size={17} />
+        </a>
+        <button className="primary-button full" onClick={onClose}>
+          Entendido
+        </button>
+      </div>
+    </ModalShell>
   );
 }
 
