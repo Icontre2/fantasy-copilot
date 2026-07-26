@@ -1,1 +1,1 @@
-# -fantasy-copilot
+fantasy-copilot
