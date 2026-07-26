@@ -2710,6 +2710,8 @@ select:focus-visible {
 }
 
 .csv-example {
+  display: grid;
+  gap: 4px;
   margin: 0;
   border-radius: 13px;
   padding: 11px 13px;
@@ -2727,6 +2729,19 @@ select:focus-visible {
   background: #eef8f3;
   color: #0f7650;
   font-weight: 680;
+}
+
+.csv-summary > div {
+  display: grid;
+  gap: 2px;
+}
+
+.csv-summary strong {
+  font-size: 15px;
+}
+
+.csv-summary span {
+  font-size: 10px;
 }
 
 .csv-preview {
