@@ -1,76 +1,94 @@
 # Prompt maestro para Lovable
 
-Continúa el proyecto existente **Fantasy Copilot**. No regeneres desde cero ni sustituyas el código funcional del repositorio. Es una aplicación web móvil-first para ayudar a usuarios de LALIGA Fantasy a tomar mejores decisiones sobre su plantilla.
+Continúa **Fantasy Copilot**, una aplicación móvil-first para ayudar a usuarios de fantasy fútbol a decidir alineación y mercado. El código existente ya contiene registro, onboarding, demo, dashboard, plantilla, mercado, perfil y persistencia Supabase.
 
 ## Fuente de verdad
 
-- Repositorio: `Icontre2/fantasy-copilot`.
-- Revisa el código actual, el PR del MVP y toda la documentación de `docs/` antes de editar.
-- Conecta con el proyecto Supabase existente `ggqealkrogfgbykicmfo`.
+- Repositorio privado: `Icontre2/fantasy-copilot`.
+- Rama estable: `main`.
+- Revisa el código actual y toda la documentación de `docs/` antes de editar.
+- Proyecto Supabase existente: `ggqealkrogfgbykicmfo`.
 - Supabase Auth y RLS ya están configurados.
-- Usa solo la clave pública/publishable de Supabase en el cliente.
-- Usa los nombres exactos del esquema existente.
+- Usa solo URL y clave pública/publishable en el cliente.
+- No actives una base de datos nueva en Lovable.
 - No crees ni cambies tablas, migraciones, funciones o políticas RLS sin mostrar primero el cambio exacto y obtener aprobación.
 
-## Prioridad del siguiente bloque
+## Objetivo del siguiente build
 
-Añade el flujo **Conectar LALIGA Fantasy** en modo solo lectura para traer:
+Mejora el frontend existente y construye un vertical slice completo de **Conectar LALIGA Fantasy** únicamente en modo simulado. El usuario debe poder recorrer todas las pantallas y estados sin introducir credenciales reales.
 
-- ligas y clasificación;
-- plantilla y alineación;
-- saldo;
-- mercado, precios y actividad.
+La integración real está bloqueada: la API es privada, su funcionamiento actual no está confirmado, la autenticación observada usa ROPC de Azure B2C y las condiciones oficiales describen el juego para uso privado y no comercial salvo consentimiento escrito. Lee primero `docs/laliga-readonly-integration.md`.
 
-Lee primero `docs/laliga-readonly-integration.md` y la documentación más reciente de Notion. Si el contrato real de autenticación o endpoints no está confirmado, construye la interfaz, estados, adaptador y mocks tipados, pero no inventes endpoints ni declares la conexión como funcional.
+## Flujo que sí debes construir
 
-## Seguridad de la conexión
+1. Tarjeta principal en onboarding, Inicio y Perfil: **Conectar LALIGA Fantasy**.
+2. Explicación previa: qué importaría, por qué sería solo lectura y qué no puede hacer Fantasy Copilot.
+3. Etiqueta visible: **Integración experimental no oficial**.
+4. CTA **Ver demostración de conexión**; no muestres un login real.
+5. Selección simulada de liga si la cuenta tiene varias.
+6. Progreso simulado: cuenta, liga, plantilla y mercado.
+7. Resultado con fecha de última sincronización de demo y resumen de datos.
+8. Estados simulables: cuenta social no compatible, sesión caducada, proveedor caído, límite temporal y cambio de formato.
+9. Alternativas permanentes: carga manual y CSV.
+10. Feature flag/kill switch para desactivar el conector sin romper el producto.
 
-- La contraseña de LALIGA nunca se guarda en Supabase, logs, analítica, repositorio ni estado persistente del navegador.
-- El frontend nunca llama directamente a la API privada de LALIGA ni recibe secretos internos.
-- Autenticación, tokens y sesiones de terceros se tratan únicamente en backend/Edge Function.
-- No uses `service_role` en el cliente.
-- No implementes compras, ventas, pujas ni cambios de alineación automáticos.
-- Añade expiración, revocación, rate limiting, timeouts, errores seguros y una feature flag para desactivar el conector.
-- Mantén carga manual y CSV como respaldo.
+## Contrato técnico
 
-## Diseño
+Crea un adaptador tipado sustituible con métodos equivalentes a:
 
-- Estética deportiva premium y tecnológica.
-- Fondo claro, tarjetas limpias, tipografía contundente y jerarquía visual fuerte.
-- Prioridad absoluta a iPhone.
-- Navegación inferior: Inicio, Plantilla, Mercado y Perfil.
-- No copies logos, identidad ni interfaz oficial de LALIGA Fantasy.
+- `authenticateEphemeral()`
+- `listLeagues()`
+- `getLeagueSummary()`
+- `getSquad()`
+- `getLineup()`
+- `getMarket()`
+- `disconnect()`
 
-## Pantallas nuevas
+Para este build todos los métodos usan mocks locales de sesión y no contienen URLs, tokens ni respuestas copiadas del proveedor. Ningún método de escritura forma parte del contrato.
 
-1. Tarjeta principal en onboarding y Perfil: **Conectar LALIGA Fantasy**.
-2. Explicación previa: solo lectura, qué datos se importan y qué no puede hacer Fantasy Copilot.
-3. Formulario seguro con credenciales efímeras, solo cuando el backend real esté validado.
-4. Selección de liga si la cuenta tiene varias.
-5. Progreso de sincronización por fases: cuenta, liga, plantilla, mercado.
-6. Resultado con fecha de última sincronización.
-7. Estados de sesión caducada, credenciales incorrectas, límite temporal, proveedor caído y reconexión.
-8. Alternativas visibles: carga manual y CSV.
+## Prohibiciones obligatorias
+
+- No pedir credenciales reales de LALIGA.
+- No llamar a endpoints privados ni inventarlos.
+- No copiar código del repositorio público de referencia: no tiene licencia explícita.
+- No guardar contraseña, token, cookie o sesión del proveedor.
+- No exponer `service_role` ni secretos al navegador.
+- No implementar compras, ventas, pujas, alineaciones o capitán.
+- No implementar sincronización privada en segundo plano.
+- No presentar el piloto automático como disponible; solo puede aparecer como V2 futura.
+- No copiar logos, identidad o interfaz oficial ni afirmar afiliación con LALIGA.
+- No destruir ni regenerar el MVP funcional.
 
 ## MVP existente que debe preservarse
 
-- Registro, inicio y cierre de sesión con email y contraseña.
-- Recuperación de contraseña.
-- Onboarding y creación del equipo.
+- Registro, inicio, cierre y recuperación por email y contraseña.
+- Onboarding y creación de equipo.
 - Dashboard, plantilla, mercado y perfil.
-- Modo demo.
+- Modo demo completo.
 - Estados de carga, error y vacío.
 - Persistencia Supabase con aislamiento por usuario.
+
+## Diseño
+
+- Deportivo premium, tecnológico y con personalidad propia.
+- Prioridad absoluta a iPhone y 390 px de ancho, respetando safe areas.
+- Fondo marfil o blanco cálido, navy casi negro, acento verde lima eléctrico y coral solo para alertas.
+- Tipografía contundente, métricas grandes, tarjetas limpias, esquinas de 18–24 px y sombras suaves.
+- Navegación inferior: Inicio, Plantilla, Mercado y Perfil.
+- Microinteracciones sutiles, skeletons y estados vacíos útiles.
+- Evita el aspecto de dashboard corporativo genérico y el exceso de gradientes.
+- Accesibilidad: buen contraste, labels, foco, targets táctiles grandes y reduced motion.
 
 ## Calidad
 
 - TypeScript estricto y dependencias fijadas.
-- Componentes reutilizables.
-- Formularios accesibles y validados.
-- No generes datos falsos permanentes.
-- Ejecuta lint y build después de cada bloque.
-- Resume archivos modificados, pruebas realizadas y cualquier bloqueo real.
+- Componentes reutilizables y formularios accesibles.
+- Datos ficticios claramente marcados como demo y nunca persistidos.
+- Sin warnings de consola.
+- Valida móvil y escritorio.
+- Ejecuta lint y build al terminar.
+- Resume archivos modificados, pruebas realizadas, estados simulados y bloqueos reales.
 
 ## Resultado esperado
 
-Una evolución segura del MVP existente con el flujo completo y comprobable de conexión en solo lectura. Si la API privada aún no puede validarse, debe quedar un vertical slice listo para enchufar el adaptador real sin exponer credenciales ni romper las vías manuales.
+Una evolución visual y funcional del MVP en la que el recorrido de conexión pueda demostrarse de principio a fin sin credenciales ni API real, y en la que manual/CSV mantengan la app plenamente utilizable. No te quedes solo en un plan: construye y valida el vertical slice.
