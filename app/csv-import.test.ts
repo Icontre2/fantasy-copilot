@@ -48,3 +48,13 @@ test("keeps unknown positions reviewable", () => {
   assert.equal(result.rows[0].position, null);
   assert.equal(result.warnings.length, 1);
 });
+
+
+test("ignores duplicate player names after normalization", () => {
+  const result = parseSquadCsv(
+    "Jugador;Posición\nOihan Sancet;MED\nOIHAN  SÁNCET;MID",
+  );
+
+  assert.equal(result.rows.length, 1);
+  assert.match(result.warnings[0], /duplicado/);
+});
