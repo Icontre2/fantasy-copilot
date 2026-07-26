@@ -1,11 +1,11 @@
 # Prompt maestro para Lovable
 
-Continúa el proyecto existente **Fantasy Copilot**. No regeneres desde cero ni sustituyas el código funcional. Es una aplicación web móvil-first para ayudar a usuarios de fantasy fútbol a gestionar su plantilla.
+Trabaja sobre **Fantasy Copilot** usando el código funcional ya validado como referencia. No sustituyas ni contradigas sus flujos aprobados. Es una aplicación web móvil-first para ayudar a usuarios de fantasy fútbol a gestionar su plantilla.
 
 ## Fuente de verdad
 
 - Repositorio: `Icontre2/fantasy-copilot`.
-- Rama de trabajo actual: `agent/manual-csv-import` hasta que su PR se fusione en `main`.
+- Rama fuente: `main`, commit validado `be74173f175842974f7a9df8c5ea8fc2f6b807ef`.
 - Lee `README.md` y toda la documentación de `docs/` antes de editar.
 - Proyecto Supabase existente: `ggqealkrogfgbykicmfo`.
 - Supabase Auth y RLS ya están configurados.
