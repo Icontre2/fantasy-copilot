@@ -47,4 +47,6 @@ Esto hace que manual/CSV funcione incluso cuando `players` está vacío. Si un n
 
 Todas las tablas tienen RLS activado. Los datos privados están aislados por propietario; los catálogos compartidos son de solo lectura para usuarios autenticados. `sync_runs` no tiene políticas de frontend por diseño. La ejecución directa pública de `handle_new_user()` fue revocada; el trigger de registro continúa funcionando.
 
+La Edge Function `sync-football-data` está en versión 2 y permanece cerrada por defecto: exige JWT válido, vuelve a verificar el usuario, rechaza la ejecución si el proveedor está inactivo o no tiene `allow_user_trigger: true`, toma liga/temporada de la configuración del servidor y aplica timeouts al proveedor. `api_football` continúa inactivo.
+
 Los cambios DDL deben aplicarse mediante migraciones revisables. Lovable no debe modificar el esquema.
