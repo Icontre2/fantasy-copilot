@@ -2623,3 +2623,274 @@ select:focus-visible {
     transition-duration: 0.01ms !important;
   }
 }
+
+
+/* Safe imports and provider status */
+
+.import-choice {
+  width: 100%;
+  background: white;
+  color: inherit;
+  text-align: left;
+}
+
+.import-choice.disabled-option {
+  cursor: not-allowed;
+  opacity: 0.64;
+}
+
+.squad-actions,
+.modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+}
+
+.compact-button {
+  min-height: 44px;
+  padding: 0 15px;
+}
+
+.two-column-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.modal-intro {
+  margin: -6px 0 2px;
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.csv-dropzone {
+  display: grid;
+  min-height: 142px;
+  place-items: center;
+  gap: 8px;
+  border: 2px dashed #cfd3dc;
+  border-radius: 19px;
+  padding: 24px;
+  background: var(--surface-soft);
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+.csv-dropzone:hover {
+  border-color: rgba(115, 87, 255, 0.52);
+  background: #f7f5ff;
+}
+
+.csv-dropzone input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.csv-dropzone svg {
+  color: var(--purple);
+}
+
+.csv-dropzone strong {
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.csv-dropzone small,
+.csv-example,
+.csv-summary {
+  color: var(--ink-faint);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.csv-example {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  border-radius: 13px;
+  padding: 11px 13px;
+  background: #f2f3f6;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  overflow-wrap: anywhere;
+}
+
+.csv-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px 14px;
+  border-radius: 13px;
+  padding: 10px 13px;
+  background: #eef8f3;
+  color: #0f7650;
+  font-weight: 680;
+}
+
+.csv-summary > div {
+  display: grid;
+  gap: 2px;
+}
+
+.csv-summary strong {
+  font-size: 15px;
+}
+
+.csv-summary span {
+  font-size: 10px;
+}
+
+.csv-preview {
+  display: grid;
+  gap: 7px;
+  max-height: 265px;
+  overflow: auto;
+}
+
+.csv-preview article {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 10px 12px;
+}
+
+.csv-preview article > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.csv-preview strong {
+  overflow: hidden;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.csv-preview span,
+.csv-preview small {
+  color: var(--ink-faint);
+  font-size: 10px;
+}
+
+.csv-preview .player-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  font-size: 10px;
+}
+
+.csv-warnings {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  border: 1px solid #f0ddb8;
+  border-radius: 13px;
+  padding: 11px 13px 11px 31px;
+  background: #fff9ed;
+  color: #7b5614;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.connection-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 15px;
+  border: 1px solid #ead9b6;
+  border-radius: 21px;
+  padding: 18px;
+  background: #fffaf0;
+}
+
+.connection-card > div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.connection-card strong {
+  font-size: 14px;
+}
+
+.connection-card p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 11px;
+  line-height: 1.48;
+}
+
+.connection-icon,
+.connection-hero-icon {
+  display: grid;
+  place-items: center;
+  background: #fff0cf;
+  color: var(--amber);
+}
+
+.connection-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+}
+
+.connection-modal {
+  display: grid;
+  gap: 16px;
+}
+
+.connection-hero-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+}
+
+.connection-modal h2 {
+  margin: 0;
+  padding-right: 44px;
+  font-size: 29px;
+  letter-spacing: -0.04em;
+}
+
+.connection-modal > p {
+  margin: 0;
+  color: var(--ink-soft);
+  line-height: 1.55;
+}
+
+.compact-list {
+  display: grid;
+  gap: 9px;
+  margin: 0;
+  padding-left: 20px;
+  color: var(--ink-soft);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+@media (max-width: 760px) {
+  .two-column-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .connection-card {
+    grid-template-columns: auto 1fr;
+  }
+
+  .connection-card > button {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .squad-actions {
+    justify-content: flex-end;
+  }
+}
