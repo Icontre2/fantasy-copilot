@@ -2298,7 +2298,7 @@ function CsvImportModal({
             </div>
             <div className="csv-preview">
               {parsed.rows.slice(0, 6).map((row: CsvSquadRow) => (
-                <div key={row.rowNumber}>
+                <article key={row.rowNumber}>
                   <span className="player-avatar compact-avatar">
                     {row.name
                       .split(" ")
@@ -2313,7 +2313,7 @@ function CsvImportModal({
                     </small>
                   </span>
                   <strong>{formatMoney(row.value)}</strong>
-                </div>
+                </article>
               ))}
             </div>
             {parsed.warnings.length > 0 && (
