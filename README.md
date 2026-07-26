@@ -9,20 +9,23 @@ Asistente móvil-first para gestionar una plantilla de fantasy fútbol, prioriza
 - Dashboard, plantilla, mercado y perfil.
 - Modo demo completo para revisar el producto sin datos reales.
 - Modo conectado con persistencia Supabase y aislamiento por usuario.
-- Carga manual y futura importación CSV como vías de respaldo.
+- Alta manual de jugadores aunque el catálogo canónico aún esté vacío.
+- Importación CSV con cabeceras en español o inglés, vista previa, validación y trazabilidad por lote.
 
-Versión navegable: https://fantasy-copilot.icontre97.chatgpt.site
+Versión navegable actual: https://fantasy-copilot.icontre97.chatgpt.site
 
-## Prioridad actual: conexión con LALIGA Fantasy
+## Decisión actual sobre LALIGA Fantasy
 
-El siguiente bloque debe permitir que el usuario conecte su cuenta y lea, en modo solo lectura:
+La conexión automática es técnicamente investigable, pero **no se implementará ni se pedirán credenciales** sin autorización escrita de LALIGA.
 
-- ligas y clasificación;
-- plantilla y alineación;
-- saldo;
-- mercado, precios y actividad.
+Los motivos son:
 
-La integración se hará mediante un adaptador exclusivamente del lado servidor. La contraseña de LALIGA no se guardará en la base de datos, no se expondrán tokens en el navegador y no se ejecutarán compras, ventas ni pujas. Como la API no es pública, el conector debe estar desacoplado, protegido por feature flag y preparado para fallar sin romper la carga manual/CSV.
+- el flujo encontrado es ROPC de Azure B2C y obliga a que la contraseña atraviese nuestra infraestructura;
+- no cubre cuentas que dependan de Google, Apple o Facebook;
+- depende de endpoints privados e inestables;
+- las [condiciones de uso de LALIGA Fantasy](https://www.laliga.com/informacion-legal/condiciones-de-uso-fantasy), actualizadas el 3 de julio de 2026, limitan el uso al ámbito personal/privado y exigen consentimiento escrito para uso comercial.
+
+Por tanto, **manual/CSV es el suelo garantizado del MVP**. El código solo contiene un contrato tipado y un estado de producto bloqueado; no contiene URLs privadas, ROPC, formularios de credenciales ni operaciones de mercado.
 
 Consulta [Integración LALIGA Fantasy en modo lectura](docs/laliga-readonly-integration.md).
 
@@ -37,18 +40,20 @@ Comprobaciones:
 
 ```bash
 npm run lint
+npm test
 npm run build
 ```
 
 ## Estado de datos
 
-Supabase tiene el esquema preparado, pero todavía no hay usuarios ni catálogo real cargado. La conexión con LALIGA Fantasy será la fuente prioritaria para los datos específicos de cada usuario. El catálogo y las métricas externas seguirán detrás de una capa de ingesta desacoplada.
+Supabase tiene el esquema y RLS preparados, pero todavía no hay usuarios ni catálogo real cargado. La plantilla puede construirse manualmente o importarse desde CSV sin depender del catálogo. Los datos deportivos externos seguirán detrás de una capa de ingesta desacoplada.
 
 ## Documentación
 
 - [Arquitectura](docs/architecture.md)
 - [Modelo de datos](docs/data-model.md)
+- [Registro de cambios de base de datos](docs/database-changelog.md)
 - [Integración LALIGA Fantasy en modo lectura](docs/laliga-readonly-integration.md)
 - [Prompt maestro de Lovable](docs/lovable-master-prompt.md)
 
-Nunca se incluyen claves privadas ni credenciales de terceros en el frontend o el repositorio.
+Nunca se incluyen claves privadas, contraseñas de terceros ni tokens de sesión en el frontend o el repositorio.
