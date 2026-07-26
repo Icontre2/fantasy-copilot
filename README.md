@@ -1,48 +1,41 @@
 # Fantasy Copilot
 
-Aplicación móvil-first para ayudar a usuarios de LALIGA Fantasy a tomar mejores decisiones sobre plantilla y mercado.
+Asistente móvil-first para gestionar una plantilla de fantasy fútbol, priorizar decisiones de mercado y recibir recomendaciones explicadas.
 
-## Estado
+## MVP disponible
 
-Base técnica preparada. El primer build se realizará en Lovable sobre este repositorio y se conectará al proyecto Supabase existente.
-
-## MVP
-
-- Registro e inicio de sesión con email y contraseña.
-- Onboarding y creación del equipo.
+- Autenticación con email y contraseña mediante Supabase.
+- Onboarding guiado y creación del equipo.
 - Carga manual de plantilla.
-- Dashboard con estado del equipo y recomendaciones.
-- Gestión manual del mercado.
-- Importación CSV preparada para una iteración posterior.
+- Dashboard con recomendaciones y señales prioritarias.
+- Vistas de plantilla, mercado y perfil.
+- Modo demo completo cuando todavía no hay datos reales.
+- Persistencia en Supabase con aislamiento por usuario.
 
-## Stack
+Versión navegable: https://fantasy-copilot.icontre97.chatgpt.site
 
-- Frontend: Lovable, React y TypeScript
-- Backend, base de datos y autenticación: Supabase
-- Repositorio: GitHub
-- Despliegue: Vercel
-- IA: OpenAI
-- Emails: Resend
+## Desarrollo local
 
-## Estructura
+1. Copia `.env.example` a `.env.local`.
+2. Completa la URL y la clave publicable de Supabase.
+3. Instala dependencias con `npm ci`.
+4. Ejecuta `npm run dev`.
 
-- `src/`: frontend y lógica de aplicación
-- `supabase/migrations/`: migraciones SQL
-- `supabase/functions/`: Edge Functions
-- `docs/`: decisiones y documentación técnica
-- `.env.example`: variables públicas requeridas, sin secretos
+Comprobaciones:
 
-## Seguridad
+```bash
+npm run lint
+npm run build
+```
 
-- No se almacenan credenciales ni sesiones de LALIGA Fantasy.
-- Nunca se expone la clave `service_role` en el cliente.
-- Los datos privados se protegen mediante RLS y se vinculan al usuario autenticado.
-- No se suben secretos al repositorio.
+## Estado de datos
+
+La aplicación y el esquema están preparados. El catálogo real de jugadores y clubes aún debe cargarse mediante el pipeline desacoplado de ingesta; hasta entonces el modo demo permite revisar el producto completo.
 
 ## Documentación
 
 - [Arquitectura](docs/architecture.md)
 - [Modelo de datos](docs/data-model.md)
-- [Prompt maestro para Lovable](docs/lovable-master-prompt.md)
+- [Prompt maestro de Lovable](docs/lovable-master-prompt.md)
 
-La fuente de verdad operativa y el diario de decisiones se mantienen en Notion.
+Nunca se guardan credenciales de LALIGA Fantasy ni claves privadas en el frontend.
