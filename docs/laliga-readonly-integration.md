@@ -1,124 +1,71 @@
 # Integración LALIGA Fantasy en modo lectura
 
-## Estado de decisión
+## Estado de la decisión
 
-La integración real está **bloqueada** hasta obtener una base de uso aceptable. El MVP mantiene importación manual/CSV como vía canónica y solo puede construir, de momento, una simulación UX detrás de una feature flag.
+**Bloqueada hasta obtener autorización escrita de LALIGA.**
 
-La auditoría técnica confirma que existen contratos privados que cubren ligas, clasificación, plantilla, saldo, alineación y mercado, pero no confirma que sigan funcionando hoy. La autenticación observada usa ROPC de Azure B2C: obliga a que la contraseña pase por nuestra infraestructura y no cubre cuentas creadas exclusivamente con Google, Apple o Facebook.
+La integración parece técnicamente viable para cuentas locales, pero no está aprobada para producto. Fantasy Copilot no pedirá credenciales, no ejecutará ROPC y no llamará a endpoints privados mientras no se resuelva este bloqueo.
 
-Además, las condiciones oficiales de LALIGA Fantasy, actualizadas el 16 de julio de 2026, describen el juego para uso privado y no comercial y exigen consentimiento escrito expreso para uso comercial. Por prudencia, no se desplegará ni monetizará un conector basado en la API privada sin permiso escrito de LALIGA o revisión jurídica específica. Esta conclusión de producto no sustituye asesoramiento legal.
+Referencia oficial revisada: [Condiciones de uso de LALIGA Fantasy](https://www.laliga.com/informacion-legal/condiciones-de-uso-fantasy), actualización de 3 de julio de 2026.
 
-Fuente oficial: [Condiciones de uso de LALIGA Fantasy](https://www.laliga.com/en-GB/legal/condiciones-de-uso-fantasy).
+## Evidencia de Fase 0
 
-## Objetivo futuro
+1. Existe un catálogo no oficial de endpoints que cubre ligas, plantilla, saldo, alineación, mercado y clasificación.
+2. La autenticación observada usa ROPC de Azure B2C: la contraseña tendría que atravesar nuestra infraestructura.
+3. ROPC no resuelve cuentas que dependen de Google, Apple o Facebook.
+4. El repositorio de referencia tiene una señal de mantenimiento baja y no declara licencia; no se reutilizará su código sin permiso.
+5. El catálogo no es puramente de lectura: incluye escrituras de mercado que quedan excluidas.
+6. No hay garantía de funcionamiento actual; ya se documentó una rotura por cambio de temporada.
+7. La temporada 2026/27 empieza en agosto, por lo que una validación técnica de julio puede caducar en semanas.
+8. Sin guardar una credencial o sesión renovable no existe sincronización desatendida.
+9. Las condiciones oficiales limitan el uso al ámbito personal/privado y requieren consentimiento escrito para uso comercial.
+10. Automatización de mercado o alineación queda fuera de alcance incluso si se autoriza más adelante el modo lectura.
 
-Si se supera el bloqueo, permitir que un usuario presente conecte su cuenta para importar una vez liga, plantilla, saldo, alineación y mercado, sin automatizar acciones y sin almacenar contraseña o token.
+## Decisión de producto
 
-## Alcance permitido ahora
+- **MVP:** carga manual y CSV, disponibles y mantenidas como vía canónica.
+- **Conector:** únicamente interfaz tipada, mocks y estados de UX.
+- **Credenciales:** no se solicitan ni almacenan.
+- **API privada:** no se invoca.
+- **Operaciones de escritura:** no se implementan.
+- **Promesa comercial:** no se presenta la conexión como disponible, oficial ni inminente.
 
-- Importación manual y CSV.
-- Modo demo completo.
-- Interfaz simulada de conexión y estados de error.
-- Adaptador tipado sustituible sin URLs reales.
-- Alertas basadas en datos externos que no requieren acceso a la cuenta.
-
-## Fuera de alcance
-
-- Llamar a la API privada de LALIGA.
-- Pedir credenciales reales en producción o en una beta pública.
-- Persistir contraseña, token, cookie o sesión del proveedor.
-- Comprar, vender, pujar, cambiar alineación o capitán.
-- Ejecutar sincronización de la cuenta en segundo plano.
-- Afirmar que la integración es oficial.
-- Reutilizar código de repositorios de referencia sin licencia explícita o permiso del autor.
-- Implementar el piloto automático de V2.
-
-## Arquitectura objetivo, condicionada
+## Arquitectura activa
 
 ```mermaid
 flowchart TD
-  UI["Frontend móvil"] --> API["Endpoint propio autenticado"]
-  API --> ADAPTER["Adaptador LALIGA"]
-  ADAPTER --> PROVIDER["API privada"]
-  API --> DB["Supabase con RLS"]
-  UI --> FALLBACK["Manual / CSV"]
+  UI["Frontend móvil"] --> INPUT["Manual o CSV"]
+  INPUT --> VALIDATE["Validación y normalización"]
+  VALIDATE --> DB["Supabase + RLS"]
+  DB --> APP["Dashboard y recomendaciones"]
 ```
 
-Esta arquitectura es un contrato futuro, no una autorización para conectar. El frontend nunca llamará al proveedor ni recibirá secretos. En una sincronización autorizada, la Edge Function validaría la sesión de Supabase, usaría la credencial únicamente en memoria durante una sola pasada de lectura, normalizaría los datos y descartaría inmediatamente credencial y token.
+`app/laliga-provider.ts` define el límite futuro del proveedor y devuelve el estado `blocked_by_terms`. No contiene autenticación ni URLs privadas.
 
-Sin persistir credenciales no puede existir sincronización automática de datos privados. Cada actualización exigiría presencia y autenticación del usuario. Las alertas de la primera versión deben apoyarse en datos públicos/externos o en la última importación manual.
+## Puerta para reconsiderar la integración
 
-## Contrato del adaptador
+Solo se abrirá un vertical slice real cuando se cumplan todas estas condiciones:
 
-El producto no debe depender de URLs o respuestas concretas del proveedor. El adaptador simulado expondrá operaciones tipadas equivalentes a:
+- autorización escrita para el caso de uso y modelo de distribución;
+- cuenta de prueba propia y expresamente autorizada;
+- revisión legal y de privacidad del paso de credenciales;
+- cobertura o exclusión explícita de cuentas sociales;
+- pruebas de contrato para la temporada vigente;
+- feature flag, kill switch, rate limiting, timeouts y redacción de secretos;
+- plan de caducidad, revocación y soporte;
+- confirmación de que la beta empieza en solo lectura.
 
-- `authenticateEphemeral()`
-- `listLeagues()`
-- `getLeagueSummary()`
-- `getSquad()`
-- `getLineup()`
-- `getMarket()`
-- `disconnect()`
+Si se autoriza, el primer diseño será un login efímero del lado servidor, token solo en memoria y sincronización iniciada por el usuario. Esa decisión implica que no habrá sincronización en segundo plano.
 
-Toda respuesta se normaliza antes de guardarse. Los identificadores externos se mantienen separados de los UUID internos. Ningún método de escritura forma parte del contrato.
+## V2 y piloto automático
 
-## Flujo UX aprobado para el vertical slice
+El piloto automático permanece como objetivo de roadmap, no como compromiso técnico. Requerirá una autorización adicional para escrituras, modo simulación, límites económicos, confirmaciones graduadas, historial auditable y parada inmediata. No se construirá sobre endpoints privados sin permiso.
 
-1. El usuario pulsa **Conectar LALIGA Fantasy**.
-2. Se informa de que es una integración experimental, no oficial y todavía no disponible.
-3. Se explica qué datos importaría y que nunca actuaría sobre la cuenta.
-4. El usuario puede recorrer una demostración con selección de liga y progreso simulado.
-5. Se muestran estados de sesión caducada, cuenta social no compatible, proveedor caído, límite temporal y cambio de contrato.
-6. Siempre se ofrecen carga manual y CSV.
-7. No se muestra un formulario que pueda confundirse con un login real hasta superar Fase 0.
+## Criterios de aceptación del MVP actual
 
-## Controles obligatorios si se autoriza
-
-- Permiso escrito o validación jurídica documentada.
-- Feature flag y kill switch.
-- Consentimiento informado y revocable.
-- Rate limiting por usuario y proveedor.
-- Timeout corto y reintentos limitados.
-- Allowlist estricta de endpoints de solo lectura.
-- Redacción de secretos en logs y errores.
-- Token vivo solo en memoria durante una sincronización.
-- RLS por usuario en cualquier dato nuevo.
-- Idempotencia para evitar duplicados.
-- Métricas sin datos personales ni secretos.
-- Pruebas de cuenta social, sesión caducada, respuesta incompleta y cambio de esquema.
-
-## Implementación por fases
-
-### Fase 0 — permiso y evidencia
-
-- Conservar una copia fechada de las condiciones oficiales.
-- Solicitar a LALIGA autorización para una integración de terceros, inicialmente solo lectura.
-- Confirmar autenticación, endpoints, cobertura de login social y riesgo de bloqueo.
-- No ejecutar URLs privadas ni aceptar credenciales durante esta fase.
-
-### Fase 1 — producto sin conector
-
-- Manual/CSV como suelo garantizado.
-- Pantallas, tipos, adaptador simulado y estados de sincronización.
-- Feature flag desactivada por defecto para cualquier flujo real.
-
-### Fase 2 — spike privado autorizado
-
-Solo tras superar Fase 0: una cuenta propia, una liga, una sincronización manual, solo lectura, token en memoria y trazas sin secretos.
-
-### Fase 3 — revisión al iniciar temporada
-
-Revalidar todos los contratos después del cambio efectivo a 2026/27. Un resultado previo no se considera garantía de estabilidad.
-
-### Fase 4 — beta opt-in
-
-Solo si las fases anteriores salen bien: pocos usuarios, consentimiento explícito, desconexión inmediata y monitorización de fallos.
-
-## Criterios de aceptación actuales
-
-- La app funciona mediante demo, manual y CSV sin depender de LALIGA.
-- La simulación de conexión no pide ni transmite credenciales.
-- Ninguna contraseña, token o secreto aparece en frontend, base, logs o Git.
-- No hay escrituras ni automatización sobre cuentas de terceros.
-- La interfaz no promete afiliación oficial ni disponibilidad de una conexión real.
-- Lint, build y pruebas de estados pasan.
+- Manual y CSV funcionan sin catálogo canónico.
+- Cada importación queda registrada en `import_batches` e `import_items`.
+- RLS mantiene el aislamiento por usuario.
+- Ninguna contraseña o token de LALIGA aparece en interfaz, base, logs o Git.
+- Los estados de conexión explican el bloqueo y enlazan a la fuente oficial.
+- Lint, tests y build pasan.
