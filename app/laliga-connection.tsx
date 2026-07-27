@@ -15,9 +15,7 @@ import { FormEvent, useCallback, useEffect, useState } from "react";
 import type { LaligaLeague } from "./laliga-contract";
 import { supabase } from "./supabase";
 
-type TeamRef = {
-  id: string;
-} | null;
+type TeamRef = { id: string } | null;
 
 type SessionResponse = {
   connected: boolean;
@@ -120,28 +118,33 @@ export function LaligaConnectionCard({
     if (!open || demoMode) return;
 
     let active = true;
-    setChecking(true);
-    setError("");
 
-    void laligaRequest<SessionResponse>("/api/laliga/session")
-      .then(async (session) => {
+    const checkSession = async () => {
+      setChecking(true);
+      setError("");
+
+      try {
+        const session = await laligaRequest<SessionResponse>(
+          "/api/laliga/session",
+        );
         if (!active) return;
+
         setConnected(session.connected);
         setExpiresAt(session.expiresAt ?? null);
         if (session.connected) await loadLeagues();
-      })
-      .catch((requestError) => {
+      } catch (requestError) {
         if (!active) return;
         setError(
           requestError instanceof Error
             ? requestError.message
             : "No se pudo comprobar la conexión.",
         );
-      })
-      .finally(() => {
+      } finally {
         if (active) setChecking(false);
-      });
+      }
+    };
 
+    void checkSession();
     return () => {
       active = false;
     };
@@ -155,10 +158,7 @@ export function LaligaConnectionCard({
     setError("");
     setResult(null);
 
-    const credentials = {
-      email: email.trim(),
-      password,
-    };
+    const credentials = { email: email.trim(), password };
     setPassword("");
 
     try {
