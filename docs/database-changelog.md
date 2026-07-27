@@ -71,3 +71,7 @@ Archivo: `supabase/migrations/20260727054500_replace_laliga_snapshot.sql`.
 - Tipos TypeScript regenerados desde el proyecto.
 - Asesor de seguridad ejecutado después del cambio.
 
+## 2026-07-27 — `drop_legacy_laliga_snapshot_function`
+
+Se retiró `public.apply_laliga_snapshot`, creada durante el trabajo preliminar y no referenciada por la aplicación. `public.replace_laliga_snapshot` queda como única RPC de sincronización, con validaciones más estrictas y capacidad controlada de crear el primer equipo. No se eliminó ni modificó ningún dato.
+
