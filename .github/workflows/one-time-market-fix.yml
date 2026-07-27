@@ -103,3 +103,5 @@ jobs:
           git add app/fantasy-app.tsx
           git commit -m "fix: render nullable imported market entries"
           git push origin HEAD:agent/laliga-private-readonly
+
+# This workflow is intentionally temporary and will be removed after the patch.
