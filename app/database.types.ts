@@ -298,10 +298,15 @@ export type Database = {
           asking_price: number | null
           captured_at: string
           expires_at: string | null
+          external_market_id: string | null
+          external_player_id: string | null
           fantasy_team_id: string
           id: string
+          imported_club: string | null
+          imported_name: string | null
+          imported_position: string | null
           market_value: number | null
-          player_id: string
+          player_id: string | null
           seller_name: string | null
           source: string
         }
@@ -309,10 +314,15 @@ export type Database = {
           asking_price?: number | null
           captured_at?: string
           expires_at?: string | null
+          external_market_id?: string | null
+          external_player_id?: string | null
           fantasy_team_id: string
           id?: string
+          imported_club?: string | null
+          imported_name?: string | null
+          imported_position?: string | null
           market_value?: number | null
-          player_id: string
+          player_id?: string | null
           seller_name?: string | null
           source?: string
         }
@@ -320,10 +330,15 @@ export type Database = {
           asking_price?: number | null
           captured_at?: string
           expires_at?: string | null
+          external_market_id?: string | null
+          external_player_id?: string | null
           fantasy_team_id?: string
           id?: string
+          imported_club?: string | null
+          imported_name?: string | null
+          imported_position?: string | null
           market_value?: number | null
-          player_id?: string
+          player_id?: string | null
           seller_name?: string | null
           source?: string
         }
@@ -680,6 +695,8 @@ export type Database = {
         Row: {
           created_at: string
           current_value: number | null
+          external_player_id: string | null
+          external_player_team_id: string | null
           fantasy_team_id: string
           id: string
           imported_club: string | null
@@ -689,11 +706,14 @@ export type Database = {
           is_starter: boolean
           player_id: string | null
           purchase_price: number | null
+          source: string
           updated_at: string
         }
         Insert: {
           created_at?: string
           current_value?: number | null
+          external_player_id?: string | null
+          external_player_team_id?: string | null
           fantasy_team_id: string
           id?: string
           imported_club?: string | null
@@ -703,11 +723,14 @@ export type Database = {
           is_starter?: boolean
           player_id?: string | null
           purchase_price?: number | null
+          source?: string
           updated_at?: string
         }
         Update: {
           created_at?: string
           current_value?: number | null
+          external_player_id?: string | null
+          external_player_team_id?: string | null
           fantasy_team_id?: string
           id?: string
           imported_club?: string | null
@@ -717,6 +740,7 @@ export type Database = {
           is_starter?: boolean
           player_id?: string | null
           purchase_price?: number | null
+          source?: string
           updated_at?: string
         }
         Relationships: [
@@ -788,7 +812,30 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      apply_laliga_snapshot: {
+        Args: {
+          p_balance: number
+          p_external_league_id: string
+          p_fantasy_team_id: string
+          p_market: Json
+          p_squad: Json
+          p_squad_value: number
+          p_team_name: string
+        }
+        Returns: Json
+      }
+      replace_laliga_snapshot: {
+        Args: {
+          p_balance: number
+          p_fantasy_team_id: string
+          p_league_id: string
+          p_market: Json
+          p_squad: Json
+          p_squad_value: number
+          p_team_name: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
