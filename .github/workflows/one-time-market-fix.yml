@@ -1,0 +1,105 @@
+name: One-time market nullability fix
+
+on:
+  push:
+    branches:
+      - agent/laliga-private-readonly
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.event.head_commit.message == 'chore: apply market nullability patch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/laliga-private-readonly
+
+      - name: Patch market rendering
+        shell: bash
+        run: |
+          python <<'PY'
+          from pathlib import Path
+
+          path = Path('app/fantasy-app.tsx')
+          text = path.read_text()
+
+          old_cards = '''  const liveCards = data.market
+    .map((entry) => ({
+      entry,
+      player: playersById[entry.player_id],
+    }))
+    .filter((row) => row.player)
+    .filter(({ player }) =>
+      player.full_name.toLowerCase().includes(query.toLowerCase()),
+    );'''
+
+          new_cards = '''  const liveCards = data.market
+    .map((entry) => {
+      const player = entry.player_id ? playersById[entry.player_id] : null;
+      const name = player?.full_name ?? entry.imported_name;
+      const position = player?.position ?? entry.imported_position;
+      const club = player?.club_id
+        ? clubsById[player.club_id]?.short_name ?? "Sin club"
+        : entry.imported_club ?? "Sin club";
+
+      if (!name || !position) return null;
+      return {
+        entry,
+        name,
+        position,
+        club,
+        status: player?.status ?? "available",
+      };
+    })
+    .filter((row): row is NonNullable<typeof row> => row !== null)
+    .filter(({ name }) =>
+      name.toLowerCase().includes(query.toLowerCase()),
+    );'''
+
+          old_render = '''          {liveCards.map(({ entry, player }) => (
+            <article className="market-card" key={entry.id}>
+              <div className="market-card-top">
+                <PlayerAvatar name={player.full_name} status={player.status} />
+                <div>
+                  <strong>{player.full_name}</strong>
+                  <span>
+                    {player.position} ·{" "}
+                    {player.club_id
+                      ? clubsById[player.club_id]?.short_name ?? "Sin club"
+                      : "Sin club"}
+                  </span>
+                </div>
+              </div>'''
+
+          new_render = '''          {liveCards.map(({ entry, name, position, club, status }) => (
+            <article className="market-card" key={entry.id}>
+              <div className="market-card-top">
+                <PlayerAvatar name={name} status={status} />
+                <div>
+                  <strong>{name}</strong>
+                  <span>{position} · {club}</span>
+                </div>
+              </div>'''
+
+          if old_cards not in text:
+              raise SystemExit('market card mapping block not found')
+          if old_render not in text:
+              raise SystemExit('market rendering block not found')
+
+          text = text.replace(old_cards, new_cards, 1)
+          text = text.replace(old_render, new_render, 1)
+          path.write_text(text)
+          PY
+
+      - name: Commit patch
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/fantasy-app.tsx
+          git commit -m "fix: render nullable imported market entries"
+          git push origin HEAD:agent/laliga-private-readonly
