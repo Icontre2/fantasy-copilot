@@ -812,18 +812,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      apply_laliga_snapshot: {
-        Args: {
-          p_balance: number
-          p_external_league_id: string
-          p_fantasy_team_id: string
-          p_market: Json
-          p_squad: Json
-          p_squad_value: number
-          p_team_name: string
-        }
-        Returns: Json
-      }
       replace_laliga_snapshot: {
         Args: {
           p_balance: number
