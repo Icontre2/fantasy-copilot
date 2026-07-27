@@ -39,3 +39,35 @@ La migración registrada es idempotente: solo crea las restricciones si no exist
 - RLS no cambió.
 - El asesor de seguridad mantiene únicamente el aviso informativo intencionado de `sync_runs` sin políticas de frontend.
 - Tipos TypeScript actualizados en `app/database.types.ts`.
+
+## 2026-07-27 — `replace_laliga_snapshot`
+
+### Motivo
+
+La conexión privada necesita reemplazar equipo, plantilla y mercado como una sola unidad. Varias operaciones REST independientes podrían dejar datos parciales si una petición falla.
+
+### Cambio aplicado
+
+Se añadió `public.replace_laliga_snapshot` para:
+
+- derivar el propietario desde `auth.uid()`;
+- crear el primer equipo o actualizar uno perteneciente al usuario;
+- validar IDs, posiciones, importes, duplicados y límites;
+- reemplazar plantilla y mercado dentro de una transacción;
+- completar el onboarding;
+- devolver identificador y recuentos.
+
+La función usa `SECURITY INVOKER`, `search_path` vacío, ejecución solo para `authenticated` y las políticas RLS existentes. No usa `service_role`.
+
+Archivo: `supabase/migrations/20260727054500_replace_laliga_snapshot.sql`.
+
+### Verificación
+
+- SQL compilado primero dentro de una transacción revertida.
+- Migración registrada correctamente.
+- Llamada sin identidad rechazada.
+- `prosecdef = false` confirmado.
+- `PUBLIC` y `anon` no tienen permiso de ejecución.
+- Tipos TypeScript regenerados desde el proyecto.
+- Asesor de seguridad ejecutado después del cambio.
+
