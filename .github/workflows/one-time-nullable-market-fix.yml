@@ -1,0 +1,123 @@
+name: One-time nullable market fix
+
+on:
+  push:
+    branches:
+      - agent/laliga-private-readonly
+
+permissions:
+  contents: write
+
+jobs:
+  patch-and-verify:
+    if: github.event.head_commit.message == 'chore: run one-time nullable market fix'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout pilot branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/laliga-private-readonly
+          fetch-depth: 0
+
+      - name: Apply nullable market patch
+        shell: bash
+        run: |
+          python <<'PY'
+          from pathlib import Path
+
+          path = Path('app/fantasy-app.tsx')
+          text = path.read_text()
+
+          old_cards = '''  const liveCards = data.market
+    .map((entry) => ({
+      entry,
+      player: playersById[entry.player_id],
+    }))
+    .filter((row) => row.player)
+    .filter(({ player }) =>
+      player.full_name.toLowerCase().includes(query.toLowerCase()),
+    );'''
+
+          new_cards = '''  const liveCards = data.market
+    .map((entry) => {
+      const player = entry.player_id ? playersById[entry.player_id] : null;
+      const name = player?.full_name ?? entry.imported_name;
+      const position = player?.position ?? entry.imported_position;
+      const club = player?.club_id
+        ? clubsById[player.club_id]?.short_name ?? "Sin club"
+        : entry.imported_club ?? "Sin club";
+
+      if (!name || !position) return null;
+      return {
+        entry,
+        name,
+        position,
+        club,
+        status: player?.status ?? "available",
+      };
+    })
+    .filter((row): row is NonNullable<typeof row> => row !== null)
+    .filter(({ name }) =>
+      name.toLowerCase().includes(query.toLowerCase()),
+    );'''
+
+          old_render = '''          {liveCards.map(({ entry, player }) => (
+            <article className="market-card" key={entry.id}>
+              <div className="market-card-top">
+                <PlayerAvatar name={player.full_name} status={player.status} />
+                <div>
+                  <strong>{player.full_name}</strong>
+                  <span>
+                    {player.position} ·{" "}
+                    {player.club_id
+                      ? clubsById[player.club_id]?.short_name ?? "Sin club"
+                      : "Sin club"}
+                  </span>
+                </div>
+              </div>'''
+
+          new_render = '''          {liveCards.map(({ entry, name, position, club, status }) => (
+            <article className="market-card" key={entry.id}>
+              <div className="market-card-top">
+                <PlayerAvatar name={name} status={status} />
+                <div>
+                  <strong>{name}</strong>
+                  <span>{position} · {club}</span>
+                </div>
+              </div>'''
+
+          if old_cards not in text:
+              raise SystemExit('market mapping block not found')
+          if old_render not in text:
+              raise SystemExit('market rendering block not found')
+
+          path.write_text(
+              text.replace(old_cards, new_cards, 1).replace(old_render, new_render, 1)
+          )
+          PY
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Commit verified patch and remove workflow
+        shell: bash
+        run: |
+          rm .github/workflows/one-time-nullable-market-fix.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/fantasy-app.tsx .github/workflows/one-time-nullable-market-fix.yml
+          git commit -m "fix: render nullable imported market entries"
+          git push origin HEAD:agent/laliga-private-readonly
