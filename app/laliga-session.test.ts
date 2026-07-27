@@ -46,9 +46,11 @@ test("rejects tampered, expired and unexpected tokens", async () => {
   const now = 1_800_000_000;
   const valid = token(now + 3_600);
   const sealed = await sealLaligaSession(valid, "user-1", now);
+  const tamperIndex = sealed.value.length - 5;
   const tampered =
-    sealed.value.slice(0, -1) +
-    (sealed.value.endsWith("a") ? "b" : "a");
+    sealed.value.slice(0, tamperIndex) +
+    (sealed.value[tamperIndex] === "a" ? "b" : "a") +
+    sealed.value.slice(tamperIndex + 1);
 
   assert.equal(await openLaligaSession(tampered, "user-1", now), null);
   assert.equal(getLaligaTokenMaxAge(token(now - 1), now), null);
