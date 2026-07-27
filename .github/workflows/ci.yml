@@ -37,4 +37,18 @@ jobs:
         run: npm test
 
       - name: Build
-        run: npm run build
+        id: build
+        continue-on-error: true
+        run: npm run build 2>&1 | tee build.log
+
+      - name: Upload failed build log
+        if: steps.build.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: failed-build-log
+          path: build.log
+          retention-days: 1
+
+      - name: Fail when build failed
+        if: steps.build.outcome == 'failure'
+        run: exit 1
