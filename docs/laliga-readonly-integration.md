@@ -1,71 +1,118 @@
 # Integración LALIGA Fantasy en modo lectura
 
-## Estado de la decisión
+## Estado
 
-**Bloqueada hasta obtener autorización escrita de LALIGA.**
+**Piloto privado autorizado por el dueño de la cuenta el 27 de julio de 2026.**
 
-La integración parece técnicamente viable para cuentas locales, pero no está aprobada para producto. Fantasy Copilot no pedirá credenciales, no ejecutará ROPC y no llamará a endpoints privados mientras no se resuelva este bloqueo.
+La autorización cubre únicamente probar su propia cuenta, una liga cada vez y operaciones de lectura. No equivale a aprobación de LALIGA, no habilita distribución a terceros y no permite uso comercial ni escrituras.
 
 Referencia oficial revisada: [Condiciones de uso de LALIGA Fantasy](https://www.laliga.com/informacion-legal/condiciones-de-uso-fantasy), actualización de 3 de julio de 2026.
 
-## Evidencia de Fase 0
+## Alcance
 
-1. Existe un catálogo no oficial de endpoints que cubre ligas, plantilla, saldo, alineación, mercado y clasificación.
-2. La autenticación observada usa ROPC de Azure B2C: la contraseña tendría que atravesar nuestra infraestructura.
-3. ROPC no resuelve cuentas que dependen de Google, Apple o Facebook.
-4. El repositorio de referencia tiene una señal de mantenimiento baja y no declara licencia; no se reutilizará su código sin permiso.
-5. El catálogo no es puramente de lectura: incluye escrituras de mercado que quedan excluidas.
-6. No hay garantía de funcionamiento actual; ya se documentó una rotura por cambio de temporada.
-7. La temporada 2026/27 empieza en agosto, por lo que una validación técnica de julio puede caducar en semanas.
-8. Sin guardar una credencial o sesión renovable no existe sincronización desatendida.
-9. Las condiciones oficiales limitan el uso al ámbito personal/privado y requieren consentimiento escrito para uso comercial.
-10. Automatización de mercado o alineación queda fuera de alcance incluso si se autoriza más adelante el modo lectura.
+Incluido:
 
-## Decisión de producto
+- login local mediante Azure B2C ROPC;
+- cuentas con email y contraseña;
+- ligas del usuario, saldo, plantilla, alineación y mercado;
+- sincronización iniciada expresamente por el usuario;
+- una sesión temporal y cierre inmediato;
+- persistencia atómica en las tablas protegidas por RLS.
 
-- **MVP:** carga manual y CSV, disponibles y mantenidas como vía canónica.
-- **Conector:** únicamente interfaz tipada, mocks y estados de UX.
-- **Credenciales:** no se solicitan ni almacenan.
-- **API privada:** no se invoca.
-- **Operaciones de escritura:** no se implementan.
-- **Promesa comercial:** no se presenta la conexión como disponible, oficial ni inminente.
+Excluido:
 
-## Arquitectura activa
+- Google, Apple y Facebook;
+- refresh token y sincronización en segundo plano;
+- clasificación, actividad y datos rivales en este primer vertical slice;
+- compras, ventas, pujas o cambios de alineación;
+- acceso de terceros, publicación o monetización;
+- cualquier código del repositorio de referencia sin licencia.
+
+## Flujo de credenciales
 
 ```mermaid
-flowchart TD
-  UI["Frontend móvil"] --> INPUT["Manual o CSV"]
-  INPUT --> VALIDATE["Validación y normalización"]
-  VALIDATE --> DB["Supabase + RLS"]
-  DB --> APP["Dashboard y recomendaciones"]
+sequenceDiagram
+  participant U as Usuario
+  participant A as Fantasy Copilot
+  participant L as Acceso LALIGA
+  participant D as Supabase + RLS
+
+  U->>A: Email y contraseña en formulario privado
+  A->>L: Login ROPC por HTTPS
+  L-->>A: Access token temporal
+  A-->>U: Cookie cifrada HttpOnly
+  U->>A: Sincronizar liga
+  A->>L: Solo peticiones GET permitidas
+  L-->>A: Snapshot
+  A->>D: RPC atómica como el usuario
+  D-->>U: Plantilla y mercado actualizados
 ```
 
-`app/laliga-provider.ts` define el límite futuro del proveedor y devuelve el estado `blocked_by_terms`. No contiene autenticación ni URLs privadas.
+La contraseña existe únicamente durante la petición de login y no se escribe en base de datos, cookies, logs de aplicación, Git o analítica. El access token se cifra con AES-GCM, se vincula al ID del usuario de Supabase y solo el servidor puede descifrarlo.
 
-## Puerta para reconsiderar la integración
+## Controles
 
-Solo se abrirá un vertical slice real cuando se cumplan todas estas condiciones:
+- `LALIGA_PRIVATE_BETA_ENABLED` actúa como feature flag y kill switch.
+- `LALIGA_SESSION_SECRET` es server-only y debe contener al menos 32 bytes aleatorios.
+- Todas las rutas exigen un JWT válido de Fantasy Copilot.
+- Login, sincronización y desconexión exigen mismo origen.
+- Cookie `HttpOnly`, `SameSite=Strict`, `Secure` en producción y expiración igual o inferior a la del upstream.
+- Respuestas `Cache-Control: no-store`.
+- Body máximo, respuesta upstream máxima, timeout y rate limiting.
+- Allowlist cerrada de endpoints GET; no existe proxy genérico.
+- IDs validados y la liga elegida se vuelve a comprobar contra las ligas de la sesión.
+- Ninguna ruta usa `service_role`.
+- Los parsers fallan cerrados si cambia la estructura upstream.
 
-- autorización escrita para el caso de uso y modelo de distribución;
-- cuenta de prueba propia y expresamente autorizada;
-- revisión legal y de privacidad del paso de credenciales;
-- cobertura o exclusión explícita de cuentas sociales;
-- pruebas de contrato para la temporada vigente;
-- feature flag, kill switch, rate limiting, timeouts y redacción de secretos;
-- plan de caducidad, revocación y soporte;
-- confirmación de que la beta empieza en solo lectura.
+## Persistencia atómica
 
-Si se autoriza, el primer diseño será un login efímero del lado servidor, token solo en memoria y sincronización iniciada por el usuario. Esa decisión implica que no habrá sincronización en segundo plano.
+`public.replace_laliga_snapshot`:
+
+- usa `SECURITY INVOKER`, no `SECURITY DEFINER`;
+- tiene `search_path` vacío;
+- solo concede ejecución a `authenticated`;
+- deriva el propietario desde `auth.uid()`;
+- valida tamaño, posiciones, importes, IDs y duplicados;
+- crea o actualiza únicamente el equipo del usuario;
+- sustituye plantilla y mercado dentro de la misma transacción;
+- marca el onboarding como completado;
+- revierte todo ante cualquier error.
+
+Si la lectura, el contrato o la RPC fallan, la plantilla anterior permanece intacta.
+
+## Limitaciones operativas
+
+ROPC es legacy y obliga a que la contraseña atraviese el backend. La API no es pública y puede cambiar, especialmente al inicio de la temporada 2026/27. Por ello:
+
+- manual y CSV siguen disponibles;
+- la beta permanece privada y desactivada por defecto;
+- primero se prueba con la cuenta del dueño;
+- un error de contrato detiene la sincronización;
+- no se promete disponibilidad continua;
+- cualquier distribución exige reabrir revisión legal, privacidad y autorización.
+
+## Validación
+
+Automática:
+
+- contratos de ligas, plantilla, alineación y mercado;
+- respuestas incompletas o modificadas;
+- issuer, audience y expiración del access token;
+- cifrado, manipulación de cookie y vínculo al usuario;
+- lint, pruebas y build en GitHub Actions;
+- asesores de seguridad de Supabase después de la migración.
+
+Manual pendiente:
+
+1. desplegar con flag y secreto server-only;
+2. iniciar sesión en Fantasy Copilot desde iPhone;
+3. introducir credenciales dentro de la app;
+4. comprobar ligas y seleccionar una;
+5. sincronizar y verificar saldo, plantilla y mercado;
+6. recargar y confirmar persistencia;
+7. desconectar y confirmar que la sesión deja de funcionar;
+8. desactivar el flag tras la prueba si aparece cualquier cambio upstream.
 
 ## V2 y piloto automático
 
-El piloto automático permanece como objetivo de roadmap, no como compromiso técnico. Requerirá una autorización adicional para escrituras, modo simulación, límites económicos, confirmaciones graduadas, historial auditable y parada inmediata. No se construirá sobre endpoints privados sin permiso.
-
-## Criterios de aceptación del MVP actual
-
-- Manual y CSV funcionan sin catálogo canónico.
-- Cada importación queda registrada en `import_batches` e `import_items`.
-- RLS mantiene el aislamiento por usuario.
-- Ninguna contraseña o token de LALIGA aparece en interfaz, base, logs o Git.
-- Los estados de conexión explican el bloqueo y enlazan a la fuente oficial.
-- Lint, tests y build pasan.
+El piloto automático permanece en roadmap, no en implementación. Necesita autorización adicional para escrituras, sesiones renovables, simulación, límites económicos, confirmaciones graduadas, historial auditable y parada inmediata. No se construirá reutilizando este permiso de solo lectura.
