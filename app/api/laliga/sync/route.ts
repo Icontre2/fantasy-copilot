@@ -6,6 +6,7 @@ import {
   getLaligaSession,
   getUserScopedSupabase,
   isSafeLaligaSegment,
+  LaligaUpstreamError,
   laligaGet,
   noStoreJson,
   privateBetaUnavailable,
@@ -162,7 +163,7 @@ export async function POST(request: NextRequest) {
       squadValue: snapshot.squadValue,
     });
   } catch (error) {
-    if (error instanceof Error && error.name === "LaligaUpstreamError") {
+    if (error instanceof LaligaUpstreamError) {
       return respondToLaligaError(error);
     }
     return noStoreJson(
