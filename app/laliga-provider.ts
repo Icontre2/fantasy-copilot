@@ -1,6 +1,7 @@
 export type LaligaConnectorStatus =
   | "blocked_by_terms"
   | "mock_only"
+  | "private_beta"
   | "authorized";
 
 export type LaligaConnectorState = {
@@ -10,6 +11,7 @@ export type LaligaConnectorState = {
   legalSourceUrl: string;
   updatedAt: string;
   automaticSyncAvailable: boolean;
+  manualSyncAvailable: boolean;
 };
 
 export type LaligaLeagueSummary = {
@@ -29,14 +31,15 @@ export interface LaligaReadOnlyProvider {
 }
 
 const connectorState: LaligaConnectorState = {
-  status: "blocked_by_terms",
-  title: "Conexión automática pendiente de autorización",
+  status: "private_beta",
+  title: "Piloto privado disponible",
   detail:
-    "Las condiciones vigentes limitan el juego al uso personal y privado, prohíben el uso comercial sin consentimiento escrito y exigen mantener los identificadores en secreto. Fantasy Copilot no solicitará credenciales mientras no exista permiso expreso de LALIGA.",
+    "El dueño de la cuenta ha autorizado una prueba personal y de solo lectura. No es una integración oficial de LALIGA, no se ofrece a terceros y no incluye operaciones de mercado ni sincronización desatendida.",
   legalSourceUrl:
     "https://www.laliga.com/informacion-legal/condiciones-de-uso-fantasy",
-  updatedAt: "2026-07-26",
+  updatedAt: "2026-07-27",
   automaticSyncAvailable: false,
+  manualSyncAvailable: true,
 };
 
 export function getLaligaConnectorState(): LaligaConnectorState {
