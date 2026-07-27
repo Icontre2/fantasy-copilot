@@ -1,10 +1,16 @@
 import { createClient, type SupabaseClient, type User } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import type { Database } from "../../database.types";
-import { LALIGA_SESSION_COOKIE } from "../../laliga-session";
+import {
+  isLaligaPrivateBetaConfigured,
+  LALIGA_SESSION_COOKIE,
+  openLaligaSession,
+  type LaligaSession,
+} from "../../laliga-session";
 
 const LALIGA_API_BASE = "https://fantasy-api.llt-services.com/api";
 const SAFE_SEGMENT = /^[A-Za-z0-9_-]{1,100}$/;
+const MAX_UPSTREAM_BYTES = 2_000_000;
 
 export class LaligaUpstreamError extends Error {
   constructor(
@@ -22,7 +28,17 @@ export function noStoreJson(
   const response = NextResponse.json(body, init);
   response.headers.set("Cache-Control", "no-store, max-age=0");
   response.headers.set("Pragma", "no-cache");
+  response.headers.set("X-Content-Type-Options", "nosniff");
   return response;
+}
+
+export function privateBetaUnavailable(): NextResponse | null {
+  return isLaligaPrivateBetaConfigured()
+    ? null
+    : noStoreJson(
+        { error: "El piloto privado de LALIGA no está activado." },
+        { status: 503 },
+      );
 }
 
 export function isSafeLaligaSegment(value: string): boolean {
@@ -81,23 +97,43 @@ export async function laligaGet(path: string, token: string): Promise<unknown> {
         throw new LaligaUpstreamError("La sesión de LALIGA ha caducado.", 401);
       }
       if (response.status === 429) {
-        throw new LaligaUpstreamError("LALIGA está limitando temporalmente las consultas.", 429);
+        throw new LaligaUpstreamError(
+          "LALIGA está limitando temporalmente las consultas.",
+          429,
+        );
       }
       throw new LaligaUpstreamError("No se pudo leer LALIGA Fantasy.", 502);
     }
 
-    return (await response.json()) as unknown;
+    const contentLength = Number(response.headers.get("content-length") ?? "0");
+    if (Number.isFinite(contentLength) && contentLength > MAX_UPSTREAM_BYTES) {
+      throw new LaligaUpstreamError("La respuesta de LALIGA es demasiado grande.", 502);
+    }
+
+    const text = await response.text();
+    if (text.length > MAX_UPSTREAM_BYTES) {
+      throw new LaligaUpstreamError("La respuesta de LALIGA es demasiado grande.", 502);
+    }
+    return JSON.parse(text) as unknown;
   } catch (error) {
     if (error instanceof LaligaUpstreamError) throw error;
-    throw new LaligaUpstreamError("No se pudo conectar con LALIGA Fantasy.", 502);
+    throw new LaligaUpstreamError(
+      "No se pudo conectar con LALIGA Fantasy.",
+      502,
+    );
   } finally {
     clearTimeout(timeout);
   }
 }
 
-export function getLaligaSessionToken(request: NextRequest): string | null {
-  const value = request.cookies.get(LALIGA_SESSION_COOKIE)?.value;
-  return value && value.length < 8_192 ? value : null;
+export function respondToLaligaError(error: unknown): NextResponse {
+  if (error instanceof LaligaUpstreamError) {
+    return noStoreJson({ error: error.message }, { status: error.status });
+  }
+  return noStoreJson(
+    { error: "No se ha podido completar la operación con LALIGA." },
+    { status: 500 },
+  );
 }
 
 type UserScopedSupabase = {
@@ -133,4 +169,13 @@ export async function getUserScopedSupabase(
   const { data, error } = await client.auth.getUser(accessToken);
   if (error || !data.user) return null;
   return { client, user: data.user };
+}
+
+export async function getLaligaSession(
+  request: NextRequest,
+  userId: string,
+): Promise<LaligaSession | null> {
+  const value = request.cookies.get(LALIGA_SESSION_COOKIE)?.value;
+  if (!value || value.length > 8_192) return null;
+  return openLaligaSession(value, userId);
 }
