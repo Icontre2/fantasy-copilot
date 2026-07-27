@@ -148,12 +148,9 @@ export async function getUserScopedSupabase(
   const accessToken = authorization?.match(/^Bearer\s+(.+)$/i)?.[1];
   if (!accessToken || accessToken.length > 8_192) return null;
 
-  const url =
-    process.env.NEXT_PUBLIC_SUPABASE_URL ??
-    "https://ggqealkrogfgbykicmfo.supabase.co";
-  const publishableKey =
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
-    "sb_publishable_BqPIfs-29PVz6UdF9e9z7Q_kik1zcol";
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  if (!url || !publishableKey) return null;
 
   const client = createClient<Database>(url, publishableKey, {
     auth: {
