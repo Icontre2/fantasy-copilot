@@ -24,10 +24,8 @@ jobs:
         run: |
           python <<'PY'
           from pathlib import Path
-
           path = Path('app/fantasy-app.tsx')
           text = path.read_text()
-
           old_cards = '''  const liveCards = data.market
     .map((entry) => ({
       entry,
@@ -37,7 +35,6 @@ jobs:
     .filter(({ player }) =>
       player.full_name.toLowerCase().includes(query.toLowerCase()),
     );'''
-
           new_cards = '''  const liveCards = data.market
     .map((entry) => {
       const player = entry.player_id ? playersById[entry.player_id] : null;
@@ -61,7 +58,6 @@ jobs:
     .filter(({ name }) =>
       name.toLowerCase().includes(query.toLowerCase()),
     );'''
-
           old_render = '''          {liveCards.map(({ entry, player }) => (
             <article className="market-card" key={entry.id}>
               <div className="market-card-top">
@@ -76,7 +72,6 @@ jobs:
                   </span>
                 </div>
               </div>'''
-
           new_render = '''          {liveCards.map(({ entry, name, position, club, status }) => (
             <article className="market-card" key={entry.id}>
               <div className="market-card-top">
@@ -86,12 +81,8 @@ jobs:
                   <span>{position} · {club}</span>
                 </div>
               </div>'''
-
-          if old_cards not in text:
-              raise SystemExit('liveCards block not found')
-          if old_render not in text:
-              raise SystemExit('market render block not found')
-
+          if old_cards not in text or old_render not in text:
+              raise SystemExit('expected market blocks were not found')
           path.write_text(text.replace(old_cards, new_cards, 1).replace(old_render, new_render, 1))
           PY
 
@@ -100,64 +91,44 @@ jobs:
         with:
           node-version: 22
           cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Audit production dependencies
-        run: npm audit --omit=dev --audit-level=high
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Test
-        run: npm test
-
-      - name: Build
-        run: npm run build
+      - run: npm ci
+      - run: npm audit --omit=dev --audit-level=high
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
 
       - name: Restore normal CI and commit fix
         shell: bash
         run: |
           cat > .github/workflows/ci.yml <<'YAML'
           name: CI
-
           on:
             pull_request:
             push:
               branches:
                 - main
-
           permissions:
             contents: read
-
           jobs:
             verify:
               runs-on: ubuntu-latest
               timeout-minutes: 15
-
               steps:
                 - name: Checkout
                   uses: actions/checkout@v4
-
                 - name: Use Node.js
                   uses: actions/setup-node@v4
                   with:
                     node-version: 22
                     cache: npm
-
                 - name: Install dependencies
                   run: npm ci
-
                 - name: Audit production dependencies
                   run: npm audit --omit=dev --audit-level=high
-
                 - name: Lint
                   run: npm run lint
-
                 - name: Test
                   run: npm test
-
                 - name: Build
                   run: npm run build
           YAML
