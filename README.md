@@ -2,30 +2,39 @@
 
 Asistente móvil-first para gestionar una plantilla de fantasy fútbol, priorizar decisiones de mercado y recibir recomendaciones explicadas.
 
-## MVP disponible
+## MVP
 
 - Autenticación con email y contraseña mediante Supabase.
-- Onboarding guiado y creación del equipo.
-- Dashboard, plantilla, mercado y perfil.
-- Modo demo completo para revisar el producto sin datos reales.
-- Modo conectado con persistencia Supabase y aislamiento por usuario.
-- Alta manual de jugadores aunque el catálogo canónico aún esté vacío.
-- Importación CSV con cabeceras en español o inglés, vista previa, validación y trazabilidad por lote.
+- Onboarding, dashboard, plantilla, mercado, perfil y modo demo.
+- Persistencia Supabase con RLS y aislamiento por usuario.
+- Alta manual e importación CSV con vista previa, validación y trazabilidad.
+- Piloto privado de conexión a LALIGA Fantasy para la cuenta del dueño.
+- Selección de liga y sincronización bajo demanda de saldo, plantilla, alineación y mercado.
+- Sin compras, ventas, pujas, cambios de alineación ni tareas en segundo plano.
 
-Versión navegable actual: https://fantasy-copilot.icontre97.chatgpt.site
+Versión estable actual: https://fantasy-copilot.icontre97.chatgpt.site
 
-## Decisión actual sobre LALIGA Fantasy
+## Piloto privado de LALIGA Fantasy
 
-La conexión automática es técnicamente investigable, pero **no se implementará ni se pedirán credenciales** sin autorización escrita de LALIGA.
+La conexión es una prueba personal, de una sola cuenta y solo lectura. No es una integración oficial de LALIGA y permanece desactivada por defecto.
 
-Los motivos son:
+Flujo de seguridad:
 
-- el flujo encontrado es ROPC de Azure B2C y obliga a que la contraseña atraviese nuestra infraestructura;
-- no cubre cuentas que dependan de Google, Apple o Facebook;
-- depende de endpoints privados e inestables;
-- las [condiciones de uso de LALIGA Fantasy](https://www.laliga.com/informacion-legal/condiciones-de-uso-fantasy), actualizadas el 3 de julio de 2026, limitan el uso al ámbito personal/privado y exigen consentimiento escrito para uso comercial.
+1. El usuario debe estar autenticado primero en Fantasy Copilot.
+2. Introduce sus credenciales de LALIGA únicamente dentro de la aplicación.
+3. El servidor las reenvía una vez al acceso Azure B2C y descarta la contraseña.
+4. El access token se cifra, se liga al usuario y se guarda en una cookie `HttpOnly`, `SameSite=Strict`.
+5. Solo se permiten endpoints GET expresamente incluidos en una allowlist.
+6. La sincronización reemplaza el snapshot en una transacción `SECURITY INVOKER` que respeta RLS.
+7. Al desconectar, la cookie se elimina inmediatamente.
 
-Por tanto, **manual/CSV es el suelo garantizado del MVP**. El código solo contiene un contrato tipado y un estado de producto bloqueado; no contiene URLs privadas, ROPC, formularios de credenciales ni operaciones de mercado.
+Limitaciones:
+
+- ROPC no cubre cuentas creadas exclusivamente con Google, Apple o Facebook.
+- La API es privada y puede cambiar con la temporada.
+- No se almacena refresh token; no existe sincronización con la app cerrada.
+- Manual y CSV continúan como respaldo permanente.
+- No se ofrecerá a terceros ni se monetizará sin una revisión jurídica y autorización adicional.
 
 Consulta [Integración LALIGA Fantasy en modo lectura](docs/laliga-readonly-integration.md).
 
@@ -33,8 +42,9 @@ Consulta [Integración LALIGA Fantasy en modo lectura](docs/laliga-readonly-inte
 
 1. Copia `.env.example` a `.env.local`.
 2. Completa la URL y la clave publicable de Supabase.
-3. Instala dependencias con `npm ci`.
-4. Ejecuta `npm run dev`.
+3. Para probar el piloto privado, configura una clave aleatoria de al menos 32 bytes en `LALIGA_SESSION_SECRET` y activa `LALIGA_PRIVATE_BETA_ENABLED=true`.
+4. Instala dependencias con `npm ci`.
+5. Ejecuta `npm run dev`.
 
 Comprobaciones:
 
@@ -44,9 +54,14 @@ npm test
 npm run build
 ```
 
-## Estado de datos
+## Estado de validación
 
-Supabase tiene el esquema y RLS preparados, pero todavía no hay usuarios ni catálogo real cargado. La plantilla puede construirse manualmente o importarse desde CSV sin depender del catálogo. Los datos deportivos externos seguirán detrás de una capa de ingesta desacoplada.
+- CI #66 completada correctamente con instalación, auditoría, lint, tests y build en verde.
+- La validación con credenciales reales se realiza exclusivamente en un despliegue Preview de Vercel.
+- `LALIGA_PRIVATE_BETA_ENABLED` y `LALIGA_SESSION_SECRET` quedaron configuradas para el Preview de `agent/laliga-private-readonly` el 29 de julio de 2026.
+- La rama `main` permanece sin cambios hasta completar la prueba funcional privada.
+
+Nunca se incluyen claves privadas, contraseñas de terceros ni tokens de sesión sin cifrar en el frontend, Supabase, Git o analítica.
 
 ## Documentación
 
@@ -55,5 +70,3 @@ Supabase tiene el esquema y RLS preparados, pero todavía no hay usuarios ni cat
 - [Registro de cambios de base de datos](docs/database-changelog.md)
 - [Integración LALIGA Fantasy en modo lectura](docs/laliga-readonly-integration.md)
 - [Prompt maestro de Lovable](docs/lovable-master-prompt.md)
-
-Nunca se incluyen claves privadas, contraseñas de terceros ni tokens de sesión en el frontend o el repositorio.

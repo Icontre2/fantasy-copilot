@@ -10,7 +10,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "test": "node --experimental-strip-types --test app/csv-import.test.ts"
+    "test": "node --experimental-strip-types --test app/*.test.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.110.8",

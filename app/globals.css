@@ -2894,3 +2894,173 @@ select:focus-visible {
     justify-content: flex-end;
   }
 }
+
+/* Private LALIGA connection */
+
+.connection-card.connected {
+  border-color: #bfe8d4;
+  background: #f0faf5;
+}
+
+.connection-card.connected .connection-icon,
+.connection-card.connected .connection-hero-icon {
+  background: #dff5ea;
+  color: var(--green);
+}
+
+.onboarding-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 22px 0 7px;
+  color: var(--ink-faint);
+  font-size: 11px;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.onboarding-divider::before,
+.onboarding-divider::after {
+  height: 1px;
+  flex: 1;
+  background: var(--line);
+  content: "";
+}
+
+.connection-form {
+  gap: 15px;
+}
+
+.connection-consent {
+  display: grid !important;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: 10px !important;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  padding: 13px;
+  background: var(--surface-soft);
+  color: var(--ink-soft);
+  font-size: 11px !important;
+  font-weight: 570 !important;
+  line-height: 1.5;
+}
+
+.connection-consent input {
+  width: 17px;
+  height: 17px;
+  margin-top: 1px;
+  accent-color: var(--purple);
+}
+
+.connection-loading,
+.connection-status {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.connection-loading {
+  min-height: 92px;
+  justify-content: center;
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+
+.connection-leagues {
+  display: grid;
+  gap: 8px;
+}
+
+.field-label {
+  color: var(--ink-soft);
+  font-size: 12px;
+  font-weight: 760;
+}
+
+.league-choice {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  padding: 13px 14px;
+  background: white;
+  color: var(--ink);
+  text-align: left;
+}
+
+.league-choice > span {
+  display: grid;
+  gap: 3px;
+}
+
+.league-choice small {
+  color: var(--ink-faint);
+  font-size: 11px;
+}
+
+.league-choice > svg {
+  color: var(--ink-faint);
+}
+
+.league-choice.selected {
+  border-color: rgba(115, 87, 255, 0.42);
+  background: #f7f5ff;
+}
+
+.league-choice.selected > svg {
+  color: var(--purple);
+}
+
+.sync-result {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 11px;
+  border: 1px solid #bfe8d4;
+  border-radius: 15px;
+  padding: 13px;
+  background: #f0faf5;
+  color: var(--green);
+}
+
+.sync-result > div {
+  display: grid;
+  gap: 3px;
+}
+
+.sync-result strong {
+  font-size: 13px;
+}
+
+.sync-result span {
+  color: var(--ink-soft);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.social-login-note {
+  border-radius: 13px;
+  padding: 11px 13px;
+  background: #fff9ed;
+  color: #7b5614;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.disconnect-button {
+  color: var(--ink-soft);
+}
+
+@media (max-width: 760px) {
+  .connection-modal h2 {
+    font-size: 26px;
+  }
+
+  .connection-consent {
+    padding: 12px;
+  }
+}

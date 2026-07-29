@@ -12,14 +12,12 @@ import {
   Coins,
   Crown,
   Eye,
-  ExternalLink,
   FileText,
   Goal,
   Home,
   Info,
   ListFilter,
   LoaderCircle,
-  LockKeyhole,
   LogOut,
   Menu,
   Plus,
@@ -56,7 +54,7 @@ import {
   parseSquadCsv,
   type CsvSquadRow,
 } from "./csv-import";
-import { getLaligaConnectorState } from "./laliga-provider";
+import { LaligaConnectionCard } from "./laliga-connection";
 import { supabase } from "./supabase";
 
 type Tab = "home" | "squad" | "market" | "profile";
@@ -515,7 +513,7 @@ function Landing({
           </div>
           <div className="trust-row">
             <span>
-              <ShieldCheck size={16} /> Sin contraseña de LALIGA
+              <ShieldCheck size={16} /> Contraseña nunca almacenada
             </span>
             <span>
               <Zap size={16} /> Configuración en 3 minutos
@@ -664,8 +662,8 @@ function AuthPanel({
           </span>
           <h1>Convierte datos en puntos.</h1>
           <p>
-            Sin automatizaciones peligrosas ni credenciales de LALIGA. Solo
-            mejores decisiones.
+            Sin automatizaciones peligrosas ni acciones ocultas. Solo mejores
+            decisiones.
           </p>
         </div>
         <div className="auth-proof">
@@ -866,20 +864,27 @@ function Onboarding({
               <ShieldCheck size={36} />
             </div>
             <span className="eyebrow">Paso 1 de 4</span>
-            <h1>Tu cuenta Fantasy sigue siendo privada.</h1>
+            <h1>Conecta tu liga o empieza manualmente.</h1>
             <p>
-              Fantasy Copilot nunca te pedirá la contraseña ni la sesión de
-              LALIGA. Tú introduces los datos que quieras analizar.
+              El piloto privado puede traer liga, saldo, plantilla y mercado.
+              La contraseña se usa una vez y nunca se almacena.
             </p>
+            <LaligaConnectionCard
+              onSynced={onRefresh}
+              team={data.team}
+            />
+            <div className="onboarding-divider">
+              <span>O continúa con carga manual</span>
+            </div>
             <ul className="check-list">
               <li>
-                <Check size={17} /> Sin credenciales de terceros
+                <Check size={17} /> Conexión temporal y solo lectura
               </li>
               <li>
                 <Check size={17} /> Datos aislados por usuario
               </li>
               <li>
-                <Check size={17} /> Tú mantienes el control
+                <Check size={17} /> CSV y carga manual como respaldo
               </li>
             </ul>
             <button
@@ -2363,15 +2368,29 @@ function MarketView({
     data.players.map((player) => [player.id, player]),
   );
   const clubsById = Object.fromEntries(data.clubs.map((club) => [club.id, club]));
-  const liveCards = data.market
-    .map((entry) => ({
+const liveCards = data.market
+  .map((entry) => {
+    const player = entry.player_id ? playersById[entry.player_id] : null;
+    const name = player?.full_name ?? entry.imported_name;
+    const position = player?.position ?? entry.imported_position;
+    const club = player?.club_id
+      ? clubsById[player.club_id]?.short_name ?? "Sin club"
+      : entry.imported_club ?? "Sin club";
+
+    if (!name || !position) return null;
+
+    return {
       entry,
-      player: playersById[entry.player_id],
-    }))
-    .filter((row) => row.player)
-    .filter(({ player }) =>
-      player.full_name.toLowerCase().includes(query.toLowerCase()),
-    );
+      name,
+      position,
+      club,
+      status: player?.status ?? "available",
+    };
+  })
+  .filter((row): row is NonNullable<typeof row> => row !== null)
+  .filter(({ name }) =>
+    name.toLowerCase().includes(query.toLowerCase()),
+  );
   const demoCards = demoMarket.filter((entry) =>
     entry.name.toLowerCase().includes(query.toLowerCase()),
   );
@@ -2459,19 +2478,14 @@ function MarketView({
         </div>
       ) : liveCards.length ? (
         <div className="market-grid">
-          {liveCards.map(({ entry, player }) => (
+          {liveCards.map(({ entry, name, position, club, status }) => (
             <article className="market-card" key={entry.id}>
               <div className="market-card-top">
-                <PlayerAvatar name={player.full_name} status={player.status} />
+                <PlayerAvatar name={name} status={status} />
                 <div>
-                  <strong>{player.full_name}</strong>
-                  <span>
-                    {player.position} ·{" "}
-                    {player.club_id
-                      ? clubsById[player.club_id]?.short_name ?? "Sin club"
-                      : "Sin club"}
-                  </span>
-                </div>
+  <strong>{name}</strong>
+  <span>{position} · {club}</span>
+</div>
               </div>
               <div className="market-prices">
                 <div>
@@ -2646,7 +2660,6 @@ function ProfileView({
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [showCsv, setShowCsv] = useState(false);
-  const [showConnector, setShowConnector] = useState(false);
 
   const saveProfile = async () => {
     if (!user) return;
@@ -2710,7 +2723,11 @@ function ProfileView({
         <span className="plan-chip">MVP</span>
       </div>
 
-      <LaligaConnectionCard onOpen={() => setShowConnector(true)} />
+      <LaligaConnectionCard
+        demoMode={demoMode}
+        onSynced={onRefresh}
+        team={data.team}
+      />
 
       {!demoMode && (
         <section className="settings-card">
@@ -2800,9 +2817,6 @@ function ProfileView({
         Fantasy Copilot no almacena credenciales de LALIGA Fantasy.
       </p>
 
-      {showConnector && (
-        <LaligaConnectionModal onClose={() => setShowConnector(false)} />
-      )}
       {showCsv && !demoMode && user && data.team && (
         <CsvImportModal
           user={user}
@@ -2817,68 +2831,6 @@ function ProfileView({
         />
       )}
     </div>
-  );
-}
-
-function LaligaConnectionCard({ onOpen }: { onOpen: () => void }) {
-  const state = getLaligaConnectorState();
-
-  return (
-    <section className="connection-card">
-      <span className="connection-icon">
-        <LockKeyhole size={22} />
-      </span>
-      <div>
-        <span className="modal-kicker">Conexión LALIGA Fantasy</span>
-        <strong>{state.title}</strong>
-        <p>
-          Mientras no exista permiso escrito, la app no pedirá tu contraseña ni
-          llamará a endpoints privados.
-        </p>
-      </div>
-      <button className="secondary-button compact-button" onClick={onOpen}>
-        Ver estado
-      </button>
-    </section>
-  );
-}
-
-function LaligaConnectionModal({ onClose }: { onClose: () => void }) {
-  const state = getLaligaConnectorState();
-
-  return (
-    <ModalShell onClose={onClose}>
-      <div className="connection-modal">
-        <span className="connection-hero-icon">
-          <ShieldCheck size={28} />
-        </span>
-        <span className="modal-kicker">Decisión de seguridad</span>
-        <h2>{state.title}</h2>
-        <p>{state.detail}</p>
-        <ul className="check-list compact-list">
-          <li>
-            <Check size={17} /> Manual y CSV siguen disponibles
-          </li>
-          <li>
-            <Check size={17} /> Adaptador preparado sin endpoints copiados
-          </li>
-          <li>
-            <Check size={17} /> Piloto automático desactivado
-          </li>
-        </ul>
-        <a
-          className="secondary-button full"
-          href={state.legalSourceUrl}
-          target="_blank"
-          rel="noreferrer"
-        >
-          Leer condiciones oficiales <ExternalLink size={17} />
-        </a>
-        <button className="primary-button full" onClick={onClose}>
-          Entendido
-        </button>
-      </div>
-    </ModalShell>
   );
 }
 
