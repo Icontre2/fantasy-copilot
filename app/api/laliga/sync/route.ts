@@ -24,6 +24,14 @@ type SyncBody = {
 const UUID =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+function shape(value: unknown): string[] {
+  if (Array.isArray(value)) return ["array", `length:${value.length}`];
+  if (typeof value === "object" && value !== null) {
+    return Object.keys(value as Record<string, unknown>).slice(0, 20);
+  }
+  return [typeof value];
+}
+
 async function readSyncPart(
   label: string,
   path: string,
@@ -102,6 +110,13 @@ export async function POST(request: NextRequest) {
     return noStoreJson({ error: "Selección de liga no válida." }, { status: 400 });
   }
 
+  let stage = "leagues";
+  let team: unknown;
+  let money: unknown;
+  let lineup: unknown;
+  let market: unknown;
+  let clubs: unknown;
+
   try {
     const leaguesRaw = await laligaGet(
       "/v1/competition/1/leagues",
@@ -117,32 +132,38 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const team = await readSyncPart(
+    stage = "team";
+    team = await readSyncPart(
       "la plantilla",
       `/v1/competition/1/leagues/${leagueId}/teams/${teamId}`,
       session.accessToken,
     );
-    const money = await readSyncPart(
+    stage = "money";
+    money = await readSyncPart(
       "el saldo",
       `/v1/competition/1/teams/${teamId}/money`,
       session.accessToken,
     );
-    const lineup = await readSyncPart(
+    stage = "lineup";
+    lineup = await readSyncPart(
       "la alineación",
       `/v1/competition/1/teams/${teamId}/lineup`,
       session.accessToken,
     );
-    const market = await readSyncPart(
+    stage = "market";
+    market = await readSyncPart(
       "el mercado",
       `/v1/competition/1/league/${leagueId}/market`,
       session.accessToken,
     );
-    const clubs = await readSyncPart(
+    stage = "clubs";
+    clubs = await readSyncPart(
       "los equipos maestros",
       "/v3/teams-master",
       session.accessToken,
     );
 
+    stage = "build_snapshot";
     const snapshot = buildLaligaSnapshot({
       team,
       money,
@@ -158,6 +179,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    stage = "save";
     const { data, error } = await auth.client.rpc("replace_laliga_snapshot", {
       p_fantasy_team_id:
         fantasyTeamId ?? (null as unknown as string),
@@ -197,7 +219,16 @@ export async function POST(request: NextRequest) {
     if (error instanceof LaligaUpstreamError) {
       return respondToLaligaError(error);
     }
-    console.error("LALIGA_SYNC_UNEXPECTED");
+    console.error("LALIGA_SYNC_UNEXPECTED", {
+      stage,
+      errorName: error instanceof Error ? error.name : typeof error,
+      errorMessage: error instanceof Error ? error.message.slice(0, 200) : "unknown",
+      teamShape: shape(team),
+      moneyShape: shape(money),
+      lineupShape: shape(lineup),
+      marketShape: shape(market),
+      clubsShape: shape(clubs),
+    });
     return noStoreJson(
       {
         error:
