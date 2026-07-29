@@ -54,6 +54,12 @@ npm test
 npm run build
 ```
 
+## Estado de validación
+
+- CI #66 completada correctamente con instalación, auditoría, lint, tests y build en verde.
+- La validación con credenciales reales se realiza exclusivamente en un despliegue Preview de Vercel.
+- La rama `main` permanece sin cambios hasta completar la prueba funcional privada.
+
 Nunca se incluyen claves privadas, contraseñas de terceros ni tokens de sesión sin cifrar en el frontend, Supabase, Git o analítica.
 
 ## Documentación
