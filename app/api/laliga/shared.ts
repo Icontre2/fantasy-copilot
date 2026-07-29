@@ -11,6 +11,12 @@ import {
 const LALIGA_API_BASE = "https://fantasy-api.llt-services.com/api";
 const SAFE_SEGMENT = /^[A-Za-z0-9_-]{1,100}$/;
 const MAX_UPSTREAM_BYTES = 2_000_000;
+const SUPABASE_URL =
+  process.env.NEXT_PUBLIC_SUPABASE_URL ??
+  "https://ggqealkrogfgbykicmfo.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY =
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+  "sb_publishable_BqPIfs-29PVz6UdF9e9z7Q_kik1zcol";
 
 export class LaligaUpstreamError extends Error {
   constructor(
@@ -148,20 +154,20 @@ export async function getUserScopedSupabase(
   const accessToken = authorization?.match(/^Bearer\s+(.+)$/i)?.[1];
   if (!accessToken || accessToken.length > 8_192) return null;
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-  if (!url || !publishableKey) return null;
-
-  const client = createClient<Database>(url, publishableKey, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-      detectSessionInUrl: false,
+  const client = createClient<Database>(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY,
+    {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+      },
+      global: {
+        headers: { Authorization: "Bearer " + accessToken },
+      },
     },
-    global: {
-      headers: { Authorization: "Bearer " + accessToken },
-    },
-  });
+  );
 
   const { data, error } = await client.auth.getUser(accessToken);
   if (error || !data.user) return null;
