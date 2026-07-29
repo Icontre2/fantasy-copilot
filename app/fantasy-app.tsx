@@ -2368,15 +2368,29 @@ function MarketView({
     data.players.map((player) => [player.id, player]),
   );
   const clubsById = Object.fromEntries(data.clubs.map((club) => [club.id, club]));
-  const liveCards = data.market
-    .map((entry) => ({
+const liveCards = data.market
+  .map((entry) => {
+    const player = entry.player_id ? playersById[entry.player_id] : null;
+    const name = player?.full_name ?? entry.imported_name;
+    const position = player?.position ?? entry.imported_position;
+    const club = player?.club_id
+      ? clubsById[player.club_id]?.short_name ?? "Sin club"
+      : entry.imported_club ?? "Sin club";
+
+    if (!name || !position) return null;
+
+    return {
       entry,
-      player: playersById[entry.player_id],
-    }))
-    .filter((row) => row.player)
-    .filter(({ player }) =>
-      player.full_name.toLowerCase().includes(query.toLowerCase()),
-    );
+      name,
+      position,
+      club,
+      status: player?.status ?? "available",
+    };
+  })
+  .filter((row): row is NonNullable<typeof row> => row !== null)
+  .filter(({ name }) =>
+    name.toLowerCase().includes(query.toLowerCase()),
+  );
   const demoCards = demoMarket.filter((entry) =>
     entry.name.toLowerCase().includes(query.toLowerCase()),
   );
@@ -2464,19 +2478,14 @@ function MarketView({
         </div>
       ) : liveCards.length ? (
         <div className="market-grid">
-          {liveCards.map(({ entry, player }) => (
+          {liveCards.map(({ entry, name, position, club, status }) => (
             <article className="market-card" key={entry.id}>
               <div className="market-card-top">
-                <PlayerAvatar name={player.full_name} status={player.status} />
+                <PlayerAvatar name={name} status={status} />
                 <div>
-                  <strong>{player.full_name}</strong>
-                  <span>
-                    {player.position} ·{" "}
-                    {player.club_id
-                      ? clubsById[player.club_id]?.short_name ?? "Sin club"
-                      : "Sin club"}
-                  </span>
-                </div>
+  <strong>{name}</strong>
+  <span>{position} · {club}</span>
+</div>
               </div>
               <div className="market-prices">
                 <div>
