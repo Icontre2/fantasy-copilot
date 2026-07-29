@@ -58,7 +58,7 @@ npm run build
 
 - CI #66 completada correctamente con instalación, auditoría, lint, tests y build en verde.
 - La validación con credenciales reales se realiza exclusivamente en un despliegue Preview de Vercel.
-- Las variables privadas del Preview se configuraron en Vercel el 29 de julio de 2026 y requieren un nuevo despliegue de esta rama para aplicarse.
+- `LALIGA_PRIVATE_BETA_ENABLED` y `LALIGA_SESSION_SECRET` quedaron configuradas para el Preview de `agent/laliga-private-readonly` el 29 de julio de 2026.
 - La rama `main` permanece sin cambios hasta completar la prueba funcional privada.
 
 Nunca se incluyen claves privadas, contraseñas de terceros ni tokens de sesión sin cifrar en el frontend, Supabase, Git o analítica.
