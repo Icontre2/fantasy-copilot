@@ -1,115 +1,40 @@
-name: Apply nullable market fix
+name: CI
+
 on:
   pull_request:
-    types: [ready_for_review]
+  push:
+    branches:
+      - main
+
 permissions:
-  contents: write
+  contents: read
+
 jobs:
-  patch-and-verify:
-    if: github.event.pull_request.number == 7 && github.event.pull_request.head.ref == 'agent/laliga-private-readonly'
+  verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
+
     steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: agent/laliga-private-readonly
-      - name: Apply patch
-        shell: bash
-        run: |
-          python <<'PY'
-          from pathlib import Path
+      - name: Checkout
+        uses: actions/checkout@v4
 
-          path = Path('app/fantasy-app.tsx')
-          lines = path.read_text().splitlines()
-
-          cards_start = next(i for i, line in enumerate(lines) if line == '  const liveCards = data.market')
-          cards_end = next(i for i, line in enumerate(lines[cards_start:], cards_start) if line.startswith('  const demoCards ='))
-          new_cards = '''  const liveCards = data.market
-            .map((entry) => {
-              const player = entry.player_id ? playersById[entry.player_id] : null;
-              const name = player?.full_name ?? entry.imported_name;
-              const position = player?.position ?? entry.imported_position;
-              const club = player?.club_id
-                ? clubsById[player.club_id]?.short_name ?? "Sin club"
-                : entry.imported_club ?? "Sin club";
-
-              if (!name || !position) return null;
-
-              return {
-                entry,
-                name,
-                position,
-                club,
-                status: player?.status ?? "available",
-              };
-            })
-            .filter((row): row is NonNullable<typeof row> => row !== null)
-            .filter(({ name }) =>
-              name.toLowerCase().includes(query.toLowerCase()),
-            );'''.splitlines()
-          lines[cards_start:cards_end] = new_cards
-
-          render_start = next(i for i, line in enumerate(lines) if '{liveCards.map(({ entry, player }) => (' in line)
-          prices_start = next(i for i, line in enumerate(lines[render_start:], render_start) if '<div className="market-prices">' in line)
-          indent = lines[render_start].split('{liveCards')[0]
-          new_render = f'''{indent}{{liveCards.map(({{ entry, name, position, club, status }}) => (
-{indent}  <article className="market-card" key={{entry.id}}>
-{indent}    <div className="market-card-top">
-{indent}      <PlayerAvatar name={{name}} status={{status}} />
-{indent}      <div>
-{indent}        <strong>{{name}}</strong>
-{indent}        <span>{{position}} · {{club}}</span>
-{indent}      </div>
-{indent}    </div>'''.splitlines()
-          lines[render_start:prices_start] = new_render
-          path.write_text('\n'.join(lines) + '\n')
-          PY
-      - uses: actions/setup-node@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
-      - run: npm audit --omit=dev --audit-level=high
-      - run: npm run lint
-      - run: npm test
-      - run: npm run build
-      - name: Restore standard CI and commit fix
-        shell: bash
-        run: |
-          cat > .github/workflows/ci.yml <<'YAML'
-          name: CI
-          on:
-            pull_request:
-            push:
-              branches:
-                - main
-          permissions:
-            contents: read
-          jobs:
-            verify:
-              runs-on: ubuntu-latest
-              timeout-minutes: 15
-              steps:
-                - name: Checkout
-                  uses: actions/checkout@v4
-                - name: Use Node.js
-                  uses: actions/setup-node@v4
-                  with:
-                    node-version: 22
-                    cache: npm
-                - name: Install dependencies
-                  run: npm ci
-                - name: Audit production dependencies
-                  run: npm audit --omit=dev --audit-level=high
-                - name: Lint
-                  run: npm run lint
-                - name: Test
-                  run: npm test
-                - name: Build
-                  run: npm run build
-          YAML
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add app/fantasy-app.tsx .github/workflows/ci.yml
-          git commit -m "fix: support nullable market player ids"
-          git push origin HEAD:agent/laliga-private-readonly
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
