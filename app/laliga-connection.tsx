@@ -150,7 +150,7 @@ export function LaligaConnectionCard({
     };
   }, [demoMode, loadLeagues, open]);
 
-  const login = async (event: FormEvent) => {
+  const login = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!consent) return;
 
@@ -185,11 +185,17 @@ export function LaligaConnectionCard({
     }
   };
 
-  const sync = async () => {
+  const sync = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (busy) return;
+
     const league = leagues.find(
       (candidate) => candidate.id === selectedLeagueId,
     );
-    if (!league) return;
+    if (!league) {
+      setError("Selecciona una liga antes de sincronizar.");
+      return;
+    }
 
     setBusy(true);
     setError("");
@@ -317,7 +323,7 @@ export function LaligaConnectionCard({
                   Comprobando sesión…
                 </div>
               ) : connected ? (
-                <>
+                <form onSubmit={sync}>
                   <div className="form-alert success connection-status">
                     <Check size={17} />
                     <span>
@@ -368,33 +374,43 @@ export function LaligaConnectionCard({
                     </div>
                   )}
 
-                  {result && (
-                    <div className="sync-result">
-                      <Check size={20} />
-                      <div>
-                        <strong>Sincronización completada</strong>
-                        <span>
-                          {result.squadCount} jugadores · {result.marketCount} en
-                          mercado · saldo {formatMoney(result.balance)}
-                        </span>
+                  <div aria-live="polite">
+                    {busy && (
+                      <div className="connection-loading">
+                        <LoaderCircle className="spin" size={20} />
+                        Iniciando sincronización…
                       </div>
-                    </div>
-                  )}
-
-                  {error && <div className="form-alert error">{error}</div>}
+                    )}
+                    {result && (
+                      <div className="sync-result">
+                        <Check size={20} />
+                        <div>
+                          <strong>Sincronización completada</strong>
+                          <span>
+                            {result.squadCount} jugadores · {result.marketCount} en
+                            mercado · saldo {formatMoney(result.balance)}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    {error && <div className="form-alert error">{error}</div>}
+                  </div>
 
                   <button
                     className="primary-button full"
                     disabled={busy || !selectedLeagueId}
-                    onClick={() => void sync()}
-                    type="button"
+                    type="submit"
                   >
                     {busy ? (
                       <LoaderCircle className="spin" size={18} />
                     ) : (
                       <RefreshCw size={18} />
                     )}
-                    {result ? "Sincronizar de nuevo" : "Sincronizar ahora"}
+                    {busy
+                      ? "Sincronizando…"
+                      : result
+                        ? "Sincronizar de nuevo"
+                        : "Sincronizar ahora"}
                   </button>
                   <button
                     className="secondary-button full disconnect-button"
@@ -404,7 +420,7 @@ export function LaligaConnectionCard({
                   >
                     <Unplug size={17} /> Desconectar y borrar sesión
                   </button>
-                </>
+                </form>
               ) : (
                 <form className="modal-form connection-form" onSubmit={login}>
                   <label>
@@ -467,6 +483,7 @@ export function LaligaConnectionCard({
                   <button
                     className="primary-button full"
                     disabled={busy || !consent || !email.trim() || !password}
+                    type="submit"
                   >
                     {busy ? (
                       <LoaderCircle className="spin" size={18} />
