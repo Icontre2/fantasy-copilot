@@ -33,11 +33,17 @@ async function readSyncPart(
     return await laligaGet(path, accessToken);
   } catch (error) {
     if (error instanceof LaligaUpstreamError) {
+      console.error("LALIGA_SYNC_READ_FAILED", {
+        label,
+        path,
+        status: error.status,
+      });
       throw new LaligaUpstreamError(
         `No se pudo leer ${label} de LALIGA Fantasy.`,
         error.status,
       );
     }
+    console.error("LALIGA_SYNC_READ_UNEXPECTED", { label, path });
     throw error;
   }
 }
@@ -164,6 +170,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (error) {
+      console.error("LALIGA_SYNC_SAVE_FAILED", { code: error.code });
       return noStoreJson(
         {
           error:
@@ -190,6 +197,7 @@ export async function POST(request: NextRequest) {
     if (error instanceof LaligaUpstreamError) {
       return respondToLaligaError(error);
     }
+    console.error("LALIGA_SYNC_UNEXPECTED");
     return noStoreJson(
       {
         error:
