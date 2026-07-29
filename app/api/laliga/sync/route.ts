@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
-import { buildLaligaSnapshot, parseLaligaLeagues } from "../../../laliga-contract";
+import { parseLaligaLeagues } from "../../../laliga-contract";
+import { buildLaligaSnapshot } from "../../../laliga-contract-safe";
 import type { Json } from "../../../database.types";
 import { isAllowedRequestOrigin } from "../../../laliga-session";
 import {
