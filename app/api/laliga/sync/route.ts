@@ -24,6 +24,24 @@ type SyncBody = {
 const UUID =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+async function readSyncPart(
+  label: string,
+  path: string,
+  accessToken: string,
+): Promise<unknown> {
+  try {
+    return await laligaGet(path, accessToken);
+  } catch (error) {
+    if (error instanceof LaligaUpstreamError) {
+      throw new LaligaUpstreamError(
+        `No se pudo leer ${label} de LALIGA Fantasy.`,
+        error.status,
+      );
+    }
+    throw error;
+  }
+}
+
 export async function POST(request: NextRequest) {
   const unavailable = privateBetaUnavailable();
   if (unavailable) return unavailable;
@@ -93,25 +111,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const [team, money, lineup, market, clubs] = await Promise.all([
-      laligaGet(
-        `/v1/competition/1/leagues/${leagueId}/teams/${teamId}`,
-        session.accessToken,
-      ),
-      laligaGet(
-        `/v1/competition/1/teams/${teamId}/money`,
-        session.accessToken,
-      ),
-      laligaGet(
-        `/v1/competition/1/teams/${teamId}/lineup`,
-        session.accessToken,
-      ),
-      laligaGet(
-        `/v1/competition/1/league/${leagueId}/market`,
-        session.accessToken,
-      ),
-      laligaGet("/v3/teams-master", session.accessToken),
-    ]);
+    const team = await readSyncPart(
+      "la plantilla",
+      `/v1/competition/1/leagues/${leagueId}/teams/${teamId}`,
+      session.accessToken,
+    );
+    const money = await readSyncPart(
+      "el saldo",
+      `/v1/competition/1/teams/${teamId}/money`,
+      session.accessToken,
+    );
+    const lineup = await readSyncPart(
+      "la alineación",
+      `/v1/competition/1/teams/${teamId}/lineup`,
+      session.accessToken,
+    );
+    const market = await readSyncPart(
+      "el mercado",
+      `/v1/competition/1/league/${leagueId}/market`,
+      session.accessToken,
+    );
+    const clubs = await readSyncPart(
+      "los equipos maestros",
+      "/v3/teams-master",
+      session.accessToken,
+    );
 
     const snapshot = buildLaligaSnapshot({
       team,
