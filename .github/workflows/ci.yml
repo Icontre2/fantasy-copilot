@@ -1,7 +1,7 @@
 name: Apply nullable market fix
 on:
   pull_request:
-    types: [opened]
+    types: [ready_for_review]
 permissions:
   contents: write
 jobs:
