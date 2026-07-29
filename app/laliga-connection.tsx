@@ -37,7 +37,7 @@ type SyncResponse = {
 
 type LaligaConnectionCardProps = {
   demoMode?: boolean;
-  onSynced: () => void;
+  onSynced: (teamId: string) => void;
   team: TeamRef;
 };
 
@@ -185,11 +185,11 @@ export function LaligaConnectionCard({
     }
   };
 
+  const selectedLeague =
+    leagues.find((league) => league.id === selectedLeagueId) ?? leagues[0];
+
   const sync = async () => {
-    const league = leagues.find(
-      (candidate) => candidate.id === selectedLeagueId,
-    );
-    if (!league) return;
+    if (busy || !selectedLeague) return;
 
     setBusy(true);
     setError("");
@@ -200,12 +200,12 @@ export function LaligaConnectionCard({
         method: "POST",
         body: JSON.stringify({
           fantasyTeamId: team?.id ?? null,
-          leagueId: league.id,
-          teamId: league.teamId,
+          leagueId: selectedLeague.id,
+          teamId: selectedLeague.teamId,
         }),
       });
       setResult(response);
-      onSynced();
+      onSynced(response.teamId);
     } catch (requestError) {
       setError(
         requestError instanceof Error
@@ -385,7 +385,7 @@ export function LaligaConnectionCard({
 
                   <button
                     className="primary-button full"
-                    disabled={busy || !selectedLeagueId}
+                    disabled={busy || leagues.length === 0}
                     onClick={() => void sync()}
                     type="button"
                   >
@@ -394,7 +394,11 @@ export function LaligaConnectionCard({
                     ) : (
                       <RefreshCw size={18} />
                     )}
-                    {result ? "Sincronizar de nuevo" : "Sincronizar ahora"}
+                    {busy
+                      ? "Sincronizando…"
+                      : result
+                        ? "Sincronizar de nuevo"
+                        : "Sincronizar ahora"}
                   </button>
                   <button
                     className="secondary-button full disconnect-button"
