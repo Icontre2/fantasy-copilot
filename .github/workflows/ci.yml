@@ -1,12 +1,12 @@
 name: Apply nullable market fix
 on:
   pull_request:
-    types: [ready_for_review]
+    types: [opened]
 permissions:
   contents: write
 jobs:
   patch-and-verify:
-    if: github.event.pull_request.number == 7 && github.event.pull_request.head.ref == 'agent/laliga-private-readonly'
+    if: github.event.pull_request.head.ref == 'agent/nullable-fix-runner'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -18,10 +18,8 @@ jobs:
         run: |
           python <<'PY'
           from pathlib import Path
-
           path = Path('app/fantasy-app.tsx')
           lines = path.read_text().splitlines()
-
           cards_start = next(i for i, line in enumerate(lines) if line == '  const liveCards = data.market')
           cards_end = next(i for i, line in enumerate(lines[cards_start:], cards_start) if line.startswith('  const demoCards ='))
           new_cards = '''  const liveCards = data.market
@@ -48,7 +46,6 @@ jobs:
               name.toLowerCase().includes(query.toLowerCase()),
             );'''.splitlines()
           lines[cards_start:cards_end] = new_cards
-
           render_start = next(i for i, line in enumerate(lines) if '{liveCards.map(({ entry, player }) => (' in line)
           prices_start = next(i for i, line in enumerate(lines[render_start:], render_start) if '<div className="market-prices">' in line)
           indent = lines[render_start].split('{liveCards')[0]
