@@ -76,6 +76,16 @@ async function laligaRequest<T>(
   return payload as T;
 }
 
+/**
+ * Clave estable para identificar una liga en la interfaz.
+ * Si la API no devuelve `id`, se usa la posición para que la selección
+ * siga funcionando en vez de romperse en silencio.
+ */
+const leagueKeyOf = (league: LaligaLeague, index: number): string =>
+  league?.id != null && String(league.id).trim() !== ""
+    ? String(league.id)
+    : `__idx_${index}`;
+
 const formatMoney = (value: number) =>
   new Intl.NumberFormat("es-ES", {
     currency: "EUR",
@@ -106,12 +116,15 @@ export function LaligaConnectionCard({
     const response = await laligaRequest<LeaguesResponse>(
       "/api/laliga/leagues",
     );
-    setLeagues(response.leagues);
-    setSelectedLeagueId((current) =>
-      response.leagues.some((league) => league.id === current)
-        ? current
-        : (response.leagues[0]?.id ?? ""),
-    );
+
+    const list = Array.isArray(response.leagues) ? response.leagues : [];
+
+    setLeagues(list);
+
+    setSelectedLeagueId((current) => {
+      const keys = list.map((league, index) => leagueKeyOf(league, index));
+      return keys.includes(current) ? current : (keys[0] ?? "");
+    });
   }, []);
 
   useEffect(() => {
@@ -185,25 +198,46 @@ export function LaligaConnectionCard({
     }
   };
 
-  const selectedLeague =
-    leagues.find((league) => league.id === selectedLeagueId) ?? leagues[0];
-
   const sync = async () => {
-    if (busy || !selectedLeague) return;
+    const index = leagues.findIndex(
+      (candidate, position) =>
+        leagueKeyOf(candidate, position) === selectedLeagueId,
+    );
+    const league = index >= 0 ? leagues[index] : null;
+
+    if (!league) {
+      setError(
+        leagues.length === 0
+          ? "No hay ninguna liga cargada. Vuelve a conectar la cuenta."
+          : "No se ha podido identificar la liga seleccionada. Toca una liga de la lista.",
+      );
+      return;
+    }
+
+    if (league.id == null || String(league.id).trim() === "") {
+      setError(
+        "La liga recibida no incluye identificador. Revisa el contrato de /api/laliga/leagues.",
+      );
+      return;
+    }
 
     setBusy(true);
     setError("");
     setResult(null);
 
     try {
-      const response = await laligaRequest<SyncResponse>("/api/laliga/sync", {
-        method: "POST",
-        body: JSON.stringify({
-          fantasyTeamId: team?.id ?? null,
-          leagueId: selectedLeague.id,
-          teamId: selectedLeague.teamId,
-        }),
-      });
+      const response = await laligaRequest<SyncResponse>(
+        "/api/laliga/sync",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            fantasyTeamId: team?.id ?? null,
+            leagueId: league.id,
+            teamId: league.teamId,
+          }),
+        },
+      );
+
       setResult(response);
       onSynced(response.teamId);
     } catch (requestError) {
@@ -334,33 +368,38 @@ export function LaligaConnectionCard({
                   {leagues.length > 0 ? (
                     <div className="connection-leagues">
                       <span className="field-label">Elige una liga</span>
-                      {leagues.map((league) => (
-                        <button
-                          className={
-                            selectedLeagueId === league.id
-                              ? "league-choice selected"
-                              : "league-choice"
-                          }
-                          key={league.id}
-                          onClick={() => setSelectedLeagueId(league.id)}
-                          type="button"
-                        >
-                          <span>
-                            <strong>{league.name}</strong>
-                            <small>
-                              {league.squadCount} jugadores
-                              {league.balance !== null
-                                ? ` · ${formatMoney(league.balance)}`
-                                : ""}
-                            </small>
-                          </span>
-                          {selectedLeagueId === league.id ? (
-                            <Check size={18} />
-                          ) : (
-                            <ChevronRight size={18} />
-                          )}
-                        </button>
-                      ))}
+                      {leagues.map((league, index) => {
+                        const key = leagueKeyOf(league, index);
+
+                        return (
+                          <button
+                            className={
+                              selectedLeagueId === key
+                                ? "league-choice selected"
+                                : "league-choice"
+                            }
+                            key={key}
+                            onClick={() => setSelectedLeagueId(key)}
+                            type="button"
+                          >
+                            <span>
+                              <strong>{league.name}</strong>
+                              <small>
+                                {league.squadCount} jugadores
+                                {typeof league.balance === "number"
+                                  ? ` · ${formatMoney(league.balance)}`
+                                  : ""}
+                              </small>
+                            </span>
+
+                            {selectedLeagueId === key ? (
+                              <Check size={18} />
+                            ) : (
+                              <ChevronRight size={18} />
+                            )}
+                          </button>
+                        );
+                      })}
                     </div>
                   ) : (
                     <div className="form-alert error">
