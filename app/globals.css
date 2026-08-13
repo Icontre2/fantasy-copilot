@@ -21,54 +21,69 @@
   --shadow-lg: 0 28px 80px rgba(10, 15, 35, 0.16);
 }
 
-* {
-  box-sizing: border-box;
-}
+/*
+ * Resets de elemento, dentro de `@layer base` A PROPOSITO.
+ *
+ * En Tailwind v4 las utilidades viven en una capa (`@layer utilities`), y en la
+ * cascada **el CSS sin capa gana al CSS con capa**, sin importar la
+ * especificidad. Con estas reglas fuera de toda capa, `button { color: inherit }`
+ * pisaba a `text-white` en TODOS los botones oscuros: el texto salia del color
+ * de la pagina (#11131a) sobre fondo casi negro, es decir, invisible. Se veia en
+ * "Entrar" y en "Sincronizar ahora".
+ *
+ * Declarandolos en `base` vuelven a ser lo que deben ser: un punto de partida
+ * que cualquier utilidad puede sobrescribir.
+ */
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
 
-html {
-  background: var(--paper);
-  color: var(--ink);
-  scroll-behavior: smooth;
-}
+  html {
+    background: var(--paper);
+    color: var(--ink);
+    scroll-behavior: smooth;
+  }
 
-body {
-  margin: 0;
-  min-height: 100vh;
-  background: var(--paper);
-  color: var(--ink);
-  font-family: var(--font-geist-sans), Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-}
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-geist-sans), Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
 
-button,
-input,
-select {
-  font: inherit;
-}
+  button,
+  input,
+  select {
+    font: inherit;
+  }
 
-button {
-  color: inherit;
-}
+  button {
+    color: inherit;
+  }
 
-button:not(:disabled) {
-  cursor: pointer;
-}
+  button:not(:disabled) {
+    cursor: pointer;
+  }
 
-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.52;
-}
+  button:disabled {
+    cursor: not-allowed;
+    opacity: 0.52;
+  }
 
-input,
-select {
-  min-width: 0;
-}
+  input,
+  select {
+    min-width: 0;
+  }
 
-button:focus-visible,
-input:focus-visible,
-select:focus-visible {
-  outline: 3px solid rgba(115, 87, 255, 0.24);
-  outline-offset: 2px;
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible {
+    outline: 3px solid rgba(115, 87, 255, 0.24);
+    outline-offset: 2px;
+  }
 }
 
 .brand-mark {
