@@ -5,9 +5,8 @@ import { LaligaError } from './errors';
 /**
  * Cliente HTTP del conector. Todo el trafico hacia LALIGA sale de aqui.
  *
- * Solo GET: la app es de **lectura**. No existe ninguna funcion de escritura
- * (pujar, vender, pagar clausula, blindar, alinear) y no debe anadirse ninguna
- * mientras el producto sea el de datos + alertas + contabilidad.
+ * Las lecturas pueden reintentarse. Las escrituras viven en `writes.ts` y no
+ * se reintentan nunca: ante una respuesta incierta se relee el mercado.
  */
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));

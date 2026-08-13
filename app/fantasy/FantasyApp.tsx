@@ -8,6 +8,8 @@ import { ExportView } from "./ExportView";
 import { LeagueView } from "./LeagueView";
 import { LoginView } from "./LoginView";
 import { MarketView } from "./MarketView";
+import { CompareView } from "./CompareView";
+import { LineupsView, type LineupsResponse } from "./LineupsView";
 import {
   SECTIONS,
   type AlertsResponse,
@@ -111,7 +113,7 @@ export default function FantasyApp() {
         habia que arrastrar una barra que no se ve. En una app mobile-first con
         exactamente cinco secciones fijas, todas tienen que estar a la vista.
       */}
-      <nav className="grid grid-cols-5 gap-1 rounded-xl bg-neutral-100 p-1">
+      <nav className="grid grid-cols-4 gap-1 rounded-xl bg-neutral-100 p-1 sm:grid-cols-7">
         {SECTIONS.map((item) => (
           <button
             key={item.id}
@@ -177,6 +179,8 @@ const ENDPOINT: Record<Exclude<Section, "exportar">, (leagueId: string) => strin
   alertas: (id) => `/api/fantasy/leagues/${id}/alerts`,
   economia: (id) => `/api/fantasy/leagues/${id}/economy`,
   mercado: (id) => `/api/fantasy/leagues/${id}/market`,
+  comparar: (id) => `/api/fantasy/leagues/${id}/teams`,
+  onces: () => `/api/fantasy/lineups`,
 };
 
 const LOADING_LABEL: Record<Exclude<Section, "exportar">, string> = {
@@ -184,6 +188,8 @@ const LOADING_LABEL: Record<Exclude<Section, "exportar">, string> = {
   alertas: "Calculando alertas de cláusula…",
   economia: "Reconstruyendo la contabilidad…",
   mercado: "Cargando el mercado…",
+  comparar: "Cargando jugadores…",
+  onces: "Consultando onces probables…",
 };
 
 function SectionData({
@@ -231,6 +237,10 @@ function SectionData({
     case "economia":
       return <EconomyView data={data as EconomyResponse} leagueId={leagueId} onSynced={onSynced} />;
     case "mercado":
-      return <MarketView data={data as MarketResponse} />;
+      return <MarketView data={data as MarketResponse} leagueId={leagueId} onChanged={onSynced} />;
+    case "comparar":
+      return <CompareView data={data as TeamsResponse} />;
+    case "onces":
+      return <LineupsView data={data as LineupsResponse} />;
   }
 }
