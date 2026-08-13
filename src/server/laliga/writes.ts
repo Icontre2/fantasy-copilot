@@ -45,3 +45,13 @@ export function modifyBid(token: string, leagueId: string, marketId: string, bid
 export function cancelBid(token: string, leagueId: string, marketId: string, bidId: string) {
   return mutate(`${marketPath(leagueId, marketId)}/bid/${encodeURIComponent(bidId)}/cancel`, token, 'DELETE');
 }
+
+/** Paga la cláusula exacta publicada por LALIGA. Esta operación es irreversible. */
+export function payBuyoutClause(token: string, leagueId: string, playerId: string, amount: number) {
+  return mutate(
+    `/api/v1/competition/${COMPETITION_ID}/league/${encodeURIComponent(leagueId)}/buyout/${encodeURIComponent(playerId)}/pay`,
+    token,
+    'POST',
+    { buyoutClauseToPay: amount },
+  );
+}

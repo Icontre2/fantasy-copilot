@@ -150,7 +150,7 @@ function LibroCard({ economy, saldoInicial }: { economy: ManagerEconomy; saldoIn
                 <strong>{KIND_LABEL[entry.kind]}</strong>
                 <span className="block text-xs text-neutral-500">
                   {shortDate(entry.occurredAt)}
-                  {entry.playerId ? ` · jugador ${entry.playerId}` : ""}
+                  {entry.playerName ? ` · ${entry.playerName}` : entry.playerId ? ` · jugador ${entry.playerId}` : ""}
                 </span>
               </span>
               <span

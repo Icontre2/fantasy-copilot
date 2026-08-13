@@ -31,13 +31,13 @@ export function LineupsView({ data }: { data: LineupsResponse }) {
       <h2 className="mt-1 text-2xl font-bold tracking-tight">Probabilidad de titularidad</h2>
       <p className="mt-2 text-sm leading-5 text-white/60">Todos los candidatos publicados por FútbolFantasy, no solo once nombres.</p>
       <div className="mt-4 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
-        {data.teams.map((item) => <button key={item.teamId} type="button" onClick={() => setTeamId(item.teamId)} className={`flex shrink-0 items-center gap-2 rounded-2xl px-3 py-2 text-xs font-semibold transition ${item.teamId === team?.teamId ? "bg-[#d6ff75] text-[#101a39]" : "bg-white/10 text-white/70"}`}>{item.badge ? <Image src={item.badge} alt="" width={24} height={24} unoptimized className="h-6 w-6 object-contain"/> : null}{item.shortName}</button>)}
+        {data.teams.map((item) => <button key={item.teamId} type="button" onClick={() => setTeamId(item.teamId)} className={`flex shrink-0 items-center gap-2 rounded-2xl px-3 py-2 text-xs font-semibold transition ${item.teamId === team?.teamId ? "bg-[#7c3aed] text-white" : "bg-white/10 text-white/70"}`}>{item.badge ? <Image src={item.badge} alt="" width={24} height={24} unoptimized className="h-6 w-6 object-contain"/> : null}{item.shortName}</button>)}
       </div>
     </section>
 
-    {team && <section className="rounded-[26px] bg-white p-4 shadow-[0_10px_35px_rgba(16,26,57,.07)]">
-      <div className="flex items-center gap-3"><Image src={team.badge} alt="" width={48} height={48} unoptimized className="h-12 w-12 object-contain"/><div className="min-w-0 flex-1"><h3 className="truncate text-xl font-bold text-[#101a39]">{team.name}</h3><p className="text-xs text-neutral-400">{team.players.length} candidatos publicados</p></div></div>
-      <label className="mt-4 flex items-center gap-2 rounded-2xl bg-[#f3f5f8] px-3 py-2.5"><Search size={17} className="text-neutral-400"/><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar jugador" className="w-full bg-transparent text-sm outline-none"/></label>
+    {team && <section className="rounded-[26px] border border-white/8 bg-[#121214] p-4 shadow-[0_10px_35px_rgba(0,0,0,.3)]">
+      <div className="flex items-center gap-3"><Image src={team.badge} alt="" width={48} height={48} unoptimized className="h-12 w-12 object-contain"/><div className="min-w-0 flex-1"><h3 className="truncate text-xl font-bold text-white">{team.name}</h3><p className="text-xs text-neutral-500">{team.players.length} candidatos publicados</p></div></div>
+      <label className="mt-4 flex items-center gap-2 rounded-2xl bg-white/[.04] px-3 py-2.5"><Search size={17} className="text-neutral-500"/><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar jugador" className="w-full bg-transparent text-sm text-white outline-none"/></label>
       <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
         {players.map((player) => <PlayerProbability key={player.externalId} player={player} onSelect={setSelected}/>) }
       </div>

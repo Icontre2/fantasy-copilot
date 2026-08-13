@@ -30,6 +30,7 @@ export type DashboardResponse = {
     points?: number;
     /** `null` cuando LALIGA no publica la caja: no se rellena con el valor de plantilla. */
     netWorth: number | null;
+    cashSource: "OFICIAL" | "RECONSTRUIDA";
   };
   lineup: {
     formation: string;
@@ -43,14 +44,17 @@ export type DashboardResponse = {
     points?: number;
     teamValue?: number;
     teamMoney?: number;
-    /** `null` para los rivales: LALIGA no publica su caja. */
+    /** Patrimonio con caja oficial propia o caja rival reconstruida. */
     netWorth: number | null;
+    cashSource: "OFICIAL" | "RECONSTRUIDA";
   }>;
   failedTeamIds: string[];
 };
 
 export type AlertsResponse = {
   leagueId: string;
+  myManagerId: string;
+  myTeamMoney: number | null;
   alerts: ClauseAlert[];
   playersWithClause: number;
   playersWithoutClause: number;
@@ -104,5 +108,6 @@ export const SECTIONS: { id: Section; label: string }[] = [
   { id: "inicio", label: "Inicio" },
   { id: "plantilla", label: "Plantilla" },
   { id: "mercado", label: "Mercado" },
+  { id: "alertas", label: "Alertas" },
   { id: "mas", label: "Más" },
 ];

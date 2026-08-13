@@ -1,5 +1,5 @@
 import type { MarketValuePoint } from '@/src/domain/fantasy';
-import { getLeagueSnapshot, getMarketValueHistory } from '../read.ts';
+import { getLeagueSnapshot, getMarketValueHistory, getMyProfile } from '../read.ts';
 import {
   buildClauseAlerts,
   MAX_HISTORY_AGE_DAYS,
@@ -64,6 +64,8 @@ async function mapWithConcurrency<T, R>(
 
 export type ClauseAlertsReport = {
   leagueId: string;
+  myManagerId: string;
+  myTeamMoney: number | null;
   alerts: ClauseAlert[];
   /** Jugadores con clausula publicada considerados. */
   playersWithClause: number;
@@ -86,7 +88,11 @@ export async function buildClauseAlertsReport(
   accessToken: string,
   leagueId: string,
 ): Promise<ClauseAlertsReport> {
-  const league = await getLeagueSnapshot(accessToken, leagueId);
+  const [league, profile] = await Promise.all([
+    getLeagueSnapshot(accessToken, leagueId),
+    getMyProfile(accessToken),
+  ]);
+  const myTeam = league.teams.find((team) => team.manager.id === profile.id);
 
   const candidates: OwnedPlayer[] = [];
   let playersWithoutClause = 0;
@@ -147,6 +153,8 @@ export async function buildClauseAlertsReport(
 
   return {
     leagueId,
+    myManagerId: profile.id,
+    myTeamMoney: myTeam?.teamMoney ?? null,
     alerts,
     playersWithClause: candidates.length,
     playersWithoutClause,

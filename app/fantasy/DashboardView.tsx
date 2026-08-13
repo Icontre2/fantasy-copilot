@@ -56,7 +56,7 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
         <ValueChart points={myPoints} />
 
         <div className="mt-4 grid grid-cols-2 gap-2">
-          <Metric icon={<Coins size={16} />} label="Caja disponible" value={millions(data.me.teamMoney)} accent />
+          <Metric icon={<Coins size={16} />} label={`Caja ${data.me.cashSource === "OFICIAL" ? "oficial" : "reconstruida"}`} value={millions(data.me.teamMoney)} accent />
           <Metric icon={<Banknote size={16} />} label="Patrimonio total" value={millions(data.me.netWorth)} />
         </div>
         <p className="mt-3 text-[10px] leading-4 text-white/45">
@@ -68,7 +68,7 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
         <div className="mb-3 flex items-center justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[.12em] text-neutral-400">Tu liga</p>
-            <h2 className="text-xl font-bold tracking-tight text-[#101a39]">Competidores</h2>
+            <h2 className="text-xl font-bold tracking-tight text-white">Competidores</h2>
           </div>
           <span className="flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-neutral-600 shadow-sm">
             <Users size={14} /> {data.competitors.length + 1}
@@ -81,18 +81,18 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
               return value === undefined ? [] : [{ date: point.date, value }];
             });
             return (
-              <article key={competitor.teamId} className="overflow-hidden rounded-[26px] border border-white bg-white/95 p-4 shadow-[0_10px_35px_rgba(16,26,57,.07)]">
+              <article key={competitor.teamId} className="overflow-hidden rounded-[26px] border border-white/8 bg-[#121214] p-4 shadow-[0_10px_35px_rgba(0,0,0,.3)]">
                 <div className="flex items-center gap-3">
                   <Avatar name={competitor.manager.name} image={competitor.manager.avatar} />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-semibold text-[#101a39]">{competitor.manager.name}</p>
+                    <p className="truncate font-semibold text-white">{competitor.manager.name}</p>
                     <p className="text-xs text-neutral-400">#{competitor.position ?? "—"} · {competitor.points ?? "—"} pts</p>
                   </div>
-                  <p className="text-sm font-bold text-[#101a39]">{millions(competitor.teamValue)}</p>
+                  <p className="text-sm font-bold text-white">{millions(competitor.teamValue)}</p>
                 </div>
                 <MiniChart points={points} />
                 <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
-                  <SmallMetric label="Caja" value={millions(competitor.teamMoney)} lime />
+                  <SmallMetric label="Caja reconstruida" value={millions(competitor.teamMoney)} lime />
                   <SmallMetric label="Patrimonio" value={millions(competitor.netWorth)} />
                 </div>
                 {/*
@@ -101,10 +101,9 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
                   no se puede calcular. Se dice aqui en vez de dejar dos guiones
                   sin explicacion, que parecerian un fallo de carga.
                 */}
-                {competitor.teamMoney === undefined && (
+                {competitor.cashSource === "RECONSTRUIDA" && (
                   <p className="mt-2 text-[10px] leading-4 text-neutral-400">
-                    LALIGA no publica la caja de otros managers, así que su patrimonio no se
-                    puede calcular. El valor de arriba es solo su plantilla.
+                    Estimada desde 100 M€ + puntos + ventas − compras del historial que publica LALIGA.
                   </p>
                 )}
               </article>
@@ -205,7 +204,7 @@ function Metric({ icon, label, value, accent = false }: { icon: React.ReactNode;
   return <div className={`rounded-2xl p-3 ${accent ? "bg-[#d6ff75] text-[#101a39]" : "bg-white/10"}`}><div className="flex items-center gap-2 text-xs opacity-70">{icon}{label}</div><p className="mt-1 text-lg font-bold tracking-tight">{value}</p></div>;
 }
 function SmallMetric({ label, value, lime = false }: { label: string; value: string; lime?: boolean }) {
-  return <div className={`rounded-2xl px-3 py-2 ${lime ? "bg-[#efffc9]" : "bg-[#f3f5f8]"}`}><p className="text-neutral-400">{label}</p><p className="mt-0.5 font-bold text-[#101a39]">{value}</p></div>;
+  return <div className={`rounded-2xl px-3 py-2 ${lime ? "bg-emerald-500/10" : "bg-white/[.04]"}`}><p className="text-neutral-500">{label}</p><p className={`mt-0.5 font-bold ${lime ? "text-emerald-400" : "text-white"}`}>{value}</p></div>;
 }
 function Avatar({ name, image }: { name: string; image?: string }) {
   if (image) return <Image src={image} alt="" width={40} height={40} unoptimized className="h-10 w-10 rounded-full bg-neutral-100 object-cover" />;

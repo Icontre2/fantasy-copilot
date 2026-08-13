@@ -68,6 +68,7 @@ export type LedgerEntry = {
   kind: 'COMPRA' | 'VENTA' | 'TRASPASO_PAGADO' | 'TRASPASO_COBRADO';
   amount: number;
   playerId?: string;
+  playerName?: string;
   /** El otro manager, en un traspaso. */
   counterpartyId?: string;
 };
@@ -140,6 +141,7 @@ function toLedgerEntries(entry: ActivityEntry): { managerId: string; entry: Ledg
 export type BuildInput = {
   managers: { managerId: string; managerName: string; puntos: number; cajaOficial: number | null }[];
   activity: ActivityEntry[];
+  playerNames?: ReadonlyMap<string, string>;
 };
 
 /**
@@ -150,8 +152,14 @@ export type BuildInput = {
  */
 export function buildEconomy(input: BuildInput): ManagerEconomy[] {
   const porManager = new Map<string, LedgerEntry[]>();
+  const seen = new Set<string>();
   for (const raw of input.activity) {
+    if (seen.has(raw.id)) continue;
+    seen.add(raw.id);
+    if (raw.amount !== undefined && (!Number.isSafeInteger(raw.amount) || raw.amount <= 0)) continue;
     for (const { managerId, entry } of toLedgerEntries(raw)) {
+      if (entry.amount === 0) continue;
+      if (entry.playerId) entry.playerName = input.playerNames?.get(entry.playerId);
       const list = porManager.get(managerId) ?? [];
       list.push(entry);
       porManager.set(managerId, list);

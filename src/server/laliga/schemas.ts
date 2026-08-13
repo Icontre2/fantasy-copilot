@@ -109,13 +109,16 @@ export const apiTeamPlayerSchema = z.object({
 /** GET /api/v1/competition/{c}/leagues/{id}/teams/{teamId} */
 export const apiLeagueTeamSchema = z.object({
   id: z.union([z.string(), z.number()]).transform(String),
-  /** Caja disponible del manager. Dato oficial y exacto, tambien el de rivales. */
+  /** Caja oficial; en la práctica LALIGA solo la devuelve para el manager conectado. */
   teamMoney: numeric.nullable().optional(),
   teamValue: numeric.nullable().optional(),
   teamPoints: numeric.nullable().optional(),
   manager: apiManagerSchema,
   players: z.array(apiTeamPlayerSchema),
 });
+
+/** La variante plural devuelve todas las plantillas de la liga de una vez. */
+export const apiLeagueTeamsSchema = z.array(apiLeagueTeamSchema);
 
 /** Fila de GET /api/v1/competition/{c}/leagues/{id}/standing */
 export const apiStandingRowSchema = z.object({

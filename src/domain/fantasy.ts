@@ -65,7 +65,7 @@ export type SquadPlayer = Player & {
 export type LeagueTeam = {
   teamId: string;
   manager: Manager;
-  /** Caja disponible en euros. Dato OFICIAL de la API, no estimado. */
+  /** Caja disponible oficial cuando LALIGA la publica; la UI etiqueta cualquier reconstrucción. */
   teamMoney?: number;
   teamValue?: number;
   teamPoints?: number;

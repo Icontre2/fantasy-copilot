@@ -31,9 +31,9 @@ export function MySquadView({ data }: { data: DashboardResponse }) {
         <p className="mt-3 flex gap-2 text-[11px] leading-4 text-white/45"><Info size={14} className="shrink-0" />Once calculado por porcentaje de FútbolFantasy y formación válida. No cambia tu alineación oficial.</p>
       </section>
 
-      <section className="rounded-[26px] bg-white p-4 shadow-[0_10px_35px_rgba(16,26,57,.07)]">
+      <section className="rounded-[26px] border border-white/8 bg-[#121214] p-4 shadow-[0_10px_35px_rgba(0,0,0,.3)]">
         <button type="button" onClick={() => setShowBench((value) => !value)} className="flex w-full items-center justify-between text-left">
-          <div><p className="text-xs font-semibold uppercase tracking-[.12em] text-neutral-400">Resto de plantilla</p><h3 className="text-lg font-bold text-[#101a39]">Banquillo · {data.lineup.bench.length}</h3></div>
+          <div><p className="text-xs font-semibold uppercase tracking-[.12em] text-neutral-500">Resto de plantilla</p><h3 className="text-lg font-bold text-white">Banquillo · {data.lineup.bench.length}</h3></div>
           <ChevronDown className={`transition ${showBench ? "rotate-180" : ""}`} />
         </button>
         {showBench && <div className="mt-3 space-y-2">{data.lineup.bench.map((player) => <BenchPlayer key={player.id} player={player} onSelect={setSelected} />)}</div>}
@@ -57,7 +57,7 @@ function Probability({ value }: { value?: number }) {
   return <span className={`absolute -bottom-1 -right-2 rounded-full border-2 border-[#286f50] px-1.5 py-0.5 text-[9px] font-black ${tone}`}>{value === undefined ? "?" : `${value}%`}</span>;
 }
 function BenchPlayer({ player, onSelect }: { player: PlayerWithProbability; onSelect: (player: PlayerWithProbability) => void }) {
-  return <button type="button" onClick={() => onSelect(player)} className="flex w-full items-center gap-3 rounded-2xl bg-[#f5f6f8] p-2.5 text-left active:scale-[.99]" aria-label={`Ver histórico de ${player.name}`}><PlayerImage player={player} size={42}/><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-[#101a39]">{player.name}</p><p className="text-xs text-neutral-400">{player.position} · {player.team} · {millions(player.marketValue)}</p></div><span className="rounded-full bg-white px-2.5 py-1 text-xs font-bold text-[#101a39]">{player.lineupProbability === undefined ? "—" : `${player.lineupProbability}%`}</span></button>;
+  return <button type="button" onClick={() => onSelect(player)} className="flex w-full items-center gap-3 rounded-2xl bg-white/[.04] p-2.5 text-left active:scale-[.99]" aria-label={`Ver histórico de ${player.name}`}><PlayerImage player={player} size={42}/><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-white">{player.name}</p><p className="text-xs text-neutral-500">{player.position} · {player.team} · {millions(player.marketValue)}</p></div><span className="rounded-full bg-[#7c3aed]/15 px-2.5 py-1 text-xs font-bold text-[#c4b5fd]">{player.lineupProbability === undefined ? "—" : `${player.lineupProbability}%`}</span></button>;
 }
 function PitchLines() {
   return <div aria-hidden className="pointer-events-none absolute inset-3 rounded-xl border border-white/25"><span className="absolute left-1/2 top-0 h-full border-l border-white/25"/><span className="absolute left-1/2 top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/25"/><span className="absolute left-1/2 top-0 h-16 w-36 -translate-x-1/2 border border-t-0 border-white/25"/><span className="absolute bottom-0 left-1/2 h-16 w-36 -translate-x-1/2 border border-b-0 border-white/25"/></div>;

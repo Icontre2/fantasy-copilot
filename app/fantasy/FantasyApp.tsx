@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { CircleEllipsis, House, LogOut, ShoppingBag, UsersRound } from "lucide-react";
+import { BellRing, CircleEllipsis, House, LogOut, ShoppingBag, UsersRound } from "lucide-react";
 import { get, post } from "./api";
 import { AlertsView } from "./AlertsView";
 import { EconomyView } from "./EconomyView";
@@ -94,13 +94,13 @@ export default function FantasyApp() {
     <Shell>
       <header className="flex items-center justify-between gap-3 pt-1">
         <div className="flex min-w-0 items-center gap-3">
-          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[#101a39] text-lg font-black text-[#d6ff75]">LL</span>
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[#7c3aed] text-lg font-black text-white shadow-[0_0_28px_rgba(124,58,237,.35)]">LL</span>
           <div className="min-w-0">
             <p className="text-xs font-medium text-neutral-400">LigaLab</p>
-            <p className="truncate font-bold text-[#101a39]">Hola, {manager.name}</p>
+            <p className="truncate font-bold text-white">Hola, {manager.name}</p>
           </div>
         </div>
-        <button type="button" onClick={logout} aria-label="Salir" className="grid h-10 w-10 place-items-center rounded-full bg-white text-neutral-400 shadow-sm">
+        <button type="button" onClick={logout} aria-label="Salir" className="grid h-10 w-10 place-items-center rounded-full border border-white/10 bg-white/5 text-neutral-400">
           <LogOut size={18}/>
         </button>
       </header>
@@ -148,12 +148,12 @@ function Shell({ children }: { children: React.ReactNode }) {
 }
 
 const NAV_ICONS: Record<string, React.ReactNode> = {
-  inicio: <House size={20}/>, plantilla: <UsersRound size={20}/>, mercado: <ShoppingBag size={20}/>, mas: <CircleEllipsis size={20}/>,
+  inicio: <House size={20}/>, plantilla: <UsersRound size={20}/>, mercado: <ShoppingBag size={20}/>, alertas: <BellRing size={20}/>, mas: <CircleEllipsis size={20}/>,
 };
 
 function BottomNav({ section, onSelect }: { section: Section; onSelect: (section: Section) => void }) {
   const active = SECTIONS.some((item) => item.id === section) ? section : "mas";
-  return <nav className="fixed inset-x-3 bottom-[max(.75rem,env(safe-area-inset-bottom))] z-40 mx-auto grid max-w-md grid-cols-4 rounded-[24px] border border-white/50 bg-[#101a39]/95 p-1.5 text-white shadow-[0_18px_60px_rgba(10,18,45,.32)] backdrop-blur-xl">{SECTIONS.map((item) => <button key={item.id} type="button" onClick={() => onSelect(item.id)} className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-[18px] text-[10px] font-semibold transition ${active === item.id ? "bg-[#d6ff75] text-[#101a39]" : "text-white/55"}`} aria-current={active === item.id ? "page" : undefined}>{NAV_ICONS[item.id]}{item.label}</button>)}</nav>;
+  return <nav className="fixed inset-x-3 bottom-[max(.75rem,env(safe-area-inset-bottom))] z-40 mx-auto grid max-w-md grid-cols-5 rounded-[24px] border border-white/10 bg-[#111114]/95 p-1.5 text-white shadow-[0_18px_60px_rgba(0,0,0,.65)] backdrop-blur-xl">{SECTIONS.map((item) => <button key={item.id} type="button" onClick={() => onSelect(item.id)} className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-[18px] text-[10px] font-semibold transition ${active === item.id ? "bg-[#7c3aed] text-white" : "text-white/45"}`} aria-current={active === item.id ? "page" : undefined}>{NAV_ICONS[item.id]}{item.label}</button>)}</nav>;
 }
 
 /**
@@ -250,7 +250,7 @@ function SectionData({
     case "liga":
       return <LeagueView data={data as TeamsResponse} />;
     case "alertas":
-      return <AlertsView data={data as AlertsResponse} />;
+      return <AlertsView data={data as AlertsResponse} onChanged={onSynced} />;
     case "economia":
       return <EconomyView data={data as EconomyResponse} />;
     case "mercado":

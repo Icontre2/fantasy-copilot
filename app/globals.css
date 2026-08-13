@@ -1,24 +1,24 @@
 @import "tailwindcss";
 
 :root {
-  --ink: #11131a;
-  --ink-soft: #5f6473;
-  --ink-faint: #8c92a1;
-  --paper: #f1f3f5;
-  --surface: #ffffff;
-  --surface-soft: #f8f8fa;
-  --line: #e4e6ea;
-  --navy: #121c3d;
-  --navy-2: #1a2854;
-  --lime: #c8fa52;
-  --lime-strong: #a9e32a;
-  --purple: #7357ff;
+  --ink: #f7f5ff;
+  --ink-soft: #a8a3b3;
+  --ink-faint: #777180;
+  --paper: #050506;
+  --surface: #121214;
+  --surface-soft: #19191d;
+  --line: #2a292f;
+  --navy: #17121f;
+  --navy-2: #24163c;
+  --lime: #8b5cf6;
+  --lime-strong: #7c3aed;
+  --purple: #8b5cf6;
   --blue: #4c79ff;
   --green: #16a36a;
   --red: #d84955;
   --amber: #d99017;
-  --shadow-sm: 0 8px 28px rgba(16, 24, 48, 0.07);
-  --shadow-lg: 0 28px 80px rgba(10, 15, 35, 0.16);
+  --shadow-sm: 0 10px 32px rgba(0, 0, 0, 0.28);
+  --shadow-lg: 0 28px 80px rgba(0, 0, 0, 0.48);
 }
 
 /*
@@ -49,8 +49,8 @@
     margin: 0;
     min-height: 100vh;
     background:
-      radial-gradient(circle at 90% -10%, rgba(200, 250, 82, 0.12), transparent 26rem),
-      linear-gradient(180deg, #f7f8f6 0%, var(--paper) 44%, #eef0f3 100%);
+      radial-gradient(circle at 90% -10%, rgba(124, 58, 237, 0.2), transparent 28rem),
+      linear-gradient(180deg, #08070a 0%, var(--paper) 60%, #020203 100%);
     color: var(--ink);
     font-family: var(--font-geist-sans), Arial, sans-serif;
     -webkit-font-smoothing: antialiased;

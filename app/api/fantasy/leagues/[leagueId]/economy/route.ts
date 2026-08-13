@@ -1,7 +1,7 @@
 import { errorJson, privateJson } from "@/src/server/http/responses";
 import { requireSession } from "@/src/server/http/session-guard";
 import { buildEconomy, SALDO_INICIAL } from "@/src/server/laliga/economy/activity";
-import { getLeagueActivity, getLeagueSnapshot } from "@/src/server/laliga/read";
+import { getLeagueActivity, getLeagueSnapshot, getPlayerCatalog } from "@/src/server/laliga/read";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -23,9 +23,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ leag
   const { leagueId } = await params;
 
   try {
-    const [snapshot, activity] = await Promise.all([
+    const [snapshot, activity, catalog] = await Promise.all([
       getLeagueSnapshot(auth.token, leagueId),
       getLeagueActivity(auth.token, leagueId),
+      getPlayerCatalog(),
     ]);
 
     const economies = buildEconomy({
@@ -39,6 +40,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ leag
         cajaOficial: team.teamMoney ?? null,
       })),
       activity,
+      playerNames: new Map(catalog.map((player) => [player.id, player.name])),
     });
 
     const fechas = activity.map((entry) => entry.createdAt).sort();

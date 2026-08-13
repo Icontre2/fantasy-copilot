@@ -20,6 +20,7 @@ import {
 } from './mappers';
 import {
   apiLeagueTeamSchema,
+  apiLeagueTeamsSchema,
   apiLeaguesSchema,
   apiMarketSchema,
   apiMarketValueHistorySchema,
@@ -82,6 +83,16 @@ export async function getLeagueTeam(
     apiLeagueTeamSchema,
   );
   return mapLeagueTeam(team);
+}
+
+/** Plantillas completas en una sola petición. Algunas ligas antiguas no exponen esta variante. */
+export async function getLeagueTeams(accessToken: string, leagueId: string): Promise<LeagueTeam[]> {
+  const teams = await privateFetch(
+    `${CMP}/leagues/${encodeURIComponent(leagueId)}/teams`,
+    accessToken,
+    apiLeagueTeamsSchema,
+  );
+  return teams.map(mapLeagueTeam);
 }
 
 /** Jugadores a la venta ahora mismo en el mercado de la liga. */
@@ -152,7 +163,15 @@ export type LeagueSnapshot = {
  * en vez de presentar una liga incompleta como si estuviera entera.
  */
 export async function getLeagueSnapshot(accessToken: string, leagueId: string): Promise<LeagueSnapshot> {
-  const standing = await getLeagueStanding(accessToken, leagueId);
+  const standingPromise = getLeagueStanding(accessToken, leagueId);
+  try {
+    const [standing, teams] = await Promise.all([standingPromise, getLeagueTeams(accessToken, leagueId)]);
+    return { standing, teams, failedTeamIds: [] };
+  } catch {
+    // Compatibilidad: si LALIGA retira la ruta plural, seguimos pudiendo leer
+    // la liga equipo a equipo e informar exactamente de los que fallen.
+  }
+  const standing = await standingPromise;
   const settled = await Promise.allSettled(
     standing.map((row) => getLeagueTeam(accessToken, leagueId, row.teamId)),
   );

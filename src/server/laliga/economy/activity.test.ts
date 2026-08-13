@@ -162,3 +162,30 @@ test("el libro sale ordenado cronologicamente", () => {
     ["2026-08-07", "2026-08-12", "2026-08-13"],
   );
 });
+
+test("la misma actividad repetida no duplica la caja", () => {
+  const sale = entrada({ activityTypeId: ACTIVITY_TYPE.VENTA, user1Id: "A", amount: 8_316_899 });
+  const [economy] = buildEconomy({ managers: [manager("A")], activity: [sale, sale] });
+  assert.ok(economy);
+  assert.equal(economy.ventas, 8_316_899);
+  assert.equal(economy.entries.length, 1);
+});
+
+test("una operación conocida sin importe no crea un apunte de cero euros", () => {
+  const [economy] = buildEconomy({
+    managers: [manager("A")],
+    activity: [entrada({ activityTypeId: ACTIVITY_TYPE.VENTA, user1Id: "A", amount: undefined })],
+  });
+  assert.ok(economy);
+  assert.equal(economy.entries.length, 0);
+  assert.equal(economy.cajaReconstruida, SALDO_INICIAL);
+});
+
+test("el libro resuelve el nombre del jugador cuando el catálogo lo conoce", () => {
+  const [economy] = buildEconomy({
+    managers: [manager("A")],
+    activity: [entrada({ activityTypeId: ACTIVITY_TYPE.VENTA, user1Id: "A", playerMasterId: "2448", amount: 8_316_899 })],
+    playerNames: new Map([["2448", "Oskarsson"]]),
+  });
+  assert.equal(economy?.entries[0]?.playerName, "Oskarsson");
+});

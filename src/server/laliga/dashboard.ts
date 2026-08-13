@@ -1,7 +1,8 @@
 import type { LeagueTeam, Position, SquadPlayer } from '@/src/domain/fantasy';
 import { getProbableTeam } from '@/src/server/futbolfantasy/lineups';
 import { matchExternalPlayer } from '@/src/server/futbolfantasy/match';
-import { getLeagueSnapshot, getMyLeagues, getPlayerCatalog } from './read';
+import { buildEconomy } from './economy/activity';
+import { getLeagueActivity, getLeagueSnapshot, getMyLeagues, getPlayerCatalog } from './read';
 
 type PlayerWithProbability = SquadPlayer & { lineupProbability?: number };
 
@@ -49,10 +50,11 @@ function bestEleven(players: PlayerWithProbability[]): { formation: string; star
 }
 
 export async function buildDashboard(accessToken: string, leagueId: string) {
-  const [snapshot, leagues, catalog] = await Promise.all([
+  const [snapshot, leagues, catalog, activity] = await Promise.all([
     getLeagueSnapshot(accessToken, leagueId),
     getMyLeagues(accessToken),
     getPlayerCatalog(),
+    getLeagueActivity(accessToken, leagueId),
   ]);
   const league = leagues.find((item) => item.id === leagueId);
   const myTeam = snapshot.teams.find((team) => team.teamId === league?.myTeamId);
@@ -70,6 +72,16 @@ export async function buildDashboard(accessToken: string, leagueId: string) {
     return { ...player, lineupProbability: signal?.probability };
   });
   const standingByTeam = new Map(snapshot.standing.map((row) => [row.teamId, row]));
+  const economyByManager = new Map(buildEconomy({
+    managers: snapshot.teams.map((team) => ({
+      managerId: team.manager.id,
+      managerName: team.manager.name,
+      puntos: standingByTeam.get(team.teamId)?.points ?? team.teamPoints ?? 0,
+      cajaOficial: team.teamMoney ?? null,
+    })),
+    activity,
+  }).map((economy) => [economy.managerId, economy]));
+  const cashOf = (team: LeagueTeam) => team.teamMoney ?? economyByManager.get(team.manager.id)?.cajaReconstruida;
 
   return {
     league: league ?? { id: leagueId, name: 'Mi liga' },
@@ -78,7 +90,9 @@ export async function buildDashboard(accessToken: string, leagueId: string) {
       players,
       position: standingByTeam.get(myTeam.teamId)?.position,
       points: standingByTeam.get(myTeam.teamId)?.points ?? myTeam.teamPoints,
-      netWorth: netWorthOf(myTeam.teamValue, myTeam.teamMoney),
+      teamMoney: cashOf(myTeam),
+      cashSource: myTeam.teamMoney === undefined ? 'RECONSTRUIDA' : 'OFICIAL',
+      netWorth: netWorthOf(myTeam.teamValue, cashOf(myTeam)),
     },
     lineup: bestEleven(players),
     competitors: snapshot.teams
@@ -89,8 +103,9 @@ export async function buildDashboard(accessToken: string, leagueId: string) {
         position: standingByTeam.get(team.teamId)?.position,
         points: standingByTeam.get(team.teamId)?.points ?? team.teamPoints,
         teamValue: team.teamValue,
-        teamMoney: team.teamMoney,
-        netWorth: netWorthOf(team.teamValue, team.teamMoney),
+        teamMoney: cashOf(team),
+        cashSource: team.teamMoney === undefined ? 'RECONSTRUIDA' : 'OFICIAL',
+        netWorth: netWorthOf(team.teamValue, cashOf(team)),
       }))
       .sort((a, b) => (a.position ?? 999) - (b.position ?? 999)),
     failedTeamIds: snapshot.failedTeamIds,
