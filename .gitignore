@@ -5,3 +5,6 @@ dist/
 .env*
 !.env.example
 *.tsbuildinfo
+
+# Next.js genera este fichero en cada build
+next-env.d.ts

@@ -10,7 +10,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "test": "node --experimental-strip-types --test app/csv-import.test.ts"
+    "typecheck": "tsc --noEmit",
+    "test": "node --experimental-strip-types --test \"app/**/*.test.ts\" \"src/**/*.test.ts\""
   },
   "dependencies": {
     "@supabase/supabase-js": "2.110.8",
@@ -18,7 +19,8 @@
     "lucide-react": "1.27.0",
     "next": "16.2.12",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "1.47.0",

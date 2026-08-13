@@ -1,5 +1,18 @@
 "use client";
 
+/**
+ * DESACOPLADO — no forma parte del producto actual.
+ *
+ * Esta es la app anterior (importacion manual/CSV, dashboard, recomendaciones).
+ * Ya no la monta nadie: `app/page.tsx` renderiza `app/fantasy/FantasyApp.tsx`,
+ * centrado en datos reales, alertas de clausula, exportacion y contabilidad.
+ *
+ * Se conserva a proposito en vez de borrarla — junto con `laliga-provider.ts` y
+ * `csv-import.ts`, de los que depende — para no perder la via de importacion
+ * manual mientras el conector nuevo se valida contra una liga real. Si se
+ * decide que no vuelve, se elimina el trio entero de una vez.
+ */
+
 import {
   Activity,
   ArrowRight,

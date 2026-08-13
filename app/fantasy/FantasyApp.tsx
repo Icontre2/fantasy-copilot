@@ -1,0 +1,225 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import { get, post } from "./api";
+import { AlertsView } from "./AlertsView";
+import { EconomyView } from "./EconomyView";
+import { ExportView } from "./ExportView";
+import { LeagueView } from "./LeagueView";
+import { LoginView } from "./LoginView";
+import { MarketView } from "./MarketView";
+import {
+  SECTIONS,
+  type AlertsResponse,
+  type EconomyResponse,
+  type League,
+  type LeaguesResponse,
+  type Manager,
+  type MarketResponse,
+  type Section,
+  type TeamsResponse,
+} from "./types";
+import { Card, ErrorBox, Spinner } from "./ui";
+
+/**
+ * Contenedor de la app: sesión, liga seleccionada y sección visible.
+ *
+ * Cinco secciones y ninguna más: Liga, Alertas, Economía, Mercado, Exportar.
+ * Nada de Copilot, Autopilot ni recomendaciones — el motor que hacía eso vive
+ * en el repositorio de referencia y no se invoca desde aquí.
+ *
+ * Cada sección pide sus datos cuando se abre, no todas a la vez: las alertas
+ * descargan histórico de cotización y no tiene sentido pagarlo si el usuario
+ * solo quería mirar el mercado.
+ */
+export default function FantasyApp() {
+  const [manager, setManager] = useState<Manager | null>(null);
+  const [checkingSession, setCheckingSession] = useState(true);
+
+  const [leagues, setLeagues] = useState<League[]>([]);
+  const [leagueId, setLeagueId] = useState<string | null>(null);
+  const [section, setSection] = useState<Section>("liga");
+
+  useEffect(() => {
+    get<{ authenticated: boolean; manager?: Manager }>("/api/fantasy/auth/session")
+      .then((data) => setManager(data.authenticated && data.manager ? data.manager : null))
+      .catch(() => setManager(null))
+      .finally(() => setCheckingSession(false));
+  }, []);
+
+  useEffect(() => {
+    if (!manager) return;
+    get<LeaguesResponse>("/api/fantasy/leagues")
+      .then((data) => {
+        setLeagues(data.leagues);
+        setLeagueId((current) => current ?? data.leagues[0]?.id ?? null);
+      })
+      .catch(() => setLeagues([]));
+  }, [manager]);
+
+  async function logout() {
+    await post("/api/fantasy/auth/logout").catch(() => undefined);
+    // Se limpia aqui y no en un efecto: la sesion se cierra por una accion del
+    // usuario, no por sincronizar con nada externo.
+    setLeagues([]);
+    setLeagueId(null);
+    setManager(null);
+  }
+
+  if (checkingSession) {
+    return <Shell><Spinner label="Comprobando sesión…" /></Shell>;
+  }
+
+  if (!manager) {
+    return <Shell><LoginView onLogin={setManager} /></Shell>;
+  }
+
+  return (
+    <Shell>
+      <header className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <p className="text-sm text-neutral-500">Conectado como</p>
+          <p className="font-semibold">{manager.name}</p>
+        </div>
+        <button type="button" onClick={logout} className="text-sm text-neutral-600 underline">
+          Salir
+        </button>
+      </header>
+
+      {leagues.length > 1 && (
+        <label className="block">
+          <span className="mb-1 block text-sm font-medium">Liga</span>
+          <select
+            value={leagueId ?? ""}
+            onChange={(event) => setLeagueId(event.target.value)}
+            className="w-full rounded-lg border border-neutral-300 px-3 py-2"
+          >
+            {leagues.map((league) => (
+              <option key={league.id} value={league.id}>
+                {league.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+
+      <nav className="flex gap-1 overflow-x-auto rounded-xl bg-neutral-100 p-1">
+        {SECTIONS.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => setSection(item.id)}
+            className={`flex-1 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium ${
+              section === item.id ? "bg-white text-neutral-900 shadow-sm" : "text-neutral-600"
+            }`}
+          >
+            {item.label}
+          </button>
+        ))}
+      </nav>
+
+      {leagueId ? (
+        <SectionContent section={section} leagueId={leagueId} />
+      ) : (
+        <Card>
+          <p className="text-sm text-neutral-600">
+            Tu cuenta no tiene ninguna liga en esta competición.
+          </p>
+        </Card>
+      )}
+    </Shell>
+  );
+}
+
+function Shell({ children }: { children: React.ReactNode }) {
+  return (
+    <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4 pb-16">{children}</main>
+  );
+}
+
+/**
+ * Carga y pinta la sección activa.
+ *
+ * El `key` es lo que hace que `SectionData` arranque limpio en cada cambio:
+ * al remontar, sus estados vuelven a su valor inicial (`loading: true`, sin
+ * datos ni error) sin necesidad de resetearlos dentro de un efecto. Subir
+ * `reloadToken` fuerza el mismo remontaje para refrescar tras sincronizar.
+ */
+function SectionContent({ section, leagueId }: { section: Section; leagueId: string }) {
+  const [reloadToken, setReloadToken] = useState(0);
+  const reload = useCallback(() => setReloadToken((value) => value + 1), []);
+
+  if (section === "exportar") return <ExportView leagueId={leagueId} />;
+
+  return (
+    <SectionData
+      key={`${section}-${leagueId}-${reloadToken}`}
+      section={section}
+      leagueId={leagueId}
+      onSynced={reload}
+    />
+  );
+}
+
+const ENDPOINT: Record<Exclude<Section, "exportar">, (leagueId: string) => string> = {
+  liga: (id) => `/api/fantasy/leagues/${id}/teams`,
+  alertas: (id) => `/api/fantasy/leagues/${id}/alerts`,
+  economia: (id) => `/api/fantasy/leagues/${id}/economy`,
+  mercado: (id) => `/api/fantasy/leagues/${id}/market`,
+};
+
+const LOADING_LABEL: Record<Exclude<Section, "exportar">, string> = {
+  liga: "Cargando plantillas de la liga…",
+  alertas: "Calculando alertas de cláusula…",
+  economia: "Reconstruyendo la contabilidad…",
+  mercado: "Cargando el mercado…",
+};
+
+function SectionData({
+  section,
+  leagueId,
+  onSynced,
+}: {
+  section: Exclude<Section, "exportar">;
+  leagueId: string;
+  onSynced: () => void;
+}) {
+  const [data, setData] = useState<unknown>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    get<unknown>(ENDPOINT[section](leagueId))
+      .then((result) => {
+        if (!cancelled) setData(result);
+      })
+      .catch((caught: unknown) => {
+        if (!cancelled) setError(caught instanceof Error ? caught.message : "No se pudo cargar.");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    // Evita que una respuesta lenta de la seccion anterior pise a la nueva.
+    return () => {
+      cancelled = true;
+    };
+  }, [section, leagueId]);
+
+  if (loading) return <Spinner label={LOADING_LABEL[section]} />;
+  if (error) return <ErrorBox message={error} />;
+  if (!data) return null;
+
+  switch (section) {
+    case "liga":
+      return <LeagueView data={data as TeamsResponse} />;
+    case "alertas":
+      return <AlertsView data={data as AlertsResponse} />;
+    case "economia":
+      return <EconomyView data={data as EconomyResponse} leagueId={leagueId} onSynced={onSynced} />;
+    case "mercado":
+      return <MarketView data={data as MarketResponse} />;
+  }
+}

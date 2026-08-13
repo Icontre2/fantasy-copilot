@@ -1,0 +1,224 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import type { MarketValuePoint, SquadPlayer } from "../../../domain/fantasy.ts";
+import {
+  buildAlert,
+  buildClauseAlerts,
+  classify,
+  computeDailyTrend,
+  MIN_HISTORY_POINTS,
+  THRESHOLDS,
+  type OwnedPlayer,
+} from "./clause-alerts.ts";
+
+const owner = { teamId: "t1", managerId: "m1", managerName: "Javier" };
+
+function player(overrides: Partial<SquadPlayer> = {}): SquadPlayer {
+  return {
+    id: "p1",
+    name: "Jugador",
+    team: "BAR",
+    position: "MED",
+    marketValue: 18_200_000,
+    points: 0,
+    averagePoints: 0,
+    status: "ok",
+    buyoutClause: 20_000_000,
+    ...overrides,
+  };
+}
+
+/** Serie diaria que sube `perDay` euros al dia durante `days` dias. */
+function risingHistory(from: number, perDay: number, days: number): MarketValuePoint[] {
+  return Array.from({ length: days }, (_, index) => ({
+    // Fechas consecutivas terminando en 2026-08-13.
+    date: new Date(Date.UTC(2026, 7, 13) - (days - 1 - index) * 86_400_000)
+      .toISOString()
+      .slice(0, 10),
+    marketValue: from + perDay * index,
+  }));
+}
+
+test("computeDailyTrend divide por dias reales, no por numero de observaciones", () => {
+  // Dos observaciones separadas por 4 dias, mas una intermedia: 400.000 en total.
+  const history: MarketValuePoint[] = [
+    { date: "2026-08-09", marketValue: 10_000_000 },
+    { date: "2026-08-11", marketValue: 10_200_000 },
+    { date: "2026-08-13", marketValue: 10_400_000 },
+  ];
+
+  const trend = computeDailyTrend(history);
+
+  assert.ok(trend);
+  assert.equal(trend.points, 3);
+  // 400.000 EUR en 4 dias = 100.000/dia. Contar "3 puntos" habria dado 133.333.
+  assert.equal(trend.dailyTrend, 100_000);
+});
+
+test("computeDailyTrend devuelve null sin historico suficiente", () => {
+  const history = risingHistory(10_000_000, 100_000, MIN_HISTORY_POINTS - 1);
+  assert.equal(computeDailyTrend(history), null);
+});
+
+test("computeDailyTrend ignora los puntos fuera de la ventana", () => {
+  const history: MarketValuePoint[] = [
+    // Caida brusca hace un mes: no debe contaminar la tendencia de 7 dias.
+    { date: "2026-07-13", marketValue: 30_000_000 },
+    { date: "2026-08-10", marketValue: 10_000_000 },
+    { date: "2026-08-11", marketValue: 10_100_000 },
+    { date: "2026-08-13", marketValue: 10_300_000 },
+  ];
+
+  const trend = computeDailyTrend(history);
+
+  assert.ok(trend);
+  assert.equal(trend.points, 3);
+  assert.equal(trend.dailyTrend, 100_000);
+});
+
+test("el ejemplo del encargo: 18,2M de valor, 20M de clausula, +350.000/dia", () => {
+  const alert = buildAlert({
+    player: player({ marketValue: 18_200_000, buyoutClause: 20_000_000 }),
+    owner,
+    history: risingHistory(16_100_000, 350_000, 7),
+  });
+
+  assert.ok(alert);
+  assert.equal(alert.calculated.gap, 1_800_000);
+  assert.equal(alert.calculated.dailyTrend, 350_000);
+  // 1.800.000 / 350.000 = 5,14 dias.
+  assert.ok(alert.calculated.estimatedDays !== null);
+  assert.ok(Math.abs(alert.calculated.estimatedDays - 5.142857) < 0.0001);
+  // ALTA, y por el ratio de valor (18,2/20 = 91% >= 90%), no por los dias: el
+  // umbral de valor se evalua primero, asi que 5,14 dias no llega a decidir.
+  assert.equal(alert.calculated.valueToClauseRatio, 0.91);
+  assert.equal(alert.level, "ALTA");
+  assert.equal(alert.alreadyReachable, false);
+});
+
+test("MEDIA se alcanza por plazo cuando el ratio de valor aun no alerta", () => {
+  const alert = buildAlert({
+    // 17M / 20M = 85%: por debajo del 90%, asi que decide la estimacion.
+    player: player({ marketValue: 17_000_000, buyoutClause: 20_000_000 }),
+    owner,
+    history: risingHistory(14_900_000, 350_000, 7),
+  });
+
+  assert.ok(alert);
+  // 3.000.000 / 350.000 = 8,57 dias... por encima de 7. No deberia ser MEDIA.
+  assert.ok(alert.calculated.estimatedDays !== null);
+  assert.ok(alert.calculated.estimatedDays > THRESHOLDS.mediumDays);
+  assert.equal(alert.level, "INFORMATIVA");
+});
+
+test("CRITICA cuando el valor llega al 95% de la clausula, aunque no suba", () => {
+  const alert = buildAlert({
+    player: player({ marketValue: 19_000_000, buyoutClause: 20_000_000 }),
+    owner,
+    history: [],
+  });
+
+  assert.ok(alert);
+  assert.equal(alert.level, "CRITICA");
+  assert.equal(alert.calculated.estimatedDays, null);
+  assert.equal(alert.calculated.missingReason, "sin_historico");
+});
+
+test("valor por encima de la clausula: alreadyReachable y sin dias que estimar", () => {
+  const alert = buildAlert({
+    player: player({ marketValue: 21_000_000, buyoutClause: 20_000_000 }),
+    owner,
+    history: risingHistory(19_000_000, 300_000, 7),
+  });
+
+  assert.ok(alert);
+  assert.equal(alert.level, "CRITICA");
+  assert.equal(alert.alreadyReachable, true);
+  assert.equal(alert.calculated.estimatedDays, null);
+  // No es un dato que falte: es que la pregunta ya no aplica.
+  assert.equal(alert.calculated.missingReason, undefined);
+  assert.ok(alert.calculated.gap < 0);
+});
+
+test("sin clausula publicada no se genera alerta: no se inventa el dato", () => {
+  const alert = buildAlert({
+    player: player({ buyoutClause: undefined }),
+    owner,
+    history: risingHistory(16_000_000, 500_000, 7),
+  });
+
+  assert.equal(alert, null);
+});
+
+test("tendencia negativa: no se estima ningun plazo", () => {
+  const alert = buildAlert({
+    player: player({ marketValue: 19_500_000, buyoutClause: 20_000_000 }),
+    owner,
+    history: risingHistory(20_000_000, -100_000, 7),
+  });
+
+  assert.ok(alert);
+  assert.equal(alert.calculated.estimatedDays, null);
+  assert.equal(alert.calculated.missingReason, "tendencia_no_positiva");
+});
+
+test("subida fuerte pero lejos de la clausula: INFORMATIVA", () => {
+  const alert = buildAlert({
+    // 10M de valor contra 40M de clausula: 25%, lejisimos de cualquier umbral.
+    player: player({ marketValue: 10_000_000, buyoutClause: 40_000_000 }),
+    owner,
+    // 100.000/dia sobre 10M = 1% diario, por encima del minimo del 0,5%.
+    history: risingHistory(9_400_000, 100_000, 7),
+  });
+
+  assert.ok(alert);
+  assert.equal(alert.level, "INFORMATIVA");
+});
+
+test("subida debil y lejos: no genera ninguna alerta", () => {
+  const alert = buildAlert({
+    player: player({ marketValue: 10_000_000, buyoutClause: 40_000_000 }),
+    owner,
+    // 10.000/dia sobre 10M = 0,1% diario, por debajo del minimo.
+    history: risingHistory(9_940_000, 10_000, 7),
+  });
+
+  assert.equal(alert, null);
+});
+
+test("classify respeta el orden de precedencia de los umbrales", () => {
+  // El ratio de valor manda sobre la estimacion de dias.
+  assert.equal(classify(THRESHOLDS.criticalValueRatio, 30, 0), "CRITICA");
+  assert.equal(classify(THRESHOLDS.highValueRatio, 30, 0), "ALTA");
+  assert.equal(classify(0.5, THRESHOLDS.highDays, null), "ALTA");
+  assert.equal(classify(0.5, THRESHOLDS.mediumDays, null), "MEDIA");
+  assert.equal(classify(0.5, 30, THRESHOLDS.infoMinDailyRiseRatio), "INFORMATIVA");
+  assert.equal(classify(0.5, 30, 0), null);
+});
+
+test("buildClauseAlerts ordena por urgencia y descarta lo que no alerta", () => {
+  const owned: OwnedPlayer[] = [
+    {
+      player: player({ id: "lejos", marketValue: 10_000_000, buyoutClause: 40_000_000 }),
+      owner,
+      history: risingHistory(9_940_000, 10_000, 7), // no alerta
+    },
+    {
+      player: player({ id: "media", marketValue: 18_200_000, buyoutClause: 20_000_000 }),
+      owner,
+      history: risingHistory(16_100_000, 350_000, 7),
+    },
+    {
+      player: player({ id: "critica", marketValue: 19_500_000, buyoutClause: 20_000_000 }),
+      owner,
+      history: [],
+    },
+  ];
+
+  const alerts = buildClauseAlerts(owned);
+
+  assert.deepEqual(
+    alerts.map((alert) => alert.player.id),
+    ["critica", "media"],
+  );
+});
