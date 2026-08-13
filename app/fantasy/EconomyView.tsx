@@ -5,6 +5,7 @@ import { millions, shortDate, signedMillions, UNKNOWN } from "./format";
 import type { EconomyResponse, ManagerLedger, SyncResponse } from "./types";
 import { Card, DataNotes, Empty, ErrorBox, SectionTitle, TableWrap, Td, Th } from "./ui";
 import { post } from "./api";
+import { AutoSyncPanel } from "./AutoSyncPanel";
 
 /**
  * Economía: cuánto dinero tiene cada manager y de dónde sale.
@@ -57,6 +58,12 @@ export function EconomyView({
             {syncing ? "Sincronizando…" : "Sincronizar ahora"}
           </button>
         </div>
+
+        {data.schedule && (
+          <div className="mb-3">
+            <AutoSyncPanel leagueId={leagueId} status={data.schedule} onChanged={onSynced} />
+          </div>
+        )}
 
         {syncError && <div className="mb-3"><ErrorBox message={syncError} /></div>}
 

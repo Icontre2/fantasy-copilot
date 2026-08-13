@@ -32,6 +32,8 @@ export type EconomyResponse = {
   trackedSince: string | null;
   ledgers: ManagerLedger[];
   dataNotes: string[];
+  /** Estado de la sincronizacion automatica; llega en la misma respuesta. */
+  schedule?: ScheduleStatus;
 };
 
 export type SyncResponse = {
@@ -40,6 +42,23 @@ export type SyncResponse = {
   detectedTransactions: number;
   storedTransactions: number;
   pointIncomeRows: number;
+};
+
+/** Estado de la sincronizacion automatica. Lo diagnostica el servidor, no la UI. */
+export type ScheduleStatus = {
+  subscription: {
+    leagueId: string;
+    leagueName: string | null;
+    enabled: boolean;
+    lastRunAt: string | null;
+    lastStatus: "OK" | "SESSION_EXPIRED" | "ERROR" | null;
+    lastError: string | null;
+    lastDetectedTransactions: number | null;
+    consecutiveFailures: number;
+  } | null;
+  health: "OFF" | "PENDING" | "OK" | "LATE" | "STOPPED";
+  minutesSinceLastRun: number | null;
+  message: string;
 };
 
 export type Section = "liga" | "alertas" | "economia" | "mercado" | "exportar";
