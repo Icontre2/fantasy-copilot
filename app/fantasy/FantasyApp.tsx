@@ -103,14 +103,25 @@ export default function FantasyApp() {
         </label>
       )}
 
-      <nav className="flex gap-1 overflow-x-auto rounded-xl bg-neutral-100 p-1">
+      {/*
+        Rejilla de 5 columnas, no flex con scroll horizontal.
+
+        Con `flex-1` + `whitespace-nowrap` las cinco pestañas no cabian en un
+        movil y «Exportar» quedaba fuera de pantalla: para descubrir que existe
+        habia que arrastrar una barra que no se ve. En una app mobile-first con
+        exactamente cinco secciones fijas, todas tienen que estar a la vista.
+      */}
+      <nav className="grid grid-cols-5 gap-1 rounded-xl bg-neutral-100 p-1">
         {SECTIONS.map((item) => (
           <button
             key={item.id}
             type="button"
             onClick={() => setSection(item.id)}
-            className={`flex-1 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium ${
-              section === item.id ? "bg-white text-neutral-900 shadow-sm" : "text-neutral-600"
+            aria-current={section === item.id ? "page" : undefined}
+            className={`truncate rounded-lg px-0.5 py-2 text-center text-[11.5px] font-medium tracking-tight transition-colors sm:text-[13px] ${
+              section === item.id
+                ? "bg-white text-neutral-900 shadow-sm"
+                : "text-neutral-600 hover:text-neutral-900"
             }`}
           >
             {item.label}

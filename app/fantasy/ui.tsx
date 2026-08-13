@@ -6,14 +6,16 @@ import type { ReactNode } from "react";
 
 export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
-    <section className={`rounded-xl border border-neutral-200 bg-white p-4 ${className}`}>
+    <section
+      className={`rounded-2xl border border-neutral-200/80 bg-white p-4 shadow-[0_1px_2px_rgba(16,24,48,0.04),0_8px_24px_rgba(16,24,48,0.04)] ${className}`}
+    >
       {children}
     </section>
   );
 }
 
 export function SectionTitle({ children }: { children: ReactNode }) {
-  return <h2 className="mb-3 text-lg font-semibold text-neutral-900">{children}</h2>;
+  return <h2 className="mb-3 text-[17px] font-semibold tracking-tight text-neutral-900">{children}</h2>;
 }
 
 /**
@@ -67,7 +69,7 @@ export function TableWrap({ children }: { children: ReactNode }) {
 export function Th({ children, align = "left" }: { children: ReactNode; align?: "left" | "right" }) {
   return (
     <th
-      className={`whitespace-nowrap border-b border-neutral-200 px-2 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-500 ${
+      className={`whitespace-nowrap border-b border-neutral-200 bg-white px-2 py-2.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-neutral-500 ${
         align === "right" ? "text-right" : "text-left"
       }`}
     >
@@ -87,7 +89,7 @@ export function Td({
 }) {
   return (
     <td
-      className={`whitespace-nowrap border-b border-neutral-100 px-2 py-2 text-sm ${
+      className={`whitespace-nowrap border-b border-neutral-100 px-2 py-2.5 text-sm ${
         align === "right" ? "text-right tabular-nums" : "text-left"
       } ${className}`}
     >
