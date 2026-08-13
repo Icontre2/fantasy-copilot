@@ -9,46 +9,42 @@ import { decryptTokenSet, encryptTokenSet } from './token-crypto';
  * Al navegador viaja UNICAMENTE un identificador opaco en una cookie httpOnly.
  * El token de LALIGA no sale del servidor en ningun caso.
  *
- * ── Dos almacenes, y por que ─────────────────────────────────────────────────
- * Con Supabase configurado, los tokens se guardan cifrados en `fantasy_sessions`.
- * Es el modo de siempre y el unico valido en produccion: sobrevive a reinicios y
- * lo comparten varias instancias.
+ * ── Dos modos ────────────────────────────────────────────────────────────────
+ * CON Supabase: los tokens se guardan cifrados en `fantasy_sessions` y la cookie
+ * lleva solo un id opaco. La sesion se renueva sola y dura 30 dias.
  *
- * SIN Supabase, y solo fuera de produccion, la sesion vive en memoria del
- * proceso. Existe para que se pueda mirar la app sin montar antes una base de
- * datos: `npm run dev`, iniciar sesion, y ver la liga de verdad. Las cuatro
- * pantallas que solo leen de LALIGA (Liga, Alertas, Mercado, Exportar) funcionan
- * asi; Economia no, porque es un historico y necesita donde guardarlo.
+ * SIN Supabase: la sesion viaja cifrada DENTRO de la cookie. No hay estado en
+ * servidor, asi que funciona igual con una instancia que con veinte — se puede
+ * desplegar sin base de datos. El precio es que no hay donde guardar el token
+ * renovado: la sesion dura lo que dura el access token de LALIGA (~24 h) y
+ * despues toca volver a entrar.
  *
- * Lo que se pierde en ese modo, y hay que asumir: reiniciar el proceso cierra la
- * sesion, y no vale para varias instancias. Por eso esta prohibido en
- * produccion — ahi la ausencia de Supabase es un error de configuracion, no una
- * comodidad.
+ * En los dos modos el token va cifrado con AES-256-GCM y la cookie es
+ * `httpOnly`: el navegador nunca puede leer el token.
  */
 
-export const SESSION_COOKIE = 'llf_session';
-const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 dias
+import { SESSION_TTL_MS } from './session-cookie.ts';
 
 /** Refrescos en vuelo, para no lanzar dos a la vez sobre la misma sesion. */
 const inflight = ((globalThis as { __llfRefreshes?: Map<string, Promise<string | null>> })
   .__llfRefreshes ??= new Map<string, Promise<string | null>>());
 
-/** Sesiones en memoria del modo sin base de datos. Colgadas de globalThis para
- *  sobrevivir al hot-reload de `next dev`, que recarga los modulos. */
-const memoryStore = ((globalThis as { __llfMemorySessions?: Map<string, { tokens: string; expiresAt: number }> })
-  .__llfMemorySessions ??= new Map<string, { tokens: string; expiresAt: number }>());
-
 type SessionRow = { encrypted_tokens: string };
 
 /**
- * `true` cuando la sesion vive en memoria en vez de en Supabase.
+ * Sin Supabase, la sesion viaja CIFRADA DENTRO DE LA COOKIE.
  *
- * En produccion nunca: si falta la configuracion, `supabaseAdmin()` lanza con su
- * mensaje y el fallo se ve, en vez de arrancar en un modo que perderia las
- * sesiones en cada despliegue.
+ * Es lo que permite desplegar la app sin base de datos: no hay estado en el
+ * servidor que compartir, asi que funciona igual con una instancia que con
+ * veinte. El token sigue sin ser legible por el navegador (AES-256-GCM y
+ * `httpOnly`), y la clave no sale del servidor.
+ *
+ * El precio, y hay que decirlo: sin sitio donde guardar el token renovado, la
+ * sesion dura lo que dura el access token de LALIGA (~24 h). Al caducar toca
+ * volver a entrar. Con Supabase configurado no pasa: se renueva sola.
  */
-export function usingMemorySessions(): boolean {
-  return !hasSupabaseAdmin() && process.env.NODE_ENV !== 'production';
+export function usingCookieSessions(): boolean {
+  return !hasSupabaseAdmin();
 }
 
 /** Persistencia disponible para el historico economico. */
@@ -57,17 +53,11 @@ export function hasPersistentStorage(): boolean {
 }
 
 export async function createSession(tokens: TokenSet): Promise<string> {
+  // Modo cookie: el "identificador" ES la sesion cifrada. No se guarda nada.
+  if (usingCookieSessions()) return encryptTokenSet(tokens);
+
   const id = randomUUID();
   const now = new Date();
-
-  if (usingMemorySessions()) {
-    memoryStore.set(id, {
-      tokens: encryptTokenSet(tokens),
-      expiresAt: now.getTime() + SESSION_TTL_MS,
-    });
-    return id;
-  }
-
   const db = supabaseAdmin();
 
   // Limpieza oportunista: sin esto la tabla solo crece.
@@ -85,23 +75,14 @@ export async function createSession(tokens: TokenSet): Promise<string> {
 }
 
 export async function destroySession(sessionId: string): Promise<void> {
-  if (usingMemorySessions()) {
-    memoryStore.delete(sessionId);
-    return;
-  }
+  // En modo cookie no hay nada que borrar en servidor: basta con caducar la
+  // cookie, que es lo que hace la ruta de logout.
+  if (usingCookieSessions()) return;
   await supabaseAdmin().from('fantasy_sessions').delete().eq('id', sessionId);
 }
 
 async function readSession(sessionId: string): Promise<SessionRow | null> {
-  if (usingMemorySessions()) {
-    const entry = memoryStore.get(sessionId);
-    if (!entry) return null;
-    if (Date.now() >= entry.expiresAt) {
-      memoryStore.delete(sessionId);
-      return null;
-    }
-    return { encrypted_tokens: entry.tokens };
-  }
+  if (usingCookieSessions()) return { encrypted_tokens: sessionId };
 
   const { data } = await supabaseAdmin()
     .from('fantasy_sessions')
@@ -117,8 +98,9 @@ async function readSession(sessionId: string): Promise<SessionRow | null> {
  *
  * En Supabase el UPDATE lleva `.eq('encrypted_tokens', previous)` como
  * comparacion optimista: si otra instancia refresco primero, no se pisa su
- * resultado — se relee la fila y se usa el token que ya dejo escrito. En memoria
- * no hace falta: hay un solo proceso.
+ * resultado — se relee la fila y se usa el token que ya dejo escrito.
+ *
+ * Solo aplica al modo Supabase: en modo cookie no hay nada que renovar.
  */
 async function refreshSession(sessionId: string, previous: string, tokens: TokenSet): Promise<string | null> {
   const active = inflight.get(sessionId);
@@ -127,14 +109,6 @@ async function refreshSession(sessionId: string, previous: string, tokens: Token
   const task = (async () => {
     try {
       const fresh = await refreshTokens(tokens.refreshToken);
-
-      if (usingMemorySessions()) {
-        memoryStore.set(sessionId, {
-          tokens: encryptTokenSet(fresh),
-          expiresAt: Date.now() + SESSION_TTL_MS,
-        });
-        return fresh.accessToken;
-      }
 
       const db = supabaseAdmin();
       const { data } = await db
@@ -151,16 +125,11 @@ async function refreshSession(sessionId: string, previous: string, tokens: Token
     } catch {
       // El refresh token ya no vale: se borra SOLO la version que fallo, para no
       // tumbar un refresh concurrente que si haya funcionado.
-      if (usingMemorySessions()) {
-        const entry = memoryStore.get(sessionId);
-        if (entry?.tokens === previous) memoryStore.delete(sessionId);
-      } else {
-        await supabaseAdmin()
-          .from('fantasy_sessions')
-          .delete()
-          .eq('id', sessionId)
-          .eq('encrypted_tokens', previous);
-      }
+      await supabaseAdmin()
+        .from('fantasy_sessions')
+        .delete()
+        .eq('id', sessionId)
+        .eq('encrypted_tokens', previous);
       return null;
     }
   })().finally(() => inflight.delete(sessionId));
@@ -189,26 +158,20 @@ export async function getValidAccessToken(sessionId: string | undefined): Promis
   }
 
   if (Date.now() < tokens.expiresAt) return tokens.accessToken;
+
+  // Sin almacen no hay donde dejar el token renovado, asi que no se renueva:
+  // la sesion caduca y el usuario vuelve a entrar. Fingir lo contrario dejaria
+  // una cookie que ya no sirve.
+  if (usingCookieSessions()) return null;
+
   return refreshSession(sessionId, row.encrypted_tokens, tokens);
 }
 
 // --- Cookie -----------------------------------------------------------------
 
-export function readSessionId(request: Request): string | undefined {
-  const header = request.headers.get('cookie');
-  if (!header) return undefined;
-  for (const part of header.split(';')) {
-    const [name, ...rest] = part.trim().split('=');
-    if (name === SESSION_COOKIE) return decodeURIComponent(rest.join('='));
-  }
-  return undefined;
-}
-
-export function buildSessionCookie(sessionId: string): string {
-  const secure = process.env.NODE_ENV === 'production' ? ' Secure;' : '';
-  return `${SESSION_COOKIE}=${encodeURIComponent(sessionId)}; Path=/; HttpOnly; SameSite=Lax;${secure} Max-Age=${Math.floor(SESSION_TTL_MS / 1000)}`;
-}
-
-export function buildClearCookie(): string {
-  return `${SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`;
-}
+export {
+  buildClearCookies,
+  buildSessionCookies,
+  readSessionId,
+  SESSION_COOKIE,
+} from './session-cookie.ts';

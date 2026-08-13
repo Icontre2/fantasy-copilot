@@ -1,5 +1,7 @@
 "use client";
 
+import "./legacy.css";
+
 /**
  * DESACOPLADO — no forma parte del producto actual.
  *

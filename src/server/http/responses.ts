@@ -16,16 +16,25 @@ export function privateJson(data: unknown, status = 200): Response {
   });
 }
 
-export function privateJsonWithCookie(data: unknown, cookie: string, status = 200): Response {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: {
-      'Content-Type': 'application/json; charset=utf-8',
-      'Cache-Control': 'no-store',
-      Vary: 'Cookie',
-      'Set-Cookie': cookie,
-    },
+/**
+ * Respuesta que ademas fija cookies. Acepta varias porque la sesion cifrada se
+ * trocea cuando no cabe en una sola (ver `session.ts`), y `Set-Cookie` es la
+ * unica cabecera que se repite en vez de concatenarse.
+ */
+export function privateJsonWithCookies(
+  data: unknown,
+  cookies: string | string[],
+  status = 200,
+): Response {
+  const headers = new Headers({
+    'Content-Type': 'application/json; charset=utf-8',
+    'Cache-Control': 'no-store',
+    Vary: 'Cookie',
   });
+  for (const cookie of Array.isArray(cookies) ? cookies : [cookies]) {
+    headers.append('Set-Cookie', cookie);
+  }
+  return new Response(JSON.stringify(data), { status, headers });
 }
 
 /** Descarga de CSV. `filename` ya debe venir saneado por quien construye el fichero. */

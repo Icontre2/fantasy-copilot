@@ -1,7 +1,7 @@
-import { errorJson, privateJson, privateJsonWithCookie } from "@/src/server/http/responses";
+import { errorJson, privateJson, privateJsonWithCookies } from "@/src/server/http/responses";
 import { passwordLogin } from "@/src/server/laliga/auth";
 import { getMyProfile } from "@/src/server/laliga/read";
-import { buildSessionCookie, createSession } from "@/src/server/laliga/session";
+import { buildSessionCookies, createSession } from "@/src/server/laliga/session";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     const manager = await getMyProfile(tokens.accessToken);
     const sessionId = await createSession(tokens);
 
-    return privateJsonWithCookie({ manager }, buildSessionCookie(sessionId));
+    return privateJsonWithCookies({ manager }, buildSessionCookies(sessionId));
   } catch (error) {
     return errorJson(error);
   }
