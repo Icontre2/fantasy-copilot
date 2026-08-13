@@ -1,31 +1,100 @@
-import { load } from 'cheerio';
+import { getPlayerCatalog } from '@/src/server/laliga/read';
+import { FALLBACK_TEAMS } from '@/src/server/laliga/teams';
+import { matchExternalPlayer } from './match';
+import { FUTBOLFANTASY_TEAM_SLUGS } from './teams';
+import { parseProbableLineup, type ProbableLineupEntry } from './parser';
 
-export type ProbableMatch = { home: string; away: string; kickoff?: string; url: string; homePlayers: string[]; awayPlayers: string[] };
-const INDEX = 'https://www.futbolfantasy.com/laliga/posibles-alineaciones';
-const headers = { Accept: 'text/html', 'User-Agent': 'FantasyCopilot/2.0 (+personal-use)' };
-const MATCH_LINK = /^https:\/\/www\.futbolfantasy\.com\/partidos\/[a-zA-Z0-9_-]+$/;
+export type { ProbableLineupEntry } from './parser';
 
-async function html(url: string): Promise<string> {
-  const response = await fetch(url, { headers, next: { revalidate: 600 }, signal: AbortSignal.timeout(12_000) });
-  if (!response.ok) throw new Error(`FútbolFantasy respondió ${response.status}.`);
+export type ProbableTeam = {
+  teamId: string;
+  name: string;
+  shortName: string;
+  badge: string;
+  players: Array<ProbableLineupEntry & { playerId?: string; image?: string }>;
+};
+
+const BASE = 'https://www.futbolfantasy.com/laliga/equipos/';
+const headers = { 'User-Agent': 'Mozilla/5.0 (compatible; FantasyCopilot/2.0; +personal use)' };
+
+async function fetchTeam(slug: string): Promise<string> {
+  const response = await fetch(`${BASE}${slug}`, {
+    headers,
+    next: { revalidate: 60 * 60 },
+    signal: AbortSignal.timeout(10_000),
+  });
+  if (!response.ok) throw new Error(`FútbolFantasy respondió ${response.status} para ${slug}.`);
   return response.text();
 }
 
-export function parseMatchPage(source: string, url: string): ProbableMatch {
-  const $ = load(source);
-  const title = $('.alineacion_wrapper header.title').first().text().replace(/\s+/g, ' ').trim().replace(/^Posibles alineaciones\s+/i, '');
-  const [home = 'Local', away = 'Visitante'] = title.split(/\s+-\s+/);
-  const players = (side: string) => $(`.campo-wrapper.${side} .camiseta-wrapper`).map((_, element) => $(element).find('.fotocontainer img[alt]').first().attr('alt')?.trim()).get().filter(Boolean).slice(0, 11);
-  return { home, away, url, homePlayers: players('local'), awayPlayers: players('visitante') };
+async function mapConcurrent<T, R>(items: T[], limit: number, worker: (item: T) => Promise<R>): Promise<R[]> {
+  const output = new Array<R>(items.length);
+  let cursor = 0;
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (cursor < items.length) {
+      const index = cursor++;
+      const item = items[index];
+      if (item !== undefined) output[index] = await worker(item);
+    }
+  }));
+  return output;
 }
 
-export async function getProbableLineups(): Promise<{ matches: ProbableMatch[]; updatedAt: string; source: string }> {
-  const $ = load(await html(INDEX));
-  const links = $('a.partido[href*="/partidos/"]').map((_, element) => ({
-    url: $(element).attr('href')!, kickoff: $(element).find('.fecha').text().replace(/\s+/g, ' ').trim(),
-  })).get().filter((item) => MATCH_LINK.test(item.url)).filter((item, index, all) => all.findIndex((other) => other.url === item.url) === index).slice(0, 10);
-  const settled = await Promise.allSettled(links.map(async (link) => ({ ...parseMatchPage(await html(link.url), link.url), kickoff: link.kickoff })));
-  const matches = settled.flatMap((result) => result.status === 'fulfilled' && result.value.homePlayers.length === 11 && result.value.awayPlayers.length === 11 ? [result.value] : []);
-  if (!matches.length) throw new Error('FútbolFantasy no publicó onces interpretables en este momento.');
-  return { matches, updatedAt: new Date().toISOString(), source: INDEX };
+export async function getProbableTeam(
+  teamId: string,
+  catalog: Awaited<ReturnType<typeof getPlayerCatalog>>,
+): Promise<ProbableTeam> {
+  const slug = FUTBOLFANTASY_TEAM_SLUGS[teamId];
+  if (!slug) throw new Error(`FútbolFantasy no tiene slug para el equipo ${teamId}.`);
+  const entries = parseProbableLineup(await fetchTeam(slug));
+  const teamPlayers = catalog.filter((player) => player.teamId === teamId);
+  return {
+    teamId,
+    name: FALLBACK_TEAMS[teamId]?.name ?? slug,
+    shortName: FALLBACK_TEAMS[teamId]?.shortName ?? slug.slice(0, 3).toUpperCase(),
+    badge: FALLBACK_TEAMS[teamId]?.badge ?? '',
+    players: entries.map((entry) => {
+      const matched = teamPlayers.find(
+        (player) => matchExternalPlayer(entries, player.name)?.externalId === entry.externalId,
+      );
+      return { ...entry, playerId: matched?.id, image: matched?.image };
+    }),
+  };
+}
+
+export async function getProbableLineups(): Promise<{
+  teams: ProbableTeam[];
+  updatedAt: string;
+  source: string;
+  failedTeams: number;
+}> {
+  const catalog = await getPlayerCatalog();
+  const catalogByTeam = new Map<string, typeof catalog>();
+  for (const player of catalog) {
+    if (!player.teamId) continue;
+    const list = catalogByTeam.get(player.teamId) ?? [];
+    list.push(player);
+    catalogByTeam.set(player.teamId, list);
+  }
+
+  const definitions = Object.entries(FUTBOLFANTASY_TEAM_SLUGS);
+  const settled = await mapConcurrent(definitions, 5, async ([teamId]) => {
+    try {
+      return {
+        ok: true as const,
+        team: await getProbableTeam(teamId, catalogByTeam.get(teamId) ?? []),
+      };
+    } catch {
+      return { ok: false as const };
+    }
+  });
+
+  const teams = settled.flatMap((result) => result.ok ? [result.team] : []);
+  if (!teams.length) throw new Error('FútbolFantasy no publicó alineaciones interpretables en este momento.');
+  return {
+    teams: teams.sort((a, b) => a.name.localeCompare(b.name, 'es')),
+    failedTeams: settled.length - teams.length,
+    updatedAt: new Date().toISOString(),
+    source: 'https://www.futbolfantasy.com/laliga/posibles-alineaciones',
+  };
 }

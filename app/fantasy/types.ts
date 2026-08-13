@@ -16,6 +16,39 @@ export type TeamsResponse = {
 
 export type MarketResponse = { market: MarketEntry[] };
 
+export type PlayerWithProbability = Player & {
+  buyoutClause?: number;
+  isShielded?: boolean;
+  lineupProbability?: number;
+};
+
+export type DashboardResponse = {
+  league: Pick<League, 'id' | 'name'>;
+  me: LeagueTeam & {
+    players: PlayerWithProbability[];
+    position?: number;
+    points?: number;
+    netWorth: number;
+  };
+  lineup: {
+    formation: string;
+    starters: PlayerWithProbability[];
+    bench: PlayerWithProbability[];
+  };
+  history: { date: string; value: number }[];
+  historyCoverage: { covered: number; total: number };
+  competitors: Array<{
+    teamId: string;
+    manager: Manager;
+    position?: number;
+    points?: number;
+    teamValue?: number;
+    teamMoney?: number;
+    netWorth: number;
+  }>;
+  failedTeamIds: string[];
+};
+
 export type AlertsResponse = {
   leagueId: string;
   alerts: ClauseAlert[];
@@ -65,14 +98,11 @@ export type ScheduleStatus = {
   message: string;
 };
 
-export type Section = "liga" | "alertas" | "economia" | "mercado" | "onces" | "comparar" | "exportar";
+export type Section = "inicio" | "plantilla" | "liga" | "alertas" | "economia" | "mercado" | "onces" | "comparar" | "exportar" | "mas";
 
 export const SECTIONS: { id: Section; label: string }[] = [
-  { id: "liga", label: "Liga" },
-  { id: "alertas", label: "Alertas" },
-  { id: "economia", label: "Economía" },
+  { id: "inicio", label: "Inicio" },
+  { id: "plantilla", label: "Plantilla" },
   { id: "mercado", label: "Mercado" },
-  { id: "onces", label: "Onces" },
-  { id: "comparar", label: "Comparar" },
-  { id: "exportar", label: "Exportar" },
+  { id: "mas", label: "Más" },
 ];

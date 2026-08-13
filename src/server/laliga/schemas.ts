@@ -14,6 +14,22 @@ import { z } from 'zod';
 
 const numeric = z.union([z.number(), z.string()]).transform((value) => Number(value));
 
+/** GET /api/v5/players — catálogo público completo. */
+export const apiPlayerSchema = z.object({
+  id: z.string(),
+  positionId: z.string(),
+  nickname: z.string(),
+  playerStatus: z.enum(['ok', 'doubtful', 'injured', 'suspended', 'out_of_league']),
+  marketValue: numeric,
+  points: numeric,
+  averagePoints: numeric,
+  image: z.string(),
+  teamId: z.string(),
+  lastSeasonPoints: numeric.optional(),
+});
+
+export const apiPlayersSchema = z.array(apiPlayerSchema);
+
 // --- Endpoints publicos (sin token) -----------------------------------------
 
 /** GET /api/v3/player/{id}/market-value — serie diaria de cotizacion. */
@@ -155,6 +171,7 @@ export const apiWeekSchema = z.object({
 });
 
 export type ApiManagerLike = z.infer<typeof apiManagerSchema>;
+export type ApiPlayer = z.infer<typeof apiPlayerSchema>;
 export type ApiUser = z.infer<typeof apiUserSchema>;
 export type ApiLeague = z.infer<typeof apiLeagueSchema>;
 export type ApiLeagueTeam = z.infer<typeof apiLeagueTeamSchema>;
