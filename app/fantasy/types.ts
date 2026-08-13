@@ -1,10 +1,10 @@
 /** Formas que devuelven las rutas `/api/fantasy/*`, tal cual las consume la UI. */
 
-import type { League, LeagueTeam, Manager, MarketEntry, StandingRow } from "@/src/domain/fantasy";
+import type { League, LeagueTeam, Manager, MarketEntry, MarketValuePoint, Player, StandingRow } from "@/src/domain/fantasy";
 import type { ClauseAlert } from "@/src/server/laliga/alerts/clause-alerts";
 import type { ManagerLedger } from "@/src/server/laliga/economy/ledger";
 
-export type { ClauseAlert, League, LeagueTeam, Manager, ManagerLedger, MarketEntry, StandingRow };
+export type { ClauseAlert, League, LeagueTeam, Manager, ManagerLedger, MarketEntry, MarketValuePoint, Player, StandingRow };
 
 export type LeaguesResponse = { leagues: League[] };
 
@@ -65,12 +65,14 @@ export type ScheduleStatus = {
   message: string;
 };
 
-export type Section = "liga" | "alertas" | "economia" | "mercado" | "exportar";
+export type Section = "liga" | "alertas" | "economia" | "mercado" | "onces" | "comparar" | "exportar";
 
 export const SECTIONS: { id: Section; label: string }[] = [
   { id: "liga", label: "Liga" },
   { id: "alertas", label: "Alertas" },
   { id: "economia", label: "Economía" },
   { id: "mercado", label: "Mercado" },
+  { id: "onces", label: "Onces" },
+  { id: "comparar", label: "Comparar" },
   { id: "exportar", label: "Exportar" },
 ];

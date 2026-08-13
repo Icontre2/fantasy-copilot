@@ -4,6 +4,9 @@ import { useState } from "react";
 import { euros, millions, UNKNOWN } from "./format";
 import type { TeamsResponse } from "./types";
 import { Card, Empty, SectionTitle, Td, Th, TableWrap } from "./ui";
+import { PlayerDetails } from "./PlayerDetails";
+import { PlayerImage } from "./PlayerImage";
+import type { Player } from "./types";
 
 /**
  * Liga: todos los managers y sus plantillas. Solo lectura.
@@ -13,6 +16,7 @@ import { Card, Empty, SectionTitle, Td, Th, TableWrap } from "./ui";
  */
 export function LeagueView({ data }: { data: TeamsResponse }) {
   const [openTeamId, setOpenTeamId] = useState<string | null>(null);
+  const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
 
   if (data.teams.length === 0) {
     return <Empty>No se ha podido leer ninguna plantilla de esta liga.</Empty>;
@@ -71,12 +75,13 @@ export function LeagueView({ data }: { data: TeamsResponse }) {
         </p>
       </Card>
 
-      {openTeamId && <SquadCard team={byTeamId.get(openTeamId)} />}
+      {openTeamId && <SquadCard team={byTeamId.get(openTeamId)} onPlayer={setSelectedPlayer} />}
+      {selectedPlayer && <PlayerDetails player={selectedPlayer} onClose={() => setSelectedPlayer(null)} />}
     </div>
   );
 }
 
-function SquadCard({ team }: { team: TeamsResponse["teams"][number] | undefined }) {
+function SquadCard({ team, onPlayer }: { team: TeamsResponse["teams"][number] | undefined; onPlayer: (player: Player) => void }) {
   if (!team) return null;
 
   return (
@@ -101,7 +106,7 @@ function SquadCard({ team }: { team: TeamsResponse["teams"][number] | undefined 
             {team.players.map((player) => (
               <tr key={player.id}>
                 <Td className="font-medium">
-                  {player.name}
+                  <button type="button" onClick={() => onPlayer(player)} className="flex items-center gap-2 text-left hover:underline"><PlayerImage player={player} size={38} /><span>{player.name}</span></button>
                   {player.isShielded && (
                     <span className="ml-1 text-xs text-neutral-500" title="Blindado">
                       🛡
