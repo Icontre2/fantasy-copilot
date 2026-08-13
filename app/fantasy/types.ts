@@ -23,6 +23,8 @@ export type AlertsResponse = {
   playersWithoutClause: number;
   skippedForBudget: number;
   historyFailures: number;
+  /** Con histórico, pero congelado: alertan por cercanía, sin tendencia. */
+  staleHistories: number;
   failedTeamIds: string[];
   dataNotes: string[];
 };

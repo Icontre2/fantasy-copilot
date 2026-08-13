@@ -9,11 +9,15 @@ historial. Dice qué está hecho, qué está **sin verificar**, y qué es lo sig
 
 ## Lo más importante que hay que saber
 
-**Nada de esto se ha ejecutado nunca contra la API real de LALIGA.** Ni una
-petición. Todo lo escrito se apoya en la auditoría de código de
+**La parte privada (tu liga) no se ha ejecutado nunca contra la API real.** Se
+apoya en la auditoría de código de
 [`JavierContreras00/AppFantasy`](https://github.com/JavierContreras00/AppFantasy)
 (commit `65e813b`), que sí documenta pruebas reales, pero **este** repositorio no
-ha hablado con LALIGA todavía.
+ha usado todavía un token de sesión.
+
+**La parte pública sí está verificada** contra la API real el 2026-08-13 (no
+necesita credenciales). Ver la sección siguiente: sirvió para encontrar y
+corregir un defecto que habría mostrado datos viejos como actuales.
 
 Lo que está probado son 53 tests de la aritmética pura (alertas, ledger,
 detección de operaciones, CSV, estado de sincronización), sin red. Eso demuestra
@@ -22,6 +26,58 @@ que las cuentas salen, **no** que los datos de entrada sean los que esperamos.
 Consecuencia práctica: el primer arranque real puede fallar en el parseo, y ese
 fallo es informativo — `LaligaError('invalid_response')` dice el campo exacto que
 no encaja con el schema de `src/server/laliga/schemas.ts`.
+
+---
+
+## Verificado contra la API real (2026-08-13, endpoints públicos)
+
+Peticiones reales al host público `api-fantasy.llt-services.com`, sin
+credenciales:
+
+| Endpoint | Resultado | ¿Encaja con el schema? |
+| --- | --- | --- |
+| `GET /api/v3/week/current` | `weekNumber: 38`, `isLive: false`, cierre `2026-05-25` | Sí |
+| `GET /api/v5/players` | 792 jugadores, exactamente los 10 campos documentados | Sí |
+| `GET /api/v3/player/{id}/market-value` | 360 puntos diarios, `2025-07-03` → `2026-06-30` | Sí |
+
+Tres hallazgos que importan:
+
+1. **La temporada 26/27 todavía no ha empezado** en el host público: sigue
+   devolviendo la última jornada de la 25/26. El bonus por puntos no tendrá nada
+   que sumar hasta que se dispute la jornada 1.
+2. **`bids` llega a 0 en los 360 puntos**, como avisaba la auditoría de
+   `AppFantasy`. No sirve como señal histórica de competencia.
+3. **La serie de cotización trae un campo extra `lfpId`** que no está en el
+   schema. No rompe nada: zod descarta las claves desconocidas por defecto.
+
+### Defecto real encontrado y corregido con esto
+
+La serie pública terminaba el **2026-06-30**, 44 días antes de la fecha de la
+comprobación. Y `computeDailyTrend` medía la ventana respecto al **último punto
+de la serie**, no respecto a hoy.
+
+Resultado antes del arreglo: la app calculaba la pendiente del 23→30 de junio y
+la presentaba como *"subida reciente"*, con su *"alcanzará la cláusula en N
+días"* incluido. Dato de hace seis semanas disfrazado de actual — exactamente lo
+que el encargo prohíbe.
+
+El arreglo (`MAX_HISTORY_AGE_DAYS = 3`) distingue dos cosas que antes iban
+juntas:
+
+- **Valor y cláusula son de hoy** (vienen de la plantilla, no de la serie), así
+  que la alerta por cercanía **se mantiene**: en la comprobación real el jugador
+  seguía saliendo como `ALTA`.
+- **La tendencia se calla**: `dailyTrend`, `dailyTrendRatio` y `estimatedDays`
+  pasan a `null` con `missingReason: 'historico_desactualizado'`, y la respuesta
+  expone `historyLatestDate` y `historyAgeDays` para que la pantalla pueda decir
+  hasta dónde llega el dato.
+
+Efecto secundario importante: una cotización congelada ya **no puede generar una
+`INFORMATIVA`** por una subida que ocurrió hace mes y medio.
+
+Cubierto por 3 tests nuevos construidos sobre el caso real medido, y los tests
+existentes se anclaron a un `NOW` fijo (antes dependían del reloj y habrían
+empezado a fallar solos a los pocos días).
 
 ---
 
@@ -123,12 +179,14 @@ suscripción, la marca, y la UI lo dice en rojo.
 
 | Cosa | Estado | Cómo verificarlo |
 | --- | --- | --- |
-| Cualquier respuesta real de LALIGA | **Sin verificar** | arrancar y entrar en una liga |
+| Endpoints **públicos** y sus schemas | ✅ **Verificado** 2026-08-13 | ver sección anterior |
+| ¿Ha empezado la temporada 26/27? | ✅ **Comprobado: no** | `week/current` sigue en la J38 de la 25/26 |
+| Cualquier endpoint **privado** (tu liga) | **Sin verificar** | arrancar y entrar en una liga |
 | Login ROPC desde este repo | **Sin verificar** | `POST /api/fantasy/auth/login` |
+| `buyoutClause` y `teamMoney` reales | **Sin verificar** | son privados: hacen falta credenciales |
 | `runScheduledSyncs()` | **Sin ejecutar** | ver abajo |
 | Detección de operaciones con datos reales | **Sin verificar** | requiere 2 sincronizaciones con un fichaje entre medias |
 | Límite de peticiones/minuto de LALIGA | **Sin medir** | por eso el cron va secuencial y limitado a 10 ligas |
-| ¿Ha empezado la temporada 26/27? | **Sin comprobar** | si no hay jornada jugada, el bonus por puntos no tendrá nada que sumar |
 
 Probar el cron a mano:
 

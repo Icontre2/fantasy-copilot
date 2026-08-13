@@ -32,6 +32,23 @@ export const TREND_WINDOW_DAYS = 7;
 export const MIN_HISTORY_POINTS = 3;
 
 /**
+ * Antiguedad maxima del ultimo punto de cotizacion para que la tendencia se
+ * considere ACTUAL, en dias.
+ *
+ * Existe por un fallo real detectado contra la API: la ventana de tendencia se
+ * mide respecto al ultimo punto de la serie, no respecto a hoy. Entre temporadas
+ * la serie publica se queda congelada (comprobado el 2026-08-13: el ultimo dato
+ * era del 2026-06-30, 44 dias antes), y sin este control la app calculaba la
+ * pendiente de finales de junio y la presentaba como "subida reciente", con su
+ * "alcanzara la clausula en N dias" incluido. Eso es dato viejo disfrazado de
+ * actual, que es justo lo que este proyecto no hace.
+ *
+ * Tres dias de margen: la serie es diaria, asi que uno o dos dias de retraso son
+ * un hipo de la API; una semana ya no describe el presente.
+ */
+export const MAX_HISTORY_AGE_DAYS = 3;
+
+/**
  * Umbrales de nivel. Los tres primeros son los pedidos en el encargo.
  *
  * `INFO_MIN_DAILY_RISE_RATIO` es el unico que se ha tenido que fijar aqui,
@@ -54,6 +71,7 @@ export type AlertLevel = 'CRITICA' | 'ALTA' | 'MEDIA' | 'INFORMATIVA';
 export type MissingReason =
   | 'sin_clausula' // LALIGA no publica buyoutClause para ese jugador
   | 'sin_historico' // no hay suficientes puntos de cotizacion
+  | 'historico_desactualizado' // el ultimo dato es demasiado viejo para hablar de "reciente"
   | 'tendencia_no_positiva'; // el valor no sube: la estimacion no tiene sentido
 
 export type ClauseAlert = {
@@ -83,6 +101,10 @@ export type ClauseAlert = {
     estimatedDays: number | null;
     /** Observaciones de cotizacion usadas para la tendencia. */
     historyPoints: number;
+    /** Fecha del ultimo dato de cotizacion disponible. `null` si no hay serie. */
+    historyLatestDate: string | null;
+    /** Dias transcurridos desde ese ultimo dato. Permite decir "medido hasta X". */
+    historyAgeDays: number | null;
     /** Presente cuando `estimatedDays` es null: por que no se pudo calcular. */
     missingReason?: MissingReason;
   };
@@ -106,7 +128,8 @@ export type ClauseAlert = {
 export function computeDailyTrend(
   history: MarketValuePoint[],
   windowDays = TREND_WINDOW_DAYS,
-): { dailyTrend: number; points: number } | null {
+  now: Date = new Date(),
+): { dailyTrend: number; points: number; latestDate: string; ageDays: number } | null {
   if (history.length < MIN_HISTORY_POINTS) return null;
 
   const sorted = [...history].sort((a, b) => a.date.localeCompare(b.date));
@@ -133,6 +156,10 @@ export function computeDailyTrend(
   return {
     dailyTrend: (latest.marketValue - first.marketValue) / elapsedDays,
     points: window.length,
+    latestDate: latest.date,
+    // Puede salir negativo si el reloj del servidor va por detras del dato: se
+    // acota a 0 para no acabar mostrando "hace -1 dias".
+    ageDays: Math.max(0, (now.getTime() - latestTime) / 86_400_000),
   };
 }
 
@@ -166,12 +193,22 @@ export type OwnedPlayer = {
  * hay nada con lo que comparar el valor, y rellenarla con una estimacion seria
  * inventar el dato que da sentido a toda la pantalla.
  */
-export function buildAlert({ player, owner, history }: OwnedPlayer): ClauseAlert | null {
+export function buildAlert(
+  { player, owner, history }: OwnedPlayer,
+  now: Date = new Date(),
+): ClauseAlert | null {
   const clause = player.buyoutClause;
   if (clause === undefined || clause <= 0) return null;
 
-  const trend = computeDailyTrend(history);
-  const dailyTrend = trend?.dailyTrend ?? null;
+  const trend = computeDailyTrend(history, TREND_WINDOW_DAYS, now);
+
+  // Un historico congelado NO produce tendencia. El valor y la clausula siguen
+  // siendo de hoy (vienen de la plantilla, no de la serie), asi que la alerta por
+  // cercania se mantiene; lo que desaparece es la parte que dice "esta subiendo"
+  // y su estimacion de dias, que serian una pendiente vieja presentada como
+  // actual. Ver MAX_HISTORY_AGE_DAYS.
+  const isStale = trend !== null && trend.ageDays > MAX_HISTORY_AGE_DAYS;
+  const dailyTrend = trend === null || isStale ? null : trend.dailyTrend;
   const dailyTrendRatio =
     dailyTrend !== null && player.marketValue > 0 ? dailyTrend / player.marketValue : null;
 
@@ -180,9 +217,11 @@ export function buildAlert({ player, owner, history }: OwnedPlayer): ClauseAlert
 
   let estimatedDays: number | null = null;
   let missingReason: MissingReason | undefined;
-  if (dailyTrend === null) {
+  if (trend === null) {
     missingReason = 'sin_historico';
-  } else if (dailyTrend <= 0) {
+  } else if (isStale) {
+    missingReason = 'historico_desactualizado';
+  } else if (dailyTrend === null || dailyTrend <= 0) {
     missingReason = 'tendencia_no_positiva';
   } else if (gap > 0) {
     estimatedDays = gap / dailyTrend;
@@ -215,6 +254,8 @@ export function buildAlert({ player, owner, history }: OwnedPlayer): ClauseAlert
       dailyTrendRatio,
       estimatedDays,
       historyPoints: trend?.points ?? 0,
+      historyLatestDate: trend?.latestDate ?? null,
+      historyAgeDays: trend ? Math.round(trend.ageDays * 10) / 10 : null,
       missingReason,
     },
     level,
@@ -226,9 +267,9 @@ export function buildAlert({ player, owner, history }: OwnedPlayer): ClauseAlert
  * Alertas de toda la liga, ordenadas por urgencia y, dentro del mismo nivel,
  * por lo cerca que esta el valor de la clausula.
  */
-export function buildClauseAlerts(owned: OwnedPlayer[]): ClauseAlert[] {
+export function buildClauseAlerts(owned: OwnedPlayer[], now: Date = new Date()): ClauseAlert[] {
   return owned
-    .map(buildAlert)
+    .map((entry) => buildAlert(entry, now))
     .filter((alert): alert is ClauseAlert => alert !== null)
     .sort(
       (a, b) =>

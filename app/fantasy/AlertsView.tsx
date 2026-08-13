@@ -29,6 +29,8 @@ const LEVEL_LABEL: Record<ClauseAlert["level"], string> = {
 /** Por qué no hay estimación de días. Se dice, no se deja el hueco en blanco. */
 const MISSING_LABEL: Record<string, string> = {
   sin_historico: "sin histórico suficiente para medir la tendencia",
+  historico_desactualizado:
+    "su cotización lleva días sin actualizarse: medir una «subida diaria» con ese dato sería presentarlo como actual sin serlo",
   tendencia_no_positiva: "su valor no está subiendo",
   sin_clausula: "LALIGA no publica su cláusula",
 };
@@ -139,6 +141,7 @@ export function AlertsView({ data }: { data: AlertsResponse }) {
           {data.playersWithClause} jugadores con cláusula · {data.playersWithoutClause} sin cláusula
           publicada · {data.skippedForBudget} no consultados por límite de peticiones
           {data.historyFailures > 0 && ` · ${data.historyFailures} sin histórico descargable`}
+          {data.staleHistories > 0 && ` · ${data.staleHistories} con cotización congelada`}
         </p>
       </Card>
 

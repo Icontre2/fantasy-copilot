@@ -1,6 +1,11 @@
 import type { MarketValuePoint } from '@/src/domain/fantasy';
 import { getLeagueSnapshot, getMarketValueHistory } from '../read.ts';
-import { buildClauseAlerts, type ClauseAlert, type OwnedPlayer } from './clause-alerts.ts';
+import {
+  buildClauseAlerts,
+  MAX_HISTORY_AGE_DAYS,
+  type ClauseAlert,
+  type OwnedPlayer,
+} from './clause-alerts.ts';
 
 /**
  * Construccion de las alertas de clausula de una liga completa.
@@ -68,6 +73,11 @@ export type ClauseAlertsReport = {
   skippedForBudget: number;
   /** Jugadores cuyo historico no se pudo descargar: sin tendencia. */
   historyFailures: number;
+  /**
+   * Jugadores cuyo historico existe pero esta congelado (ultimo dato demasiado
+   * viejo). Siguen alertando por cercania a la clausula, pero SIN tendencia.
+   */
+  staleHistories: number;
   failedTeamIds: string[];
   dataNotes: string[];
 };
@@ -123,6 +133,17 @@ export async function buildClauseAlertsReport(
   });
 
   const alerts = buildClauseAlerts(selected);
+  const staleHistories = alerts.filter(
+    (alert) => alert.calculated.missingReason === 'historico_desactualizado',
+  ).length;
+
+  // La fecha del dato mas reciente que hemos visto de cualquier jugador. Sirve
+  // para decir "la cotizacion va hasta el X" en vez de dejarlo a la imaginacion.
+  const latestHistoryDate = alerts
+    .map((alert) => alert.calculated.historyLatestDate)
+    .filter((date): date is string => date !== null)
+    .sort()
+    .at(-1);
 
   return {
     leagueId,
@@ -131,6 +152,7 @@ export async function buildClauseAlertsReport(
     playersWithoutClause,
     skippedForBudget: candidates.length - selected.length,
     historyFailures,
+    staleHistories,
     failedTeamIds: league.failedTeamIds,
     dataNotes: [
       'Valor de mercado y clausula son datos oficiales de LALIGA. El hueco, la tendencia diaria y los dias estimados los calcula esta app.',
@@ -139,6 +161,11 @@ export async function buildClauseAlertsReport(
       playersWithoutClause > 0
         ? `${playersWithoutClause} jugador(es) no tienen clausula publicada por LALIGA y no se pueden evaluar.`
         : 'Todos los jugadores de la liga tienen clausula publicada.',
+      staleHistories > 0
+        ? `${staleHistories} jugador(es) se muestran SIN tendencia ni dias estimados: su ultimo dato de cotizacion tiene mas de ${MAX_HISTORY_AGE_DAYS} dias${
+            latestHistoryDate ? ` (la serie llega al ${latestHistoryDate.slice(0, 10)})` : ''
+          }. Entre temporadas la serie publica se congela; calcular una "subida diaria" con eso seria presentar dato viejo como actual.`
+        : 'La cotizacion usada para las tendencias esta al dia.',
     ],
   };
 }
