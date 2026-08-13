@@ -61,8 +61,14 @@ test("sin clave y fuera de produccion usa una efimera, estable dentro del proces
   });
 });
 
-test("sin clave y EN produccion lanza: el atajo de desarrollo no se cuela", () => {
-  withEnv({ SESSION_ENCRYPTION_KEY: undefined, NODE_ENV: "production" }, () => {
+test("en Vercel usa OIDC como respaldo cifrado cuando falta la clave explicita", () => {
+  withEnv({ SESSION_ENCRYPTION_KEY: undefined, VERCEL_OIDC_TOKEN: "o".repeat(80), NODE_ENV: "production" }, () => {
+    assert.deepEqual(decryptTokenSet(encryptTokenSet(tokens)), tokens);
+  });
+});
+
+test("sin ningun secreto y EN produccion lanza: el atajo de desarrollo no se cuela", () => {
+  withEnv({ SESSION_ENCRYPTION_KEY: undefined, VERCEL_OIDC_TOKEN: undefined, NODE_ENV: "production" }, () => {
     assert.throws(() => encryptTokenSet(tokens), /SESSION_ENCRYPTION_KEY/);
   });
 });
