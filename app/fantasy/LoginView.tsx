@@ -44,8 +44,8 @@ export function LoginView({ onLogin }: { onLogin: (manager: Manager) => void }) 
   return (
     <section className="mx-auto mt-[8vh] w-full max-w-md overflow-hidden rounded-[32px] bg-white shadow-[0_28px_90px_rgba(10,18,45,.16)]">
       <div className="bg-[linear-gradient(145deg,#101a39,#1d3566)] p-6 text-white">
-        <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[#d6ff75] text-lg font-black text-[#101a39]">FC</span>
-        <p className="mt-6 text-xs font-semibold uppercase tracking-[.16em] text-white/45">Fantasy Copilot</p>
+        <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[#d6ff75] text-lg font-black text-[#101a39]">LL</span>
+        <p className="mt-6 text-xs font-semibold uppercase tracking-[.16em] text-white/45">LigaLab</p>
         <h1 className="mt-1 text-3xl font-bold tracking-[-.04em]">Tu liga, más clara.</h1>
         <p className="mt-2 text-sm leading-5 text-white/60">Consulta cajas, plantillas, alertas y mercado desde un único sitio.</p>
       </div>

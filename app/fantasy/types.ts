@@ -35,8 +35,6 @@ export type DashboardResponse = {
     starters: PlayerWithProbability[];
     bench: PlayerWithProbability[];
   };
-  history: { date: string; value: number }[];
-  historyCoverage: { covered: number; total: number };
   competitors: Array<{
     teamId: string;
     manager: Manager;

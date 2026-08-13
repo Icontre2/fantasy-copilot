@@ -1,151 +1,71 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { ArrowUpRight, Clock3, ShieldCheck, TriangleAlert } from "lucide-react";
 import { days, millions, percent, signedMillions, UNKNOWN } from "./format";
-import type { AlertsResponse, ClauseAlert } from "./types";
-import { Card, DataNotes, Empty, SectionTitle, TableWrap, Td, Th } from "./ui";
-
-/**
- * Alertas de cláusula: jugadores cuyo valor de mercado se acerca a su cláusula.
- *
- * Cada fila separa lo que publica LALIGA (valor, cláusula, propietario) de lo
- * que calcula la app (diferencia, subida diaria, días estimados).
- */
+import type { AlertsResponse, ClauseAlert, Player } from "./types";
+import { DataNotes, Empty } from "./ui";
+import { PlayerDetails } from "./PlayerDetails";
+import { PlayerImage } from "./PlayerImage";
 
 const LEVEL_STYLE: Record<ClauseAlert["level"], string> = {
-  CRITICA: "bg-red-100 text-red-900",
-  ALTA: "bg-orange-100 text-orange-900",
-  MEDIA: "bg-amber-100 text-amber-900",
-  INFORMATIVA: "bg-neutral-100 text-neutral-700",
+  CRITICA: "bg-rose-100 text-rose-700",
+  ALTA: "bg-orange-100 text-orange-800",
+  MEDIA: "bg-amber-100 text-amber-800",
+  INFORMATIVA: "bg-neutral-100 text-neutral-600",
 };
 
 const LEVEL_LABEL: Record<ClauseAlert["level"], string> = {
   CRITICA: "Crítica",
   ALTA: "Alta",
   MEDIA: "Media",
-  INFORMATIVA: "Informativa",
-};
-
-/** Por qué no hay estimación de días. Se dice, no se deja el hueco en blanco. */
-const MISSING_LABEL: Record<string, string> = {
-  sin_historico: "sin histórico suficiente para medir la tendencia",
-  historico_desactualizado:
-    "su cotización lleva días sin actualizarse: medir una «subida diaria» con ese dato sería presentarlo como actual sin serlo",
-  tendencia_no_positiva: "su valor no está subiendo",
-  sin_clausula: "LALIGA no publica su cláusula",
+  INFORMATIVA: "Info",
 };
 
 export function AlertsView({ data }: { data: AlertsResponse }) {
   const [level, setLevel] = useState<ClauseAlert["level"] | "TODAS">("TODAS");
-
+  const [selected, setSelected] = useState<Player | null>(null);
+  const counts = useMemo(() => new Map((["CRITICA", "ALTA", "MEDIA", "INFORMATIVA"] as const).map((option) => [option, data.alerts.filter((alert) => alert.level === option).length])), [data.alerts]);
   const visible = level === "TODAS" ? data.alerts : data.alerts.filter((alert) => alert.level === level);
 
-  return (
-    <div className="space-y-4">
-      <Card>
-        <SectionTitle>Alertas de cláusula</SectionTitle>
+  return <div className="space-y-4">
+    <section className="overflow-hidden rounded-[28px] bg-[#101a39] p-5 text-white shadow-[0_22px_65px_rgba(12,22,52,.2)]">
+      <div className="flex items-start justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-[.14em] text-white/45">Protege tu mercado</p><h2 className="mt-1 text-2xl font-bold tracking-tight">Alertas de cláusula</h2><p className="mt-2 text-sm leading-5 text-white/55">Jugadores cuyo valor se acerca peligrosamente a su cláusula.</p></div><span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[#d6ff75] text-[#101a39]"><TriangleAlert size={22}/></span></div>
+      <div className="mt-4 grid grid-cols-2 gap-2"><Summary label="Alertas activas" value={String(data.alerts.length)}/><Summary label="Con cláusula" value={String(data.playersWithClause)}/></div>
+    </section>
 
-        <div className="mb-3 flex flex-wrap gap-2">
-          {(["TODAS", "CRITICA", "ALTA", "MEDIA", "INFORMATIVA"] as const).map((option) => {
-            const count =
-              option === "TODAS"
-                ? data.alerts.length
-                : data.alerts.filter((alert) => alert.level === option).length;
-            return (
-              <button
-                key={option}
-                type="button"
-                onClick={() => setLevel(option)}
-                className={`rounded-full px-3 py-1 text-sm ${
-                  level === option ? "bg-neutral-900 text-white" : "bg-neutral-100 text-neutral-700"
-                }`}
-              >
-                {option === "TODAS" ? "Todas" : LEVEL_LABEL[option]} ({count})
-              </button>
-            );
-          })}
-        </div>
-
-        {visible.length === 0 ? (
-          <Empty>
-            Ningún jugador cumple este criterio ahora mismo. Se han evaluado {data.playersWithClause}{" "}
-            jugadores con cláusula publicada.
-          </Empty>
-        ) : (
-          <TableWrap>
-            <table className="w-full min-w-[760px] border-collapse">
-              <thead>
-                <tr>
-                  <Th>Nivel</Th>
-                  <Th>Jugador</Th>
-                  <Th>Propietario</Th>
-                  <Th align="right">Valor</Th>
-                  <Th align="right">Cláusula</Th>
-                  <Th align="right">Diferencia</Th>
-                  <Th align="right">% de cláusula</Th>
-                  <Th align="right">Subida/día</Th>
-                  <Th align="right">Días est.</Th>
-                </tr>
-              </thead>
-              <tbody>
-                {visible.map((alert) => (
-                  <tr key={`${alert.owner.teamId}-${alert.player.id}`}>
-                    <Td>
-                      <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${LEVEL_STYLE[alert.level]}`}>
-                        {LEVEL_LABEL[alert.level]}
-                      </span>
-                    </Td>
-                    <Td className="font-medium">
-                      {alert.player.name}
-                      <span className="ml-1 text-xs text-neutral-500">
-                        {alert.player.position} · {alert.player.team}
-                      </span>
-                      {alert.official.isShielded && (
-                        <span className="ml-1 text-xs" title="Blindado: la cláusula está protegida">
-                          🛡
-                        </span>
-                      )}
-                    </Td>
-                    <Td>{alert.owner.managerName}</Td>
-                    <Td align="right">{millions(alert.official.marketValue)}</Td>
-                    <Td align="right">{millions(alert.official.buyoutClause)}</Td>
-                    <Td align="right" className={alert.alreadyReachable ? "text-red-700" : ""}>
-                      {alert.alreadyReachable ? "ya la supera" : millions(alert.calculated.gap)}
-                    </Td>
-                    <Td align="right">{percent(alert.calculated.valueToClauseRatio)}</Td>
-                    <Td align="right">{signedMillions(alert.calculated.dailyTrend)}</Td>
-                    <Td align="right">
-                      {alert.calculated.estimatedDays !== null ? (
-                        days(alert.calculated.estimatedDays)
-                      ) : (
-                        <span
-                          className="text-neutral-400"
-                          title={
-                            alert.alreadyReachable
-                              ? "El valor ya alcanzó la cláusula"
-                              : MISSING_LABEL[alert.calculated.missingReason ?? ""] ?? "sin datos"
-                          }
-                        >
-                          {UNKNOWN}
-                        </span>
-                      )}
-                    </Td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </TableWrap>
-        )}
-
-        <p className="mt-3 text-xs text-neutral-500">
-          {data.playersWithClause} jugadores con cláusula · {data.playersWithoutClause} sin cláusula
-          publicada · {data.skippedForBudget} no consultados por límite de peticiones
-          {data.historyFailures > 0 && ` · ${data.historyFailures} sin histórico descargable`}
-          {data.staleHistories > 0 && ` · ${data.staleHistories} con cotización congelada`}
-        </p>
-      </Card>
-
-      <DataNotes notes={data.dataNotes} />
+    <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none]" aria-label="Filtrar alertas">
+      {(["TODAS", "CRITICA", "ALTA", "MEDIA", "INFORMATIVA"] as const).map((option) => {
+        const count = option === "TODAS" ? data.alerts.length : counts.get(option) ?? 0;
+        return <button key={option} type="button" onClick={() => setLevel(option)} className={`min-h-11 shrink-0 rounded-2xl px-4 text-sm font-bold transition ${level === option ? "bg-[#101a39] text-white shadow-lg" : "bg-white text-neutral-500 shadow-sm"}`} aria-pressed={level === option}>{option === "TODAS" ? "Todas" : LEVEL_LABEL[option]} <span className="ml-1 opacity-55">{count}</span></button>;
+      })}
     </div>
-  );
+
+    {visible.length === 0 ? <Empty>Ningún jugador cumple este criterio ahora mismo.</Empty> : <div className="space-y-3">{visible.map((alert) => <AlertCard key={`${alert.owner.teamId}-${alert.player.id}`} alert={alert} onSelect={setSelected}/>)}</div>}
+
+    <p className="rounded-2xl bg-white px-4 py-3 text-xs leading-5 text-neutral-400 shadow-sm">
+      {data.playersWithoutClause} sin cláusula publicada · {data.skippedForBudget} fuera del límite de consultas
+      {data.historyFailures > 0 ? ` · ${data.historyFailures} sin histórico` : ""}
+    </p>
+    <DataNotes notes={data.dataNotes}/>
+    {selected ? <PlayerDetails player={selected} onClose={() => setSelected(null)}/> : null}
+  </div>;
 }
+
+function AlertCard({ alert, onSelect }: { alert: ClauseAlert; onSelect: (player: Player) => void }) {
+  return <article className="rounded-[26px] bg-white p-4 shadow-[0_10px_35px_rgba(16,26,57,.07)]">
+    <button type="button" onClick={() => onSelect(alert.player)} className="flex w-full items-center gap-3 text-left" aria-label={`Ver histórico de ${alert.player.name}`}>
+      <PlayerImage player={alert.player} size={52}/>
+      <div className="min-w-0 flex-1"><div className="flex items-center gap-2"><p className="truncate font-bold text-[#101a39]">{alert.player.name}</p>{alert.official.isShielded ? <ShieldCheck size={15} className="shrink-0 text-emerald-600"/> : null}</div><p className="truncate text-xs text-neutral-400">{alert.player.position} · {alert.player.team} · {alert.owner.managerName}</p></div>
+      <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold ${LEVEL_STYLE[alert.level]}`}>{LEVEL_LABEL[alert.level]}</span>
+    </button>
+    <div className="mt-4 grid grid-cols-2 gap-2"><Metric label="Valor" value={millions(alert.official.marketValue)}/><Metric label="Cláusula" value={millions(alert.official.buyoutClause)} accent/></div>
+    <div className="mt-2 grid grid-cols-3 gap-2"><CompactMetric icon={<ArrowUpRight size={13}/>} label="Subida/día" value={signedMillions(alert.calculated.dailyTrend)}/><CompactMetric label="Cubierta" value={percent(alert.calculated.valueToClauseRatio)}/><CompactMetric icon={<Clock3 size={13}/>} label="Estimación" value={alert.calculated.estimatedDays !== null ? days(alert.calculated.estimatedDays) : UNKNOWN}/></div>
+    <div className="mt-3 h-2 overflow-hidden rounded-full bg-neutral-100"><div className={`h-full rounded-full ${alert.alreadyReachable ? "bg-rose-500" : "bg-[#a7d84d]"}`} style={{ width: `${Math.min(100, Math.max(4, alert.calculated.valueToClauseRatio * 100))}%` }}/></div>
+    <p className={`mt-2 text-xs font-medium ${alert.alreadyReachable ? "text-rose-600" : "text-neutral-400"}`}>{alert.alreadyReachable ? "El valor ya alcanza o supera la cláusula" : `Faltan ${millions(Math.max(0, alert.calculated.gap))}`}</p>
+  </article>;
+}
+
+function Summary({ label, value }: { label: string; value: string }) { return <div className="rounded-2xl bg-white/10 p-3"><p className="text-[10px] text-white/45">{label}</p><p className="mt-1 text-xl font-bold text-[#d6ff75]">{value}</p></div>; }
+function Metric({ label, value, accent = false }: { label: string; value: string; accent?: boolean }) { return <div className={`rounded-2xl p-3 ${accent ? "bg-[#efffc9]" : "bg-[#f4f6f8]"}`}><p className="text-[10px] text-neutral-400">{label}</p><p className="mt-1 font-bold text-[#101a39]">{value}</p></div>; }
+function CompactMetric({ icon, label, value }: { icon?: React.ReactNode; label: string; value: string }) { return <div className="min-w-0 rounded-2xl bg-[#f7f8fa] px-2 py-2 text-center"><p className="flex items-center justify-center gap-1 truncate text-[9px] text-neutral-400">{icon}{label}</p><p className="mt-1 truncate text-[11px] font-bold text-[#101a39]">{value}</p></div>; }

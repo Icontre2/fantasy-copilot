@@ -1,4 +1,5 @@
 import { getPlayerCatalog } from '@/src/server/laliga/read';
+import type { Player } from '@/src/domain/fantasy';
 import { FALLBACK_TEAMS } from '@/src/server/laliga/teams';
 import { matchExternalPlayer } from './match';
 import { FUTBOLFANTASY_TEAM_SLUGS } from './teams';
@@ -11,11 +12,11 @@ export type ProbableTeam = {
   name: string;
   shortName: string;
   badge: string;
-  players: Array<ProbableLineupEntry & { playerId?: string; image?: string }>;
+  players: Array<ProbableLineupEntry & { playerId?: string; image?: string; player?: Player }>;
 };
 
 const BASE = 'https://www.futbolfantasy.com/laliga/equipos/';
-const headers = { 'User-Agent': 'Mozilla/5.0 (compatible; FantasyCopilot/2.0; +personal use)' };
+const headers = { 'User-Agent': 'Mozilla/5.0 (compatible; LigaLab/2.0; +personal use)' };
 
 async function fetchTeam(slug: string): Promise<string> {
   const response = await fetch(`${BASE}${slug}`, {
@@ -57,7 +58,7 @@ export async function getProbableTeam(
       const matched = teamPlayers.find(
         (player) => matchExternalPlayer(entries, player.name)?.externalId === entry.externalId,
       );
-      return { ...entry, playerId: matched?.id, image: matched?.image };
+      return { ...entry, playerId: matched?.id, image: matched?.image, player: matched };
     }),
   };
 }
