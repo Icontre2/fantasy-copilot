@@ -274,3 +274,40 @@ solo lectura contra LALIGA en toda esta fase.
    para el equipo del usuario logueado?
 
 Con las respuestas a esto empiezo la implementación en el orden del punto E.
+
+---
+
+## CORRECCIÓN (2026-08-13, contra una liga real de 8 managers)
+
+**LALIGA NO publica `teamMoney` de los demás managers. Solo el del conectado.**
+
+Comprobado con `GET /api/fantasy/diagnostico/caja` sobre una liga real: de 8
+plantillas, la caja llegó en 1 (la del usuario) y `null` en las 7 restantes. Los
+8 equipos se leyeron sin errores, así que no es un fallo de descarga.
+
+Esto **contradice** la documentación de `JavierContreras00/AppFantasy`
+(`engine/DATA.md`), que listaba «Presupuesto de cada rival (`teamMoney`)» como
+dato disponible. Esa afirmación se dio por buena al portar el conector y es
+falsa en la temporada 26/27.
+
+### Qué se cae con esto
+
+| Afectado | Consecuencia |
+| --- | --- |
+| «Saldo oficial» por manager en Economía | Solo existe para ti. Para el resto, desconocido. |
+| «Saldo previo» (`openingBalance`) | No se puede despejar sin saldo oficial. |
+| Importe de las operaciones de rivales | Se infiere de la variación de caja — que no existe para ellos. Quedará siempre `UNKNOWN_CASH`. |
+| «Patrimonio» de un rival | **Era un error activo**: `(teamValue ?? 0) + (teamMoney ?? 0)` devolvía el valor de plantilla y lo etiquetaba patrimonio total. Corregido: ahora es `null` y la tarjeta explica por qué. |
+
+### Lo que sí sigue en pie
+
+`teamValue`, `teamPoints`, plantillas completas, cláusulas y blindaje llegan de
+todos los managers. Las alertas de cláusula —la función principal— no dependen
+de la caja ajena y funcionan igual.
+
+### Pendiente
+
+Buscar si algún otro endpoint publica el saldo de los rivales antes de dar la
+contabilidad completa por imposible. Si no aparece, Economía debe presentarse
+como «movimiento neto conocido» y no como saldo, tal y como ya contemplaba el
+encargo original en su punto 4.

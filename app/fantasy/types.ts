@@ -28,7 +28,8 @@ export type DashboardResponse = {
     players: PlayerWithProbability[];
     position?: number;
     points?: number;
-    netWorth: number;
+    /** `null` cuando LALIGA no publica la caja: no se rellena con el valor de plantilla. */
+    netWorth: number | null;
   };
   lineup: {
     formation: string;
@@ -42,7 +43,8 @@ export type DashboardResponse = {
     points?: number;
     teamValue?: number;
     teamMoney?: number;
-    netWorth: number;
+    /** `null` para los rivales: LALIGA no publica su caja. */
+    netWorth: number | null;
   }>;
   failedTeamIds: string[];
 };

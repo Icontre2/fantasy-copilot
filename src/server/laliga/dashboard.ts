@@ -78,7 +78,7 @@ export async function buildDashboard(accessToken: string, leagueId: string) {
       players,
       position: standingByTeam.get(myTeam.teamId)?.position,
       points: standingByTeam.get(myTeam.teamId)?.points ?? myTeam.teamPoints,
-      netWorth: (myTeam.teamValue ?? 0) + (myTeam.teamMoney ?? 0),
+      netWorth: netWorthOf(myTeam.teamValue, myTeam.teamMoney),
     },
     lineup: bestEleven(players),
     competitors: snapshot.teams
@@ -90,9 +90,27 @@ export async function buildDashboard(accessToken: string, leagueId: string) {
         points: standingByTeam.get(team.teamId)?.points ?? team.teamPoints,
         teamValue: team.teamValue,
         teamMoney: team.teamMoney,
-        netWorth: (team.teamValue ?? 0) + (team.teamMoney ?? 0),
+        netWorth: netWorthOf(team.teamValue, team.teamMoney),
       }))
       .sort((a, b) => (a.position ?? 999) - (b.position ?? 999)),
     failedTeamIds: snapshot.failedTeamIds,
   };
+}
+
+/**
+ * Patrimonio = valor de plantilla + caja. `null` si falta cualquiera de los dos.
+ *
+ * Comprobado contra una liga real (2026-08-13): **LALIGA solo publica
+ * `teamMoney` del manager conectado**. Para los rivales llega `null`, en las 8
+ * plantillas de la liga probada.
+ *
+ * La version anterior hacia `(teamValue ?? 0) + (teamMoney ?? 0)`, asi que para
+ * un rival devolvia exactamente el valor de su plantilla y lo etiquetaba
+ * "Patrimonio total". No era un redondeo: era afirmar que su caja es cero
+ * cuando lo cierto es que no se sabe. Un manager con 30 M en caja aparecia
+ * igual que uno arruinado.
+ */
+function netWorthOf(teamValue: number | undefined, teamMoney: number | undefined): number | null {
+  if (teamValue === undefined || teamMoney === undefined) return null;
+  return teamValue + teamMoney;
 }

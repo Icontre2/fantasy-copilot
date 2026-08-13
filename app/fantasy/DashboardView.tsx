@@ -9,7 +9,9 @@ import { millions } from "./format";
 type Range = 7 | 30 | 90 | "MAX";
 type PortfolioPoint = {
   date: string;
-  managers: Record<string, { teamValue: number; teamMoney: number; netWorth: number }>;
+  // `null` = no lo publica LALIGA. Guardar 0 en el historico grabaria en disco
+  // la misma mentira que se corrigio en pantalla: "este manager no tiene caja".
+  managers: Record<string, { teamValue: number; teamMoney: number | null; netWorth: number | null }>;
 };
 
 const RANGE_OPTIONS: Array<{ value: Range; label: string }> = [
@@ -93,6 +95,18 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
                   <SmallMetric label="Caja" value={millions(competitor.teamMoney)} lime />
                   <SmallMetric label="Patrimonio" value={millions(competitor.netWorth)} />
                 </div>
+                {/*
+                  LALIGA solo publica la caja del manager conectado (comprobado
+                  contra una liga real). Sin ese dato, el patrimonio de un rival
+                  no se puede calcular. Se dice aqui en vez de dejar dos guiones
+                  sin explicacion, que parecerian un fallo de carga.
+                */}
+                {competitor.teamMoney === undefined && (
+                  <p className="mt-2 text-[10px] leading-4 text-neutral-400">
+                    LALIGA no publica la caja de otros managers, así que su patrimonio no se
+                    puede calcular. El valor de arriba es solo su plantilla.
+                  </p>
+                )}
               </article>
             );
           })}
@@ -136,7 +150,11 @@ function usePortfolioHistory(data: DashboardResponse) {
 function currentPoint(data: DashboardResponse): PortfolioPoint {
   const current: PortfolioPoint = { date: localDate(), managers: {} };
   for (const team of [data.me, ...data.competitors]) {
-    current.managers[team.teamId] = { teamValue: team.teamValue ?? 0, teamMoney: team.teamMoney ?? 0, netWorth: team.netWorth };
+    current.managers[team.teamId] = {
+      teamValue: team.teamValue ?? 0,
+      teamMoney: team.teamMoney ?? null,
+      netWorth: team.netWorth,
+    };
   }
   return current;
 }
