@@ -40,11 +40,27 @@ export function toHttpStatus(error: unknown): number {
   return 500;
 }
 
+/**
+ * Mensaje para el usuario.
+ *
+ * Conserva el detalle real en vez de sustituirlo por una frase generica. La
+ * version anterior devolvia "Error inesperado al consultar LALIGA Fantasy" para
+ * cualquier fallo que no fuera un `LaligaError`, y eso tapaba justo los errores
+ * de configuracion del despliegue (clave de cifrado ausente o corta, sesion que
+ * no cabe en la cookie): el usuario veia una frase que culpaba a LALIGA de un
+ * problema que estaba en casa, y no habia forma de diagnosticarlo sin acceso a
+ * los logs del servidor.
+ *
+ * Ninguno de estos mensajes incluye secretos: son los que escribe este propio
+ * codigo, o la descripcion de error que devuelve el login de LALIGA.
+ */
 export function toPublicMessage(error: unknown): string {
   if (error instanceof LaligaError) {
     switch (error.kind) {
       case 'unauthorized':
-        return 'La sesion de LALIGA no es valida o ha caducado. Vuelve a iniciar sesion.';
+        // El detalle de Azure B2C ("The username or password provided in the
+        // request are invalid", etc.) es MUCHO mas util que la frase generica.
+        return error.message;
       case 'timeout':
         return 'La API de LALIGA tardo demasiado en responder.';
       case 'network':
@@ -57,5 +73,7 @@ export function toPublicMessage(error: unknown): string {
         return 'La API de LALIGA devolvio un error.';
     }
   }
-  return 'Error inesperado al consultar LALIGA Fantasy.';
+  // Fallo que no viene de LALIGA: casi siempre configuracion del despliegue.
+  const detail = error instanceof Error ? error.message : String(error);
+  return `Error interno de la aplicacion (no es culpa de LALIGA): ${detail}`;
 }
