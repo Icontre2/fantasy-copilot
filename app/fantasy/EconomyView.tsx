@@ -2,254 +2,188 @@
 
 import { useState } from "react";
 import { millions, shortDate, signedMillions, UNKNOWN } from "./format";
-import type { EconomyResponse, ManagerLedger, SyncResponse } from "./types";
-import { Card, DataNotes, Empty, ErrorBox, SectionTitle, TableWrap, Td, Th } from "./ui";
-import { post } from "./api";
-import { AutoSyncPanel } from "./AutoSyncPanel";
+import type { EconomyResponse, ManagerEconomy } from "./types";
+import { Card, DataNotes, Empty, SectionTitle, TableWrap, Td, Th } from "./ui";
 
 /**
- * Economía: cuánto dinero tiene cada manager y de dónde sale.
+ * Economía: de dónde sale el dinero de cada manager.
  *
- * La columna que manda es "Saldo oficial": la publica LALIGA. El resto es el
- * desglose calculado por esta app, y "Saldo previo" es explícitamente el
- * residuo — lo que ya tenía antes de empezar a mirar, más lo no explicado.
+ * Todos parten de los mismos 100 M€, así que la caja se explica entera con las
+ * operaciones que publica LALIGA. La cifra que manda sigue siendo la oficial
+ * cuando existe; la reconstruida está para EXPLICARLA, no para sustituirla.
+ *
+ * La diferencia entre ambas se enseña siempre. Es la parte que la actividad
+ * disponible no cubre, y esconderla convertiría un dato incompleto en uno falso.
  */
-export function EconomyView({
-  data,
-  leagueId,
-  onSynced,
-}: {
-  data: EconomyResponse;
-  leagueId: string;
-  onSynced: () => void;
-}) {
-  const [openManagerId, setOpenManagerId] = useState<string | null>(null);
-  const [syncing, setSyncing] = useState(false);
-  const [syncResult, setSyncResult] = useState<SyncResponse | null>(null);
-  const [syncError, setSyncError] = useState<string | null>(null);
+export function EconomyView({ data }: { data: EconomyResponse }) {
+  const [abierto, setAbierto] = useState<string | null>(null);
+  const detalle = data.economies.find((economy) => economy.managerId === abierto);
 
-  async function sync() {
-    setSyncing(true);
-    setSyncError(null);
-    try {
-      const result = await post<SyncResponse>(`/api/fantasy/leagues/${leagueId}/economy/sync`);
-      setSyncResult(result);
-      onSynced();
-    } catch (error) {
-      setSyncError(error instanceof Error ? error.message : "No se pudo sincronizar.");
-    } finally {
-      setSyncing(false);
-    }
-  }
-
-  const open = data.ledgers.find((ledger) => ledger.managerId === openManagerId);
-
-  // Sin base de datos no hay histórico posible. Se explica y se para aquí: una
-  // tabla vacía con ceros parecería un resultado ("nadie ha movido dinero")
-  // cuando en realidad es "no lo estamos midiendo".
-  if (data.storageRequired) {
-    return (
-      <div className="space-y-4">
-        <Card>
-          <SectionTitle>Economía de la liga</SectionTitle>
-          <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-            Esta pantalla necesita base de datos y no hay ninguna configurada. Las otras cuatro
-            funcionan sin ella.
-          </p>
-        </Card>
-        <DataNotes notes={data.dataNotes} />
-      </div>
-    );
+  if (data.economies.length === 0) {
+    return <Empty>No se ha podido leer ningún manager de esta liga.</Empty>;
   }
 
   return (
     <div className="space-y-4">
       <Card>
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <SectionTitle>Economía de la liga</SectionTitle>
-          <button
-            type="button"
-            onClick={sync}
-            disabled={syncing}
-            className="rounded-lg bg-neutral-900 px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
-          >
-            {syncing ? "Sincronizando…" : "Sincronizar ahora"}
-          </button>
-        </div>
+        <SectionTitle>Economía de la liga</SectionTitle>
 
-        {data.schedule && (
-          <div className="mb-3">
-            <AutoSyncPanel leagueId={leagueId} status={data.schedule} onChanged={onSynced} />
-          </div>
-        )}
+        <p className="mb-3 text-sm text-neutral-600">
+          Todos empezaron con <strong>{millions(data.saldoInicial)}</strong>.{" "}
+          {data.actividadDesde
+            ? `Actividad conocida desde el ${shortDate(data.actividadDesde)} (${data.operaciones} operaciones).`
+            : "LALIGA no ha devuelto operaciones de esta liga."}
+        </p>
 
-        {syncError && <div className="mb-3"><ErrorBox message={syncError} /></div>}
-
-        {syncResult && (
-          <p className="mb-3 rounded-lg border border-neutral-200 bg-neutral-50 p-3 text-sm text-neutral-700">
-            {syncResult.hadPreviousSnapshot
-              ? `Foto tomada. ${syncResult.detectedTransactions} operación(es) detectadas, ${syncResult.storedTransactions} nuevas.`
-              : "Primera foto de esta liga guardada. A partir de ahora se podrán detectar operaciones comparando con ella."}
-          </p>
-        )}
-
-        {data.trackedSince ? (
-          <p className="mb-3 text-sm text-neutral-600">
-            Movimientos registrados desde el {shortDate(data.trackedSince)}. Lo anterior no es
-            recuperable: LALIGA no publica histórico de operaciones.
-          </p>
-        ) : (
-          <p className="mb-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-            Todavía no hay ninguna sincronización de esta liga. Pulsa &laquo;Sincronizar ahora&raquo; para
-            guardar la primera foto; el desglose empezará a partir de ella.
-          </p>
-        )}
-
-        {data.ledgers.length === 0 ? (
-          <Empty>No se ha podido leer ningún manager de esta liga.</Empty>
-        ) : (
-          <TableWrap>
-            <table className="w-full min-w-[680px] border-collapse">
-              <thead>
-                <tr>
-                  <Th>Manager</Th>
-                  <Th align="right">Saldo oficial</Th>
-                  <Th align="right">Compras</Th>
-                  <Th align="right">Ventas</Th>
-                  <Th align="right">Bonus puntos</Th>
-                  <Th align="right">Neto</Th>
-                  <Th align="right">Saldo previo</Th>
+        <TableWrap>
+          <table className="w-full min-w-[640px] border-collapse">
+            <thead>
+              <tr>
+                <Th>Manager</Th>
+                <Th align="right">Caja</Th>
+                <Th align="right">Compras</Th>
+                <Th align="right">Ventas</Th>
+                <Th align="right">Puntos</Th>
+                <Th align="right">Diferencia</Th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.economies.map((economy) => (
+                <tr
+                  key={economy.managerId}
+                  className="cursor-pointer hover:bg-neutral-50"
+                  onClick={() => setAbierto(abierto === economy.managerId ? null : economy.managerId)}
+                >
+                  <Td className="font-medium">
+                    {economy.managerName}
+                    {economy.cajaOficial === null && (
+                      <span className="ml-1 text-[10px] font-normal text-neutral-400">calculada</span>
+                    )}
+                  </Td>
+                  <Td align="right" className="font-semibold">
+                    {millions(economy.cajaOficial ?? economy.cajaReconstruida)}
+                  </Td>
+                  <Td align="right" className="text-red-700">−{millions(economy.compras)}</Td>
+                  <Td align="right" className="text-green-700">+{millions(economy.ventas)}</Td>
+                  <Td align="right">{millions(economy.bonusPuntos)}</Td>
+                  <Td align="right" className={economy.diferencia === null ? "text-neutral-400" : "text-neutral-600"}>
+                    {economy.diferencia === null ? UNKNOWN : signedMillions(economy.diferencia)}
+                  </Td>
                 </tr>
-              </thead>
-              <tbody>
-                {data.ledgers.map((ledger) => (
-                  <tr
-                    key={ledger.managerId}
-                    className="cursor-pointer hover:bg-neutral-50"
-                    onClick={() =>
-                      setOpenManagerId(openManagerId === ledger.managerId ? null : ledger.managerId)
-                    }
-                  >
-                    <Td className="font-medium">
-                      {ledger.managerName}
-                      {ledger.unattributedOperations > 0 && (
-                        <span
-                          className="ml-1 text-xs text-amber-700"
-                          title={`${ledger.unattributedOperations} operación(es) sin importe atribuible`}
-                        >
-                          ⚠
-                        </span>
-                      )}
-                    </Td>
-                    <Td align="right" className="font-semibold">
-                      {millions(ledger.officialBalance)}
-                    </Td>
-                    <Td align="right">{millions(ledger.purchases)}</Td>
-                    <Td align="right">{millions(ledger.sales)}</Td>
-                    <Td align="right">{millions(ledger.pointsBonus)}</Td>
-                    <Td align="right">{signedMillions(ledger.net)}</Td>
-                    <Td
-                      align="right"
-                      className={
-                        // Un saldo previo NEGATIVO es imposible en la realidad:
-                        // significa que le hemos atribuido más dinero del que
-                        // tiene, o sea que se nos ha escapado una compra. Es una
-                        // señal de que falta un movimiento, no un número más.
-                        (ledger.openingBalance ?? 0) < 0 ? "text-red-700" : "text-neutral-500"
-                      }
-                    >
-                      {millions(ledger.openingBalance)}
-                      {(ledger.openingBalance ?? 0) < 0 && (
-                        <span
-                          className="ml-1"
-                          title="Saldo previo negativo: hemos contabilizado más dinero del que tiene. Falta por detectar alguna compra, probablemente ocurrida entre dos sincronizaciones."
-                        >
-                          ⚠
-                        </span>
-                      )}
-                    </Td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </TableWrap>
-        )}
+              ))}
+            </tbody>
+          </table>
+        </TableWrap>
 
         <p className="mt-2 text-xs text-neutral-500">
-          Toca un manager para auditar su libro. &laquo;Saldo previo&raquo; = saldo oficial − neto conocido.
+          Toca un manager para ver su libro. «Calculada» = LALIGA no publica su caja, así que es
+          nuestra reconstrucción y su diferencia no se puede comprobar.
         </p>
       </Card>
 
-      {open && <LedgerCard ledger={open} />}
+      {detalle && <LibroCard economy={detalle} saldoInicial={data.saldoInicial} />}
 
       <DataNotes notes={data.dataNotes} />
     </div>
   );
 }
 
-const KIND_LABEL = { COMPRA: "Compra", VENTA: "Venta", PUNTOS: "Puntos" } as const;
-
-/** Motivo por el que un importe no se conoce, en lenguaje llano. */
-const BASIS_LABEL: Record<string, string> = {
-  INFERRED_FROM_CASH_DELTA: "importe deducido de la variación de caja",
-  NOT_ATTRIBUTABLE_MULTIPLE_OPERATIONS:
-    "varias operaciones entre dos sincronizaciones: el importe no se puede repartir",
-  UNKNOWN_CASH: "LALIGA no publicó el saldo en una de las dos fotos",
-  CALCULO_100K_POR_PUNTO: "100.000 € por punto sobre el acumulado oficial",
+const KIND_LABEL: Record<ManagerEconomy["entries"][number]["kind"], string> = {
+  COMPRA: "Compra",
+  VENTA: "Venta",
+  TRASPASO_PAGADO: "Fichaje pagado",
+  TRASPASO_COBRADO: "Traspaso cobrado",
 };
 
-function LedgerCard({ ledger }: { ledger: ManagerLedger }) {
+function LibroCard({ economy, saldoInicial }: { economy: ManagerEconomy; saldoInicial: number }) {
   return (
     <Card>
-      <SectionTitle>Libro de {ledger.managerName}</SectionTitle>
+      <SectionTitle>Libro de {economy.managerName}</SectionTitle>
 
-      <dl className="mb-4 grid grid-cols-2 gap-3 text-sm">
-        <div>
-          <dt className="text-neutral-500">Saldo oficial (LALIGA)</dt>
-          <dd className="font-semibold">{millions(ledger.officialBalance)}</dd>
-        </div>
-        <div>
-          <dt className="text-neutral-500">Saldo previo al seguimiento</dt>
-          <dd className="font-semibold text-neutral-500">{millions(ledger.openingBalance)}</dd>
-        </div>
+      {/* El cuadre completo, línea a línea, para poder auditar cada euro. */}
+      <dl className="mb-4 space-y-1 text-sm">
+        <Linea label="Saldo inicial" value={millions(saldoInicial)} />
+        <Linea label="Compras" value={`−${millions(economy.compras)}`} tone="red" />
+        <Linea label="Ventas" value={`+${millions(economy.ventas)}`} tone="green" />
+        <Linea
+          label={`Puntos (${economy.puntos} × 100.000 €)`}
+          value={`+${millions(economy.bonusPuntos)}`}
+          tone="green"
+        />
+        <Linea label="Caja reconstruida" value={millions(economy.cajaReconstruida)} strong />
+
+        {economy.cajaOficial !== null ? (
+          <>
+            <Linea label="Caja oficial (LALIGA)" value={millions(economy.cajaOficial)} strong />
+            <Linea
+              label="Diferencia"
+              value={signedMillions(economy.diferencia)}
+              tone={economy.diferencia === 0 ? "green" : undefined}
+            />
+          </>
+        ) : (
+          <p className="pt-2 text-xs text-neutral-500">
+            LALIGA no publica la caja de otros managers, así que no hay cifra oficial contra la que
+            comprobar esta reconstrucción.
+          </p>
+        )}
       </dl>
 
-      {ledger.entries.length === 0 ? (
-        <Empty>
-          Todavía no hay movimientos registrados de este manager. Aparecerán en cuanto haya dos
-          sincronizaciones con algún cambio entre ellas.
-        </Empty>
+      {economy.recompensasQueCuadrarian !== null && (
+        <p className="mb-4 rounded-lg border border-sky-200 bg-sky-50 p-3 text-xs text-sky-900">
+          La diferencia encaja exactamente con{" "}
+          <strong>{economy.recompensasQueCuadrarian} recompensas diarias</strong> de 100.000 €. Es
+          una lectura posible, no un dato: LALIGA no publica quién las reclama.
+        </p>
+      )}
+
+      {economy.entries.length === 0 ? (
+        <Empty>Sin operaciones en el periodo que publica LALIGA.</Empty>
       ) : (
         <ul className="space-y-2">
-          {ledger.entries.map((entry, index) => (
+          {economy.entries.map((entry) => (
             <li
-              key={`${entry.kind}-${entry.occurredAt}-${entry.playerId ?? entry.matchday ?? index}`}
+              key={entry.activityId}
               className="flex items-start justify-between gap-3 border-b border-neutral-100 pb-2 text-sm"
             >
               <span>
-                <strong>{KIND_LABEL[entry.kind]}</strong>{" "}
-                {entry.kind === "PUNTOS"
-                  ? `jornada ${entry.matchday}: ${entry.points} puntos`
-                  : `jugador ${entry.playerId}`}
+                <strong>{KIND_LABEL[entry.kind]}</strong>
                 <span className="block text-xs text-neutral-500">
-                  {BASIS_LABEL[entry.basis] ?? entry.basis}
+                  {shortDate(entry.occurredAt)}
+                  {entry.playerId ? ` · jugador ${entry.playerId}` : ""}
                 </span>
               </span>
               <span
                 className={`shrink-0 tabular-nums font-medium ${
-                  entry.amount === null
-                    ? "text-neutral-400"
-                    : entry.amount > 0
-                      ? "text-green-700"
-                      : "text-red-700"
+                  entry.amount > 0 ? "text-green-700" : "text-red-700"
                 }`}
               >
-                {entry.amount === null ? UNKNOWN : signedMillions(entry.amount)}
+                {signedMillions(entry.amount)}
               </span>
             </li>
           ))}
         </ul>
       )}
     </Card>
+  );
+}
+
+function Linea({
+  label,
+  value,
+  tone,
+  strong = false,
+}: {
+  label: string;
+  value: string;
+  tone?: "red" | "green";
+  strong?: boolean;
+}) {
+  const color = tone === "red" ? "text-red-700" : tone === "green" ? "text-green-700" : "";
+  return (
+    <div className={`flex items-baseline justify-between gap-3 ${strong ? "border-t border-neutral-200 pt-1" : ""}`}>
+      <dt className={strong ? "font-semibold" : "text-neutral-600"}>{label}</dt>
+      <dd className={`tabular-nums ${strong ? "font-semibold" : ""} ${color}`}>{value}</dd>
+    </div>
   );
 }

@@ -181,3 +181,26 @@ export type ApiMarketItem = z.infer<typeof apiMarketItemSchema>;
 export type ApiPlayerMaster = z.infer<typeof apiPlayerMasterSchema>;
 export type ApiMarketValuePoint = z.infer<typeof apiMarketValuePointSchema>;
 export type ApiWeek = z.infer<typeof apiWeekSchema>;
+
+/**
+ * GET /api/v1/competition/{c}/leagues/{id}/activity
+ *
+ * El libro de operaciones de la liga. Verificado contra una liga real: trae el
+ * importe EXACTO, no una estimacion. `activityTypeId` no esta documentado; su
+ * significado se dedujo cruzando entradas con la app oficial (ver
+ * `economy/activity.ts`).
+ *
+ * Los campos opcionales lo son de verdad: `amount` falta en los tipos que no
+ * mueven dinero y `user2Id` solo aparece en traspasos entre managers.
+ */
+export const apiActivityEntrySchema = z.object({
+  id: z.union([z.string(), z.number()]).transform(String),
+  activityTypeId: numeric,
+  user1Id: z.union([z.string(), z.number()]).transform(String).optional(),
+  user2Id: z.union([z.string(), z.number()]).transform(String).nullable().optional(),
+  playerMasterId: z.union([z.string(), z.number()]).transform(String).optional(),
+  amount: numeric.optional(),
+  createdAt: z.string(),
+});
+
+export const apiActivitySchema = z.array(apiActivityEntrySchema);

@@ -2,9 +2,9 @@
 
 import type { League, LeagueTeam, Manager, MarketEntry, MarketValuePoint, Player, StandingRow } from "@/src/domain/fantasy";
 import type { ClauseAlert } from "@/src/server/laliga/alerts/clause-alerts";
-import type { ManagerLedger } from "@/src/server/laliga/economy/ledger";
+import type { ManagerEconomy } from "@/src/server/laliga/economy/activity";
 
-export type { ClauseAlert, League, LeagueTeam, Manager, ManagerLedger, MarketEntry, MarketValuePoint, Player, StandingRow };
+export type { ClauseAlert, League, LeagueTeam, Manager, ManagerEconomy, MarketEntry, MarketValuePoint, Player, StandingRow };
 
 export type LeaguesResponse = { leagues: League[] };
 
@@ -64,13 +64,13 @@ export type AlertsResponse = {
 
 export type EconomyResponse = {
   leagueId: string;
-  trackedSince: string | null;
-  ledgers: ManagerLedger[];
+  saldoInicial: number;
+  /** Fecha de la operación más antigua que publica LALIGA. */
+  actividadDesde: string | null;
+  actividadHasta: string | null;
+  operaciones: number;
+  economies: ManagerEconomy[];
   dataNotes: string[];
-  /** Estado de la sincronizacion automatica; llega en la misma respuesta. */
-  schedule?: ScheduleStatus;
-  /** `true` cuando falta base de datos: sin ella no hay histórico que mostrar. */
-  storageRequired?: boolean;
 };
 
 export type SyncResponse = {

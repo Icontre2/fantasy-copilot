@@ -252,7 +252,7 @@ function SectionData({
     case "alertas":
       return <AlertsView data={data as AlertsResponse} />;
     case "economia":
-      return <EconomyView data={data as EconomyResponse} leagueId={leagueId} onSynced={onSynced} />;
+      return <EconomyView data={data as EconomyResponse} />;
     case "mercado":
       return <MarketView data={data as MarketResponse} leagueId={leagueId} onChanged={onSynced} />;
     case "comparar":

@@ -1,21 +1,20 @@
 import { errorJson, privateJson } from "@/src/server/http/responses";
 import { requireSession } from "@/src/server/http/session-guard";
-import { buildEconomyReport } from "@/src/server/laliga/economy/sync";
-import { describeSchedule, readSubscription } from "@/src/server/laliga/economy/schedule";
-import { hasPersistentStorage } from "@/src/server/laliga/session";
+import { buildEconomy, SALDO_INICIAL } from "@/src/server/laliga/economy/activity";
+import { getLeagueActivity, getLeagueSnapshot } from "@/src/server/laliga/read";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 /**
  * GET /api/fantasy/leagues/{leagueId}/economy
  *
- * Ledger por manager: solo LEE lo ya persistido y lo cruza con el saldo oficial
- * en vivo. Para detectar operaciones nuevas hay que llamar antes a
- * `POST .../economy/sync`.
+ * Contabilidad de la liga reconstruida desde el saldo inicial con las
+ * operaciones que LALIGA publica, con su importe exacto.
  *
- * Incluye el estado de la sincronizacion automatica en la misma respuesta: es
- * parte de como hay que leer estas cifras (si lleva dias parada, el desglose
- * tiene huecos), no un detalle de configuracion aparte.
+ * Ya no necesita base de datos: antes había que guardar fotos de la liga para
+ * poder inferir los importes comparándolas. Ahora los importes vienen
+ * publicados, así que basta con leer.
  */
 export async function GET(request: Request, { params }: { params: Promise<{ leagueId: string }> }) {
   const auth = await requireSession(request);
@@ -23,29 +22,46 @@ export async function GET(request: Request, { params }: { params: Promise<{ leag
 
   const { leagueId } = await params;
 
-  // El ledger es un HISTORICO: se construye acumulando fotos, asi que sin donde
-  // guardarlas no hay nada que enseñar. Se dice explicitamente en vez de
-  // devolver un 500 o, peor, una tabla de ceros que pareceria un resultado.
-  if (!hasPersistentStorage()) {
+  try {
+    const [snapshot, activity] = await Promise.all([
+      getLeagueSnapshot(auth.token, leagueId),
+      getLeagueActivity(auth.token, leagueId),
+    ]);
+
+    const economies = buildEconomy({
+      managers: snapshot.teams.map((team) => ({
+        managerId: team.manager.id,
+        managerName: team.manager.name,
+        puntos: team.teamPoints ?? 0,
+        // LALIGA solo publica la caja del manager conectado. Para el resto va
+        // `null`, y la diferencia de conciliacion queda sin calcular en vez de
+        // compararse contra un cero inventado.
+        cajaOficial: team.teamMoney ?? null,
+      })),
+      activity,
+    });
+
+    const fechas = activity.map((entry) => entry.createdAt).sort();
+
     return privateJson({
       leagueId,
-      trackedSince: null,
-      ledgers: [],
-      storageRequired: true,
+      saldoInicial: SALDO_INICIAL,
+      /** Desde cuando hay operaciones. Lo anterior no lo guarda LALIGA. */
+      actividadDesde: fechas[0] ?? null,
+      actividadHasta: fechas.at(-1) ?? null,
+      operaciones: activity.length,
+      economies: economies.sort((a, b) => b.cajaReconstruida - a.cajaReconstruida),
       dataNotes: [
-        'Esta pantalla necesita base de datos y no hay ninguna configurada.',
-        'LALIGA no publica historico de operaciones: la unica forma de saber que ha pasado es guardar fotos de la liga y compararlas. Sin donde guardarlas no hay desglose posible.',
-        'Configura SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY y aplica supabase/migrations/. Las demas pantallas funcionan sin esto.',
+        `Todos los managers empiezan con ${(SALDO_INICIAL / 1_000_000).toFixed(0)} M€. La caja se reconstruye restando compras, sumando ventas y añadiendo 100.000 € por punto.`,
+        "Los importes de compras y ventas los PUBLICA LALIGA en la actividad de la liga: son exactos, no estimados.",
+        fechas[0]
+          ? `La actividad disponible empieza el ${fechas[0].slice(0, 10)}. LALIGA no guarda lo anterior, así que esos movimientos aparecen dentro de la diferencia.`
+          : "LALIGA no ha devuelto ninguna operación de esta liga.",
+        "«Caja oficial» solo la publica LALIGA para tu cuenta. La de los demás es reconstruida, y su diferencia no se puede comprobar.",
+        "La diferencia es lo que la actividad disponible no explica: recompensas diarias reclamadas, operaciones anteriores al inicio del histórico o movimientos que LALIGA no publica. Se muestra siempre.",
+        "Solo se sugiere «días de recompensa» cuando la diferencia es positiva y múltiplo exacto de 100.000 €. En cualquier otro caso queda sin explicar.",
       ],
     });
-  }
-
-  try {
-    const [report, subscription] = await Promise.all([
-      buildEconomyReport(auth.token, leagueId),
-      readSubscription(leagueId),
-    ]);
-    return privateJson({ ...report, schedule: describeSchedule(subscription) });
   } catch (error) {
     return errorJson(error);
   }
