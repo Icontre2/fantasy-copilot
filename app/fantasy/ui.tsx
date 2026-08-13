@@ -7,7 +7,7 @@ import type { ReactNode } from "react";
 export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
     <section
-      className={`rounded-2xl border border-neutral-200/80 bg-white p-4 shadow-[0_1px_2px_rgba(16,24,48,0.04),0_8px_24px_rgba(16,24,48,0.04)] ${className}`}
+      className={`rounded-[26px] border border-white bg-white/95 p-4 shadow-[0_10px_35px_rgba(16,26,57,0.07)] ${className}`}
     >
       {children}
     </section>
@@ -15,7 +15,7 @@ export function Card({ children, className = "" }: { children: ReactNode; classN
 }
 
 export function SectionTitle({ children }: { children: ReactNode }) {
-  return <h2 className="mb-3 text-[17px] font-semibold tracking-tight text-neutral-900">{children}</h2>;
+  return <h2 className="mb-3 text-[18px] font-bold tracking-tight text-[#101a39]">{children}</h2>;
 }
 
 /**
@@ -47,7 +47,7 @@ export function Empty({ children }: { children: ReactNode }) {
 
 export function ErrorBox({ message }: { message: string }) {
   return (
-    <p className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800" role="alert">
+    <p className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800" role="alert">
       {message}
     </p>
   );
@@ -55,8 +55,8 @@ export function ErrorBox({ message }: { message: string }) {
 
 export function Spinner({ label }: { label: string }) {
   return (
-    <p className="p-6 text-center text-sm text-neutral-500" role="status">
-      {label}
+    <p className="grid min-h-48 place-items-center p-6 text-center text-sm text-neutral-500" role="status">
+      <span><span className="mx-auto mb-3 block h-8 w-8 animate-spin rounded-full border-2 border-[#101a39]/15 border-t-[#101a39]"/>{label}</span>
     </p>
   );
 }

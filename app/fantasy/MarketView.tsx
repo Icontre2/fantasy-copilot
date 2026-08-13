@@ -5,7 +5,7 @@ import { post } from "./api";
 
 import { millions, shortDate, UNKNOWN } from "./format";
 import type { MarketResponse } from "./types";
-import { Card, Empty, SectionTitle, TableWrap, Td, Th } from "./ui";
+import { Empty } from "./ui";
 import { PlayerDetails } from "./PlayerDetails";
 import { PlayerImage } from "./PlayerImage";
 import type { Player } from "./types";
@@ -42,44 +42,21 @@ export function MarketView({ data, leagueId, onChanged }: { data: MarketResponse
   }
 
   return (
-    <Card>
-      <SectionTitle>Mercado ({data.market.length})</SectionTitle>
-      {message && <p className="mb-3 rounded-lg bg-neutral-100 p-3 text-sm" role="status">{message}</p>}
-      <TableWrap>
-        <table className="w-full min-w-[620px] border-collapse">
-          <thead>
-            <tr>
-              <Th>Jugador</Th>
-              <Th>Pos</Th>
-              <Th>Equipo</Th>
-              <Th align="right">Valor</Th>
-              <Th align="right">Precio salida</Th>
-              <Th align="right">Pujas</Th>
-              <Th align="right">Tu puja</Th>
-              <Th>Expira</Th><Th>Acción</Th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.market.map((entry) => (
-              <tr key={entry.marketId}>
-                <Td className="font-medium"><button type="button" onClick={() => setSelected(entry.player)} className="flex items-center gap-2 text-left hover:underline"><PlayerImage player={entry.player} size={38} />{entry.player.name}</button></Td>
-                <Td>{entry.player.position}</Td>
-                <Td>{entry.player.team}</Td>
-                <Td align="right">{millions(entry.player.marketValue)}</Td>
-                <Td align="right">{millions(entry.salePrice)}</Td>
-                <Td align="right">{entry.numberOfBids ?? UNKNOWN}</Td>
-                <Td align="right">{entry.myBid ? millions(entry.myBid.amount) : UNKNOWN}</Td>
-                <Td>{shortDate(entry.expiresAt)}</Td><Td><div className="flex gap-1">{entry.myBid ? <><button disabled={busy === entry.marketId} type="button" onClick={() => act(entry, "modify")} className="rounded-lg bg-neutral-900 px-2 py-1 text-xs text-white">Cambiar</button><button disabled={busy === entry.marketId} type="button" onClick={() => act(entry, "cancel")} className="rounded-lg border border-red-200 px-2 py-1 text-xs text-red-700">Cancelar</button></> : <button disabled={busy === entry.marketId} type="button" onClick={() => act(entry, "create")} className="rounded-lg bg-neutral-900 px-3 py-1.5 text-xs text-white">Pujar</button>}</div></Td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </TableWrap>
-      <p className="mt-3 text-xs text-neutral-500">
+    <div className="space-y-3">
+      <div><p className="text-xs font-semibold uppercase tracking-[.14em] text-neutral-400">En vivo</p><h2 className="text-2xl font-bold tracking-tight text-[#101a39]">Mercado · {data.market.length}</h2></div>
+      {message && <p className="rounded-2xl bg-white p-4 text-sm shadow-sm" role="status">{message}</p>}
+      {data.market.map((entry) => <article key={entry.marketId} className="rounded-[26px] bg-white p-4 shadow-[0_10px_35px_rgba(16,26,57,.07)]">
+        <button type="button" onClick={() => setSelected(entry.player)} className="flex w-full items-center gap-3 text-left"><PlayerImage player={entry.player} size={58}/><div className="min-w-0 flex-1"><p className="truncate font-bold text-[#101a39]">{entry.player.name}</p><p className="text-xs text-neutral-400">{entry.player.position} · {entry.player.team} · {entry.numberOfBids ?? UNKNOWN} pujas</p></div><div className="text-right"><p className="text-[10px] uppercase text-neutral-400">Salida</p><p className="font-bold text-[#101a39]">{millions(entry.salePrice)}</p></div></button>
+        <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs"><MarketMetric label="Valor" value={millions(entry.player.marketValue)}/><MarketMetric label="Tu puja" value={entry.myBid ? millions(entry.myBid.amount) : "—"}/><MarketMetric label="Expira" value={shortDate(entry.expiresAt)}/></div>
+        <div className="mt-3 flex gap-2">{entry.myBid ? <><button disabled={busy === entry.marketId} type="button" onClick={() => act(entry, "modify")} className="min-h-11 flex-1 rounded-2xl bg-[#101a39] px-3 text-sm font-bold text-white">Cambiar puja</button><button disabled={busy === entry.marketId} type="button" onClick={() => act(entry, "cancel")} className="min-h-11 rounded-2xl border border-red-200 px-4 text-sm font-semibold text-red-700">Cancelar</button></> : <button disabled={busy === entry.marketId} type="button" onClick={() => act(entry, "create")} className="min-h-12 w-full rounded-2xl bg-[#d6ff75] px-4 text-sm font-black text-[#101a39]">Pujar ahora</button>}</div>
+      </article>)}
+      <p className="px-2 text-xs leading-5 text-neutral-400">
         &laquo;Pujas&raquo; es cuántas hay, no de quién ni de cuánto: LALIGA no publica las pujas
         ajenas. La columna &laquo;Tu puja&raquo; solo muestra la tuya.
       </p>
       {selected && <PlayerDetails player={selected} onClose={() => setSelected(null)} />}
-    </Card>
+    </div>
   );
 }
+
+function MarketMetric({ label, value }: { label: string; value: string }) { return <div className="rounded-2xl bg-[#f3f5f8] px-2 py-2"><p className="text-[10px] text-neutral-400">{label}</p><p className="mt-0.5 truncate font-bold text-[#101a39]">{value}</p></div>; }

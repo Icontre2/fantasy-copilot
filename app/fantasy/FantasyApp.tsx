@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { CircleEllipsis, House, LogOut, ShoppingBag, UsersRound } from "lucide-react";
 import { get, post } from "./api";
 import { AlertsView } from "./AlertsView";
 import { EconomyView } from "./EconomyView";
@@ -10,10 +11,14 @@ import { LoginView } from "./LoginView";
 import { MarketView } from "./MarketView";
 import { CompareView } from "./CompareView";
 import { LineupsView, type LineupsResponse } from "./LineupsView";
+import { DashboardView } from "./DashboardView";
+import { MySquadView } from "./MySquadView";
+import { MoreView } from "./MoreView";
 import {
   SECTIONS,
   type AlertsResponse,
   type EconomyResponse,
+  type DashboardResponse,
   type League,
   type LeaguesResponse,
   type Manager,
@@ -42,7 +47,7 @@ export default function FantasyApp() {
   const [leagueId, setLeagueId] = useState<string | null>(null);
   const [leaguesLoading, setLeaguesLoading] = useState(true);
   const [leaguesError, setLeaguesError] = useState<string | null>(null);
-  const [section, setSection] = useState<Section>("liga");
+  const [section, setSection] = useState<Section>("inicio");
 
   useEffect(() => {
     get<{ authenticated: boolean; manager?: Manager }>("/api/fantasy/auth/session")
@@ -87,13 +92,16 @@ export default function FantasyApp() {
 
   return (
     <Shell>
-      <header className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <p className="text-sm text-neutral-500">Conectado como</p>
-          <p className="font-semibold">{manager.name}</p>
+      <header className="flex items-center justify-between gap-3 pt-1">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[#101a39] text-lg font-black text-[#d6ff75]">FC</span>
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-neutral-400">Fantasy Copilot</p>
+            <p className="truncate font-bold text-[#101a39]">Hola, {manager.name}</p>
+          </div>
         </div>
-        <button type="button" onClick={logout} className="text-sm text-neutral-600 underline">
-          Salir
+        <button type="button" onClick={logout} aria-label="Salir" className="grid h-10 w-10 place-items-center rounded-full bg-white text-neutral-400 shadow-sm">
+          <LogOut size={18}/>
         </button>
       </header>
 
@@ -114,38 +122,12 @@ export default function FantasyApp() {
         </label>
       )}
 
-      {/*
-        Rejilla de 5 columnas, no flex con scroll horizontal.
-
-        Con `flex-1` + `whitespace-nowrap` las cinco pestañas no cabian en un
-        movil y «Exportar» quedaba fuera de pantalla: para descubrir que existe
-        habia que arrastrar una barra que no se ve. En una app mobile-first con
-        exactamente cinco secciones fijas, todas tienen que estar a la vista.
-      */}
-      <nav className="grid grid-cols-4 gap-1 rounded-xl bg-neutral-100 p-1 sm:grid-cols-7">
-        {SECTIONS.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            onClick={() => setSection(item.id)}
-            aria-current={section === item.id ? "page" : undefined}
-            className={`truncate rounded-lg px-0.5 py-2 text-center text-[11.5px] font-medium tracking-tight transition-colors sm:text-[13px] ${
-              section === item.id
-                ? "bg-white text-neutral-900 shadow-sm"
-                : "text-neutral-600 hover:text-neutral-900"
-            }`}
-          >
-            {item.label}
-          </button>
-        ))}
-      </nav>
-
       {leaguesLoading ? (
         <Spinner label="Cargando tus ligas…" />
       ) : leaguesError ? (
         <ErrorBox message={leaguesError} />
       ) : leagueId ? (
-        <SectionContent section={section} leagueId={leagueId} />
+        <SectionContent section={section} leagueId={leagueId} onNavigate={setSection} />
       ) : (
         <Card>
           <p className="text-sm text-neutral-600">
@@ -153,14 +135,25 @@ export default function FantasyApp() {
           </p>
         </Card>
       )}
+
+      <BottomNav section={section} onSelect={setSection}/>
     </Shell>
   );
 }
 
 function Shell({ children }: { children: React.ReactNode }) {
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4 pb-16">{children}</main>
+    <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-4 px-4 pb-28 pt-[max(1rem,env(safe-area-inset-top))]">{children}</main>
   );
+}
+
+const NAV_ICONS: Record<string, React.ReactNode> = {
+  inicio: <House size={20}/>, plantilla: <UsersRound size={20}/>, mercado: <ShoppingBag size={20}/>, mas: <CircleEllipsis size={20}/>,
+};
+
+function BottomNav({ section, onSelect }: { section: Section; onSelect: (section: Section) => void }) {
+  const active = SECTIONS.some((item) => item.id === section) ? section : "mas";
+  return <nav className="fixed inset-x-3 bottom-[max(.75rem,env(safe-area-inset-bottom))] z-40 mx-auto grid max-w-md grid-cols-4 rounded-[24px] border border-white/50 bg-[#101a39]/95 p-1.5 text-white shadow-[0_18px_60px_rgba(10,18,45,.32)] backdrop-blur-xl">{SECTIONS.map((item) => <button key={item.id} type="button" onClick={() => onSelect(item.id)} className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-[18px] text-[10px] font-semibold transition ${active === item.id ? "bg-[#d6ff75] text-[#101a39]" : "text-white/55"}`} aria-current={active === item.id ? "page" : undefined}>{NAV_ICONS[item.id]}{item.label}</button>)}</nav>;
 }
 
 /**
@@ -171,11 +164,12 @@ function Shell({ children }: { children: React.ReactNode }) {
  * datos ni error) sin necesidad de resetearlos dentro de un efecto. Subir
  * `reloadToken` fuerza el mismo remontaje para refrescar tras sincronizar.
  */
-function SectionContent({ section, leagueId }: { section: Section; leagueId: string }) {
+function SectionContent({ section, leagueId, onNavigate }: { section: Section; leagueId: string; onNavigate: (section: Section) => void }) {
   const [reloadToken, setReloadToken] = useState(0);
   const reload = useCallback(() => setReloadToken((value) => value + 1), []);
 
   if (section === "exportar") return <ExportView leagueId={leagueId} />;
+  if (section === "mas") return <MoreView onSelect={onNavigate} />;
 
   return (
     <SectionData
@@ -187,7 +181,11 @@ function SectionContent({ section, leagueId }: { section: Section; leagueId: str
   );
 }
 
-const ENDPOINT: Record<Exclude<Section, "exportar">, (leagueId: string) => string> = {
+type DataSection = Exclude<Section, "exportar" | "mas">;
+
+const ENDPOINT: Record<DataSection, (leagueId: string) => string> = {
+  inicio: (id) => `/api/fantasy/leagues/${id}/dashboard`,
+  plantilla: (id) => `/api/fantasy/leagues/${id}/dashboard`,
   liga: (id) => `/api/fantasy/leagues/${id}/teams`,
   alertas: (id) => `/api/fantasy/leagues/${id}/alerts`,
   economia: (id) => `/api/fantasy/leagues/${id}/economy`,
@@ -196,7 +194,9 @@ const ENDPOINT: Record<Exclude<Section, "exportar">, (leagueId: string) => strin
   onces: () => `/api/fantasy/lineups`,
 };
 
-const LOADING_LABEL: Record<Exclude<Section, "exportar">, string> = {
+const LOADING_LABEL: Record<DataSection, string> = {
+  inicio: "Preparando tu resumen…",
+  plantilla: "Montando tu once probable…",
   liga: "Cargando plantillas de la liga…",
   alertas: "Calculando alertas de cláusula…",
   economia: "Reconstruyendo la contabilidad…",
@@ -210,7 +210,7 @@ function SectionData({
   leagueId,
   onSynced,
 }: {
-  section: Exclude<Section, "exportar">;
+  section: DataSection;
   leagueId: string;
   onSynced: () => void;
 }) {
@@ -243,6 +243,10 @@ function SectionData({
   if (!data) return null;
 
   switch (section) {
+    case "inicio":
+      return <DashboardView data={data as DashboardResponse} />;
+    case "plantilla":
+      return <MySquadView data={data as DashboardResponse} />;
     case "liga":
       return <LeagueView data={data as TeamsResponse} />;
     case "alertas":

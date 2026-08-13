@@ -1,10 +1,22 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { parseMatchPage } from './lineups.ts';
+import { parseProbableLineup } from './parser.ts';
 
-test('extrae los dos onces sin mezclar suplentes', () => {
-  const player = (name: string) => `<div class="camiseta-wrapper"><div class="fotocontainer"><img alt="${name}"></div></div>`;
-  const source = `<section class="alineacion_wrapper"><header class="title">Posibles alineaciones Uno - Dos</header><div class="campo-wrapper local">${Array.from({ length: 12 }, (_, i) => player(`L${i}`)).join('')}</div><div class="campo-wrapper visitante">${Array.from({ length: 11 }, (_, i) => player(`V${i}`)).join('')}</div></section>`;
-  const result = parseMatchPage(source, 'https://example.test/partido');
-  assert.equal(result.home, 'Uno'); assert.equal(result.away, 'Dos'); assert.equal(result.homePlayers.length, 11); assert.equal(result.awayPlayers.at(-1), 'V10');
+function player(id: string, name: string, probability: number, position: string): string {
+  return `<div class="jugador_${id} tipo_campo camiseta-wrapper" data-posicion="${position}">
+    <a class="camiseta" data-probabilidad="${probability}%"></a>
+    <span class="truncate-name">${name}</span>
+  </div>`;
+}
+
+test('extrae todos los candidatos, sus posiciones y porcentajes', () => {
+  const parsed = parseProbableLineup(player('1', 'Sivera', 95, 'Portero') + player('2', 'Tenaglia', 72, 'Defensa'));
+  assert.deepEqual(parsed, [
+    { externalId: '1', name: 'Sivera', probability: 95, position: 'Portero' },
+    { externalId: '2', name: 'Tenaglia', probability: 72, position: 'Defensa' },
+  ]);
+});
+
+test('no publica una lista vacía cuando cambia el marcado', () => {
+  assert.throws(() => parseProbableLineup('<p>otro formato</p>'), /cambió el formato/);
 });
