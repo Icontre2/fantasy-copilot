@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { decryptTokenSet, encryptTokenSet } from "./token-crypto.ts";
+import {
+  decodePortableTokenSet,
+  decryptTokenSet,
+  encodePortableTokenSet,
+  encryptTokenSet,
+} from "./token-crypto.ts";
 
 const tokens = { accessToken: "acc", refreshToken: "ref", expiresAt: 1_800_000_000_000 };
 
@@ -71,4 +76,14 @@ test("sin ningun secreto y EN produccion lanza: el atajo de desarrollo no se cue
   withEnv({ SESSION_ENCRYPTION_KEY: undefined, VERCEL_OIDC_TOKEN: undefined, NODE_ENV: "production" }, () => {
     assert.throws(() => encryptTokenSet(tokens), /SESSION_ENCRYPTION_KEY/);
   });
+});
+
+test("la sesión portátil cruza funciones sin depender de memoria", () => {
+  const encoded = encodePortableTokenSet(tokens);
+  assert.match(encoded, /^p1\./);
+  assert.deepEqual(decodePortableTokenSet(encoded), tokens);
+});
+
+test("la sesión portátil rechaza un formato que no sea suyo", () => {
+  assert.throws(() => decodePortableTokenSet("v1.no-es-portable"), /formato válido/);
 });
