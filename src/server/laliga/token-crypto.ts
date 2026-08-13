@@ -49,6 +49,20 @@ function configuredSecret(): string {
   return ephemeralDevSecret();
 }
 
+/**
+ * Indica si produccion dispone de una clave estable para cifrar sesiones.
+ *
+ * Se usa antes de intentar cifrar para poder activar el mismo respaldo en
+ * memoria que utiliza AppFantasy cuando Vercel aun no tiene la variable
+ * configurada. No devuelve el secreto ni lo expone al cliente.
+ */
+export function hasConfiguredEncryptionSecret(): boolean {
+  return Boolean(
+    process.env.SESSION_ENCRYPTION_KEY?.trim() ||
+      process.env.VERCEL_OIDC_TOKEN?.trim(),
+  );
+}
+
 export function encryptTokenSet(tokens: TokenSet, secret = configuredSecret()): string {
   const iv = randomBytes(12);
   const cipher = createCipheriv('aes-256-gcm', keyFromSecret(secret), iv);
