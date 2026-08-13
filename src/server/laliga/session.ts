@@ -1,7 +1,11 @@
 import { randomUUID } from 'node:crypto';
 import { hasSupabaseAdmin, supabaseAdmin } from '@/src/server/storage/supabase-admin';
 import { refreshTokens, type TokenSet } from './auth';
-import { decryptTokenSet, encryptTokenSet } from './token-crypto';
+import {
+  decryptTokenSet,
+  encryptTokenSet,
+  hasConfiguredEncryptionSecret,
+} from './token-crypto';
 
 /**
  * Sesion del conector privado.
@@ -13,14 +17,16 @@ import { decryptTokenSet, encryptTokenSet } from './token-crypto';
  * CON Supabase: los tokens se guardan cifrados en `fantasy_sessions` y la cookie
  * lleva solo un id opaco. La sesion se renueva sola y dura 30 dias.
  *
- * SIN Supabase: la sesion viaja cifrada DENTRO de la cookie. No hay estado en
- * servidor, asi que funciona igual con una instancia que con veinte — se puede
- * desplegar sin base de datos. El precio es que no hay donde guardar el token
- * renovado: la sesion dura lo que dura el access token de LALIGA (~24 h) y
- * despues toca volver a entrar.
+ * SIN Supabase: la sesion viaja cifrada DENTRO de la cookie.
  *
- * En los dos modos el token va cifrado con AES-256-GCM y la cookie es
- * `httpOnly`: el navegador nunca puede leer el token.
+ * SIN clave de cifrado en produccion: se usa temporalmente el respaldo de
+ * AppFantasy, con un id opaco en cookie y los tokens en memoria. Asi el login
+ * no queda inutilizado por una variable ausente. Este modo no es persistente
+ * entre instancias o despliegues y debe considerarse una red de seguridad.
+ *
+ * En los tres modos la cookie es `httpOnly`: el navegador nunca puede leer el
+ * token. Cuando hay persistencia o cookie portable, ademas va cifrado con
+ * AES-256-GCM.
  */
 
 import { SESSION_TTL_MS } from './session-cookie.ts';
@@ -28,6 +34,15 @@ import { SESSION_TTL_MS } from './session-cookie.ts';
 /** Refrescos en vuelo, para no lanzar dos a la vez sobre la misma sesion. */
 const inflight = ((globalThis as { __llfRefreshes?: Map<string, Promise<string | null>> })
   .__llfRefreshes ??= new Map<string, Promise<string | null>>());
+
+type MemorySession = {
+  tokens: TokenSet;
+  createdAt: number;
+  inflightRefresh?: Promise<TokenSet>;
+};
+
+const memorySessions = ((globalThis as { __llfSessions?: Map<string, MemorySession> })
+  .__llfSessions ??= new Map<string, MemorySession>());
 
 type SessionRow = { encrypted_tokens: string };
 
@@ -44,15 +59,26 @@ type SessionRow = { encrypted_tokens: string };
  * volver a entrar. Con Supabase configurado no pasa: se renueva sola.
  */
 export function usingCookieSessions(): boolean {
-  return !hasSupabaseAdmin();
+  return !hasSupabaseAdmin() && !usingMemorySessions();
+}
+
+/** Respaldo compatible con AppFantasy para no bloquear el acceso por config. */
+export function usingMemorySessions(): boolean {
+  return process.env.NODE_ENV === 'production' && !hasConfiguredEncryptionSecret();
 }
 
 /** Persistencia disponible para el historico economico. */
 export function hasPersistentStorage(): boolean {
-  return hasSupabaseAdmin();
+  return hasSupabaseAdmin() && !usingMemorySessions();
 }
 
 export async function createSession(tokens: TokenSet): Promise<string> {
+  if (usingMemorySessions()) {
+    const id = randomUUID();
+    memorySessions.set(id, { tokens, createdAt: Date.now() });
+    return id;
+  }
+
   // Modo cookie: el "identificador" ES la sesion cifrada. No se guarda nada.
   if (usingCookieSessions()) return encryptTokenSet(tokens);
 
@@ -75,6 +101,11 @@ export async function createSession(tokens: TokenSet): Promise<string> {
 }
 
 export async function destroySession(sessionId: string): Promise<void> {
+  if (usingMemorySessions()) {
+    memorySessions.delete(sessionId);
+    return;
+  }
+
   // En modo cookie no hay nada que borrar en servidor: basta con caducar la
   // cookie, que es lo que hace la ruta de logout.
   if (usingCookieSessions()) return;
@@ -82,6 +113,7 @@ export async function destroySession(sessionId: string): Promise<void> {
 }
 
 async function readSession(sessionId: string): Promise<SessionRow | null> {
+  if (usingMemorySessions()) return null;
   if (usingCookieSessions()) return { encrypted_tokens: sessionId };
 
   const { data } = await supabaseAdmin()
@@ -144,6 +176,33 @@ async function refreshSession(sessionId: string, previous: string, tokens: Token
  */
 export async function getValidAccessToken(sessionId: string | undefined): Promise<string | null> {
   if (!sessionId) return null;
+
+  if (usingMemorySessions()) {
+    const entry = memorySessions.get(sessionId);
+    if (!entry) return null;
+
+    if (Date.now() >= entry.createdAt + SESSION_TTL_MS) {
+      memorySessions.delete(sessionId);
+      return null;
+    }
+
+    if (Date.now() < entry.tokens.expiresAt) return entry.tokens.accessToken;
+
+    if (!entry.inflightRefresh) {
+      entry.inflightRefresh = refreshTokens(entry.tokens.refreshToken).finally(() => {
+        entry.inflightRefresh = undefined;
+      });
+    }
+
+    try {
+      const fresh = await entry.inflightRefresh;
+      entry.tokens = fresh;
+      return fresh.accessToken;
+    } catch {
+      memorySessions.delete(sessionId);
+      return null;
+    }
+  }
 
   const row = await readSession(sessionId);
   if (!row) return null;
