@@ -4,7 +4,7 @@
   --ink: #11131a;
   --ink-soft: #5f6473;
   --ink-faint: #8c92a1;
-  --paper: #f4f5f7;
+  --paper: #f1f3f5;
   --surface: #ffffff;
   --surface-soft: #f8f8fa;
   --line: #e4e6ea;
@@ -48,7 +48,9 @@
   body {
     margin: 0;
     min-height: 100vh;
-    background: var(--paper);
+    background:
+      radial-gradient(circle at 90% -10%, rgba(200, 250, 82, 0.12), transparent 26rem),
+      linear-gradient(180deg, #f7f8f6 0%, var(--paper) 44%, #eef0f3 100%);
     color: var(--ink);
     font-family: var(--font-geist-sans), Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
@@ -76,6 +78,11 @@
   input,
   select {
     min-width: 0;
+  }
+
+  a,
+  button {
+    -webkit-tap-highlight-color: transparent;
   }
 
   button:focus-visible,

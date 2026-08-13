@@ -1,10 +1,10 @@
 /** Formas que devuelven las rutas `/api/fantasy/*`, tal cual las consume la UI. */
 
-import type { League, LeagueTeam, Manager, MarketEntry, StandingRow } from "@/src/domain/fantasy";
+import type { League, LeagueTeam, Manager, MarketEntry, MarketValuePoint, Player, StandingRow } from "@/src/domain/fantasy";
 import type { ClauseAlert } from "@/src/server/laliga/alerts/clause-alerts";
 import type { ManagerLedger } from "@/src/server/laliga/economy/ledger";
 
-export type { ClauseAlert, League, LeagueTeam, Manager, ManagerLedger, MarketEntry, StandingRow };
+export type { ClauseAlert, League, LeagueTeam, Manager, ManagerLedger, MarketEntry, MarketValuePoint, Player, StandingRow };
 
 export type LeaguesResponse = { leagues: League[] };
 
@@ -15,6 +15,37 @@ export type TeamsResponse = {
 };
 
 export type MarketResponse = { market: MarketEntry[] };
+
+export type PlayerWithProbability = Player & {
+  buyoutClause?: number;
+  isShielded?: boolean;
+  lineupProbability?: number;
+};
+
+export type DashboardResponse = {
+  league: Pick<League, 'id' | 'name'>;
+  me: LeagueTeam & {
+    players: PlayerWithProbability[];
+    position?: number;
+    points?: number;
+    netWorth: number;
+  };
+  lineup: {
+    formation: string;
+    starters: PlayerWithProbability[];
+    bench: PlayerWithProbability[];
+  };
+  competitors: Array<{
+    teamId: string;
+    manager: Manager;
+    position?: number;
+    points?: number;
+    teamValue?: number;
+    teamMoney?: number;
+    netWorth: number;
+  }>;
+  failedTeamIds: string[];
+};
 
 export type AlertsResponse = {
   leagueId: string;
@@ -65,12 +96,11 @@ export type ScheduleStatus = {
   message: string;
 };
 
-export type Section = "liga" | "alertas" | "economia" | "mercado" | "exportar";
+export type Section = "inicio" | "plantilla" | "liga" | "alertas" | "economia" | "mercado" | "onces" | "comparar" | "exportar" | "mas";
 
 export const SECTIONS: { id: Section; label: string }[] = [
-  { id: "liga", label: "Liga" },
-  { id: "alertas", label: "Alertas" },
-  { id: "economia", label: "Economía" },
+  { id: "inicio", label: "Inicio" },
+  { id: "plantilla", label: "Plantilla" },
   { id: "mercado", label: "Mercado" },
-  { id: "exportar", label: "Exportar" },
+  { id: "mas", label: "Más" },
 ];

@@ -24,7 +24,10 @@ import {
   apiStandingSchema,
   apiUserSchema,
   apiWeekSchema,
+  apiPlayersSchema,
 } from './schemas';
+import { toPosition } from './mappers';
+import { FALLBACK_TEAMS } from './teams';
 
 /**
  * Lecturas de LALIGA Fantasy. Todas las que la app necesita, y ninguna mas.
@@ -106,6 +109,28 @@ export async function getMarketValueHistory(playerId: string): Promise<MarketVal
     apiMarketValueHistorySchema,
   );
   return mapMarketValueHistory(history);
+}
+
+/** Catálogo público completo, usado para fotos y cruces con fuentes externas. */
+export async function getPlayerCatalog(): Promise<import('@/src/domain/fantasy').Player[]> {
+  const players = await publicFetch('/api/v5/players', apiPlayersSchema);
+  return players.flatMap((player) => {
+    const position = toPosition(player.positionId);
+    if (!position) return [];
+    return [{
+      id: player.id,
+      name: player.nickname,
+      team: FALLBACK_TEAMS[player.teamId]?.shortName ?? '—',
+      teamId: player.teamId,
+      position,
+      marketValue: player.marketValue,
+      points: player.points,
+      averagePoints: player.averagePoints,
+      status: player.playerStatus,
+      image: player.image,
+      lastSeasonPoints: player.lastSeasonPoints,
+    }];
+  });
 }
 
 export type LeagueSnapshot = {

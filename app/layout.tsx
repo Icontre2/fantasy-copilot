@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Fantasy Copilot — Decide mejor. Suma más.",
+  title: "LigaLab — Tu liga, bajo control.",
   description:
-    "Asistente móvil para tomar mejores decisiones de plantilla y mercado en LALIGA Fantasy.",
+    "Tu liga, patrimonio, mercado y onces probables en una experiencia móvil clara.",
   other: {
     "codex-preview": "development",
   },

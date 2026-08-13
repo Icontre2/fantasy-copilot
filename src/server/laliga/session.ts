@@ -1,7 +1,13 @@
 import { randomUUID } from 'node:crypto';
 import { hasSupabaseAdmin, supabaseAdmin } from '@/src/server/storage/supabase-admin';
 import { refreshTokens, type TokenSet } from './auth';
-import { decryptTokenSet, encryptTokenSet } from './token-crypto';
+import {
+  decodePortableTokenSet,
+  decryptTokenSet,
+  encodePortableTokenSet,
+  encryptTokenSet,
+  hasConfiguredEncryptionSecret,
+} from './token-crypto';
 
 /**
  * Sesion del conector privado.
@@ -13,14 +19,14 @@ import { decryptTokenSet, encryptTokenSet } from './token-crypto';
  * CON Supabase: los tokens se guardan cifrados en `fantasy_sessions` y la cookie
  * lleva solo un id opaco. La sesion se renueva sola y dura 30 dias.
  *
- * SIN Supabase: la sesion viaja cifrada DENTRO de la cookie. No hay estado en
- * servidor, asi que funciona igual con una instancia que con veinte — se puede
- * desplegar sin base de datos. El precio es que no hay donde guardar el token
- * renovado: la sesion dura lo que dura el access token de LALIGA (~24 h) y
- * despues toca volver a entrar.
+ * SIN Supabase: la sesion viaja cifrada DENTRO de la cookie.
  *
- * En los dos modos el token va cifrado con AES-256-GCM y la cookie es
- * `httpOnly`: el navegador nunca puede leer el token.
+ * SIN clave de cifrado en produccion: la sesion viaja temporalmente dentro de
+ * una cookie Secure + httpOnly. Asi funciona entre distintas funciones de
+ * Vercel. En cuanto hay clave estable vuelve a usarse AES-256-GCM.
+ *
+ * En todos los modos la cookie es `httpOnly`: JavaScript del navegador nunca
+ * puede leer el token. Con clave configurada, ademas va cifrado con AES-256-GCM.
  */
 
 import { SESSION_TTL_MS } from './session-cookie.ts';
@@ -44,17 +50,26 @@ type SessionRow = { encrypted_tokens: string };
  * volver a entrar. Con Supabase configurado no pasa: se renueva sola.
  */
 export function usingCookieSessions(): boolean {
-  return !hasSupabaseAdmin();
+  return !hasSupabaseAdmin() || usingPortableCookieSessions();
+}
+
+/** Respaldo portable para instalaciones de Vercel aun sin clave estable. */
+export function usingPortableCookieSessions(): boolean {
+  return process.env.NODE_ENV === 'production' && !hasConfiguredEncryptionSecret();
 }
 
 /** Persistencia disponible para el historico economico. */
 export function hasPersistentStorage(): boolean {
-  return hasSupabaseAdmin();
+  return hasSupabaseAdmin() && !usingPortableCookieSessions();
 }
 
 export async function createSession(tokens: TokenSet): Promise<string> {
   // Modo cookie: el "identificador" ES la sesion cifrada. No se guarda nada.
-  if (usingCookieSessions()) return encryptTokenSet(tokens);
+  if (usingCookieSessions()) {
+    return usingPortableCookieSessions()
+      ? encodePortableTokenSet(tokens)
+      : encryptTokenSet(tokens);
+  }
 
   const id = randomUUID();
   const now = new Date();
@@ -150,7 +165,9 @@ export async function getValidAccessToken(sessionId: string | undefined): Promis
 
   let tokens: TokenSet;
   try {
-    tokens = decryptTokenSet(row.encrypted_tokens);
+    tokens = usingPortableCookieSessions()
+      ? decodePortableTokenSet(row.encrypted_tokens)
+      : decryptTokenSet(row.encrypted_tokens);
   } catch {
     // Clave de cifrado rotada o fila corrupta: la sesion ya no es recuperable.
     await destroySession(sessionId);
