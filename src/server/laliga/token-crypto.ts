@@ -11,10 +11,32 @@ function keyFromSecret(secret: string): Buffer {
   return createHash('sha256').update(secret, 'utf8').digest();
 }
 
+/**
+ * Clave efimera para el modo de desarrollo sin configurar.
+ *
+ * Se genera una vez por proceso y muere con el. Solo tiene sentido porque en ese
+ * modo las sesiones tampoco sobreviven al reinicio (viven en memoria, ver
+ * `session.ts`): la clave dura exactamente lo que dura lo que cifra.
+ *
+ * Cuelga de globalThis para que el hot-reload de `next dev` no la regenere y
+ * deje ilegibles las sesiones ya abiertas.
+ */
+function ephemeralDevSecret(): string {
+  const holder = globalThis as { __llfDevSecret?: string };
+  return (holder.__llfDevSecret ??= randomBytes(48).toString('base64'));
+}
+
 function configuredSecret(): string {
   const secret = process.env.SESSION_ENCRYPTION_KEY?.trim();
-  if (!secret) throw new Error('Falta SESSION_ENCRYPTION_KEY para cifrar las sesiones.');
-  return secret;
+  if (secret) return secret;
+
+  // En produccion la falta de clave es un error de configuracion y debe verse.
+  // En local no: obligar a generar una clave antes de poder mirar la app es
+  // friccion sin ganancia, porque lo que cifra no sale del proceso.
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('Falta SESSION_ENCRYPTION_KEY para cifrar las sesiones.');
+  }
+  return ephemeralDevSecret();
 }
 
 export function encryptTokenSet(tokens: TokenSet, secret = configuredSecret()): string {

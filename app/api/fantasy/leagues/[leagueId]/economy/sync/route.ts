@@ -1,6 +1,7 @@
 import { errorJson, privateJson } from "@/src/server/http/responses";
 import { requireSession } from "@/src/server/http/session-guard";
 import { syncLeagueEconomy } from "@/src/server/laliga/economy/sync";
+import { hasPersistentStorage } from "@/src/server/laliga/session";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +19,17 @@ export async function POST(request: Request, { params }: { params: Promise<{ lea
   if ("response" in auth) return auth.response;
 
   const { leagueId } = await params;
+
+  if (!hasPersistentStorage()) {
+    return privateJson(
+      {
+        error:
+          "Sincronizar guarda una foto de la liga para poder compararla con la siguiente, y no hay base de datos configurada donde guardarla.",
+        kind: "storage_required",
+      },
+      409,
+    );
+  }
 
   try {
     return privateJson(await syncLeagueEconomy(auth.token, leagueId));

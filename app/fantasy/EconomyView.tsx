@@ -44,6 +44,24 @@ export function EconomyView({
 
   const open = data.ledgers.find((ledger) => ledger.managerId === openManagerId);
 
+  // Sin base de datos no hay histórico posible. Se explica y se para aquí: una
+  // tabla vacía con ceros parecería un resultado ("nadie ha movido dinero")
+  // cuando en realidad es "no lo estamos midiendo".
+  if (data.storageRequired) {
+    return (
+      <div className="space-y-4">
+        <Card>
+          <SectionTitle>Economía de la liga</SectionTitle>
+          <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+            Esta pantalla necesita base de datos y no hay ninguna configurada. Las otras cuatro
+            funcionan sin ella.
+          </p>
+        </Card>
+        <DataNotes notes={data.dataNotes} />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <Card>
@@ -130,8 +148,25 @@ export function EconomyView({
                     <Td align="right">{millions(ledger.sales)}</Td>
                     <Td align="right">{millions(ledger.pointsBonus)}</Td>
                     <Td align="right">{signedMillions(ledger.net)}</Td>
-                    <Td align="right" className="text-neutral-500">
+                    <Td
+                      align="right"
+                      className={
+                        // Un saldo previo NEGATIVO es imposible en la realidad:
+                        // significa que le hemos atribuido más dinero del que
+                        // tiene, o sea que se nos ha escapado una compra. Es una
+                        // señal de que falta un movimiento, no un número más.
+                        (ledger.openingBalance ?? 0) < 0 ? "text-red-700" : "text-neutral-500"
+                      }
+                    >
                       {millions(ledger.openingBalance)}
+                      {(ledger.openingBalance ?? 0) < 0 && (
+                        <span
+                          className="ml-1"
+                          title="Saldo previo negativo: hemos contabilizado más dinero del que tiene. Falta por detectar alguna compra, probablemente ocurrida entre dos sincronizaciones."
+                        >
+                          ⚠
+                        </span>
+                      )}
                     </Td>
                   </tr>
                 ))}

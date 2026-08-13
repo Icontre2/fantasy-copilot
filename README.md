@@ -215,3 +215,28 @@ aviso. El análisis completo está en
 `app/fantasy-app.tsx`, `app/laliga-provider.ts` y `app/csv-import.ts` son la app
 anterior (importación manual/CSV). **Están desacoplados**: nadie los monta.
 Se conservan mientras el conector nuevo se valida contra una liga real.
+
+## Arranque rapido (sin configurar nada)
+
+```bash
+npm install
+npm run dev        # http://localhost:3000
+```
+
+Inicia sesion con tu cuenta de LALIGA Fantasy y ya funcionan **Liga, Alertas,
+Mercado y Exportar**: leen de LALIGA en vivo y no necesitan base de datos.
+
+En este modo la sesion vive en memoria del proceso, cifrada con una clave
+efimera: reiniciar cierra la sesion. Es deliberado — obligar a montar una base
+de datos antes de poder mirar la app es friccion sin ganancia, y lo que se cifra
+no sale del proceso. **En produccion este modo esta prohibido**: sin
+`SUPABASE_URL` y `SESSION_ENCRYPTION_KEY` la app lanza en vez de arrancar
+perdiendo sesiones en cada despliegue.
+
+**Economia** si necesita base de datos, y no es un capricho: LALIGA no publica
+historico de operaciones, asi que la unica forma de saber que ha pasado es
+guardar fotos de la liga y compararlas. Sin donde guardarlas no hay desglose
+posible, y la pantalla lo dice en vez de enseñar una tabla de ceros. Para
+activarla: rellenar `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` (ver
+`.env.example`) y aplicar los ficheros de `supabase/migrations/`.
+

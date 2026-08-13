@@ -1,6 +1,6 @@
 import { errorJson, privateJson } from "@/src/server/http/responses";
 import { requireSession } from "@/src/server/http/session-guard";
-import { readSessionId } from "@/src/server/laliga/session";
+import { hasPersistentStorage, readSessionId } from "@/src/server/laliga/session";
 import {
   describeSchedule,
   disableAutoSync,
@@ -16,6 +16,15 @@ export async function GET(request: Request, { params }: { params: Promise<{ leag
   if ("response" in auth) return auth.response;
 
   const { leagueId } = await params;
+
+  if (!hasPersistentStorage()) {
+    return privateJson({
+      subscription: null,
+      health: "OFF",
+      minutesSinceLastRun: null,
+      message: "Requiere base de datos: la suscripcion tiene que guardarse en algun sitio.",
+    });
+  }
 
   try {
     return privateJson(describeSchedule(await readSubscription(leagueId)));

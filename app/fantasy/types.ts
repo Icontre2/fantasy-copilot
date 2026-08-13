@@ -36,6 +36,8 @@ export type EconomyResponse = {
   dataNotes: string[];
   /** Estado de la sincronizacion automatica; llega en la misma respuesta. */
   schedule?: ScheduleStatus;
+  /** `true` cuando falta base de datos: sin ella no hay histórico que mostrar. */
+  storageRequired?: boolean;
 };
 
 export type SyncResponse = {

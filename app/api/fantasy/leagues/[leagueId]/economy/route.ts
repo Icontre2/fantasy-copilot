@@ -2,6 +2,7 @@ import { errorJson, privateJson } from "@/src/server/http/responses";
 import { requireSession } from "@/src/server/http/session-guard";
 import { buildEconomyReport } from "@/src/server/laliga/economy/sync";
 import { describeSchedule, readSubscription } from "@/src/server/laliga/economy/schedule";
+import { hasPersistentStorage } from "@/src/server/laliga/session";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +22,23 @@ export async function GET(request: Request, { params }: { params: Promise<{ leag
   if ("response" in auth) return auth.response;
 
   const { leagueId } = await params;
+
+  // El ledger es un HISTORICO: se construye acumulando fotos, asi que sin donde
+  // guardarlas no hay nada que enseñar. Se dice explicitamente en vez de
+  // devolver un 500 o, peor, una tabla de ceros que pareceria un resultado.
+  if (!hasPersistentStorage()) {
+    return privateJson({
+      leagueId,
+      trackedSince: null,
+      ledgers: [],
+      storageRequired: true,
+      dataNotes: [
+        'Esta pantalla necesita base de datos y no hay ninguna configurada.',
+        'LALIGA no publica historico de operaciones: la unica forma de saber que ha pasado es guardar fotos de la liga y compararlas. Sin donde guardarlas no hay desglose posible.',
+        'Configura SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY y aplica supabase/migrations/. Las demas pantallas funcionan sin esto.',
+      ],
+    });
+  }
 
   try {
     const [report, subscription] = await Promise.all([
