@@ -17,13 +17,20 @@ import { timingSafeEqual } from 'node:crypto';
  */
 
 /**
- * Cada cuanto se espera que corra la tarea.
+ * Cada cuanto se espera que corra la tarea, en minutos.
  *
  * DEBE coincidir con el `schedule` de `vercel.json`. Vive aqui porque es lo que
  * decide cuando una liga se considera "retrasada": si se cambia el cron sin
  * cambiar esto, la UI daria por bueno un retraso real.
+ *
+ * Hoy vale un dia porque **el plan Hobby de Vercel solo admite un cron diario**:
+ * pedir una cadencia horaria hace fallar el despliegue entero. Con un plan que
+ * permita mas frecuencia, subirla mejora el desglose economico: cuantas menos
+ * horas pasen entre dos fotos, mas operaciones quedan con importe atribuible
+ * (ver `economy/transactions.ts`). Al cambiar el cron, cambiar tambien este
+ * numero.
  */
-export const EXPECTED_SYNC_INTERVAL_MINUTES = 180;
+export const EXPECTED_SYNC_INTERVAL_MINUTES = 24 * 60;
 
 /** Fallos seguidos tras los que se deja de reintentar sin intervencion. */
 export const MAX_CONSECUTIVE_FAILURES = 5;
