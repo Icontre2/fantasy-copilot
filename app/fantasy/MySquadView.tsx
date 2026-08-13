@@ -41,7 +41,10 @@ export function MySquadView({ data }: { data: DashboardResponse }) {
 }
 
 function groupByPosition(players: PlayerWithProbability[]) {
-  return players.reduce<Partial<Record<PlayerWithProbability["position"], PlayerWithProbability[]>>>((groups, player) => {\n    (groups[player.position] ??= []).push(player);\n    return groups;\n  }, {});
+  return players.reduce<Partial<Record<PlayerWithProbability["position"], PlayerWithProbability[]>>>((groups, player) => {
+    (groups[player.position] ??= []).push(player);
+    return groups;
+  }, {});
 }
 function PitchPlayer({ player }: { player: PlayerWithProbability }) {
   return <div className="flex w-[72px] flex-col items-center text-center"><div className="relative"><PlayerImage player={player} size={52}/><Probability value={player.lineupProbability}/></div><p className="mt-1.5 w-full truncate rounded-lg bg-[#101a39]/85 px-1.5 py-1 text-[10px] font-semibold shadow">{player.name}</p></div>;
