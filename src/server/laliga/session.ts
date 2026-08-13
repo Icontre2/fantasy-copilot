@@ -2,7 +2,9 @@ import { randomUUID } from 'node:crypto';
 import { hasSupabaseAdmin, supabaseAdmin } from '@/src/server/storage/supabase-admin';
 import { refreshTokens, type TokenSet } from './auth';
 import {
+  decodePortableTokenSet,
   decryptTokenSet,
+  encodePortableTokenSet,
   encryptTokenSet,
   hasConfiguredEncryptionSecret,
 } from './token-crypto';
@@ -19,14 +21,12 @@ import {
  *
  * SIN Supabase: la sesion viaja cifrada DENTRO de la cookie.
  *
- * SIN clave de cifrado en produccion: se usa temporalmente el respaldo de
- * AppFantasy, con un id opaco en cookie y los tokens en memoria. Asi el login
- * no queda inutilizado por una variable ausente. Este modo no es persistente
- * entre instancias o despliegues y debe considerarse una red de seguridad.
+ * SIN clave de cifrado en produccion: la sesion viaja temporalmente dentro de
+ * una cookie Secure + httpOnly. Asi funciona entre distintas funciones de
+ * Vercel. En cuanto hay clave estable vuelve a usarse AES-256-GCM.
  *
- * En los tres modos la cookie es `httpOnly`: el navegador nunca puede leer el
- * token. Cuando hay persistencia o cookie portable, ademas va cifrado con
- * AES-256-GCM.
+ * En todos los modos la cookie es `httpOnly`: JavaScript del navegador nunca
+ * puede leer el token. Con clave configurada, ademas va cifrado con AES-256-GCM.
  */
 
 import { SESSION_TTL_MS } from './session-cookie.ts';
@@ -34,15 +34,6 @@ import { SESSION_TTL_MS } from './session-cookie.ts';
 /** Refrescos en vuelo, para no lanzar dos a la vez sobre la misma sesion. */
 const inflight = ((globalThis as { __llfRefreshes?: Map<string, Promise<string | null>> })
   .__llfRefreshes ??= new Map<string, Promise<string | null>>());
-
-type MemorySession = {
-  tokens: TokenSet;
-  createdAt: number;
-  inflightRefresh?: Promise<TokenSet>;
-};
-
-const memorySessions = ((globalThis as { __llfSessions?: Map<string, MemorySession> })
-  .__llfSessions ??= new Map<string, MemorySession>());
 
 type SessionRow = { encrypted_tokens: string };
 
@@ -59,28 +50,26 @@ type SessionRow = { encrypted_tokens: string };
  * volver a entrar. Con Supabase configurado no pasa: se renueva sola.
  */
 export function usingCookieSessions(): boolean {
-  return !hasSupabaseAdmin() && !usingMemorySessions();
+  return !hasSupabaseAdmin() || usingPortableCookieSessions();
 }
 
-/** Respaldo compatible con AppFantasy para no bloquear el acceso por config. */
-export function usingMemorySessions(): boolean {
+/** Respaldo portable para instalaciones de Vercel aun sin clave estable. */
+export function usingPortableCookieSessions(): boolean {
   return process.env.NODE_ENV === 'production' && !hasConfiguredEncryptionSecret();
 }
 
 /** Persistencia disponible para el historico economico. */
 export function hasPersistentStorage(): boolean {
-  return hasSupabaseAdmin() && !usingMemorySessions();
+  return hasSupabaseAdmin() && !usingPortableCookieSessions();
 }
 
 export async function createSession(tokens: TokenSet): Promise<string> {
-  if (usingMemorySessions()) {
-    const id = randomUUID();
-    memorySessions.set(id, { tokens, createdAt: Date.now() });
-    return id;
-  }
-
   // Modo cookie: el "identificador" ES la sesion cifrada. No se guarda nada.
-  if (usingCookieSessions()) return encryptTokenSet(tokens);
+  if (usingCookieSessions()) {
+    return usingPortableCookieSessions()
+      ? encodePortableTokenSet(tokens)
+      : encryptTokenSet(tokens);
+  }
 
   const id = randomUUID();
   const now = new Date();
@@ -101,11 +90,6 @@ export async function createSession(tokens: TokenSet): Promise<string> {
 }
 
 export async function destroySession(sessionId: string): Promise<void> {
-  if (usingMemorySessions()) {
-    memorySessions.delete(sessionId);
-    return;
-  }
-
   // En modo cookie no hay nada que borrar en servidor: basta con caducar la
   // cookie, que es lo que hace la ruta de logout.
   if (usingCookieSessions()) return;
@@ -113,7 +97,6 @@ export async function destroySession(sessionId: string): Promise<void> {
 }
 
 async function readSession(sessionId: string): Promise<SessionRow | null> {
-  if (usingMemorySessions()) return null;
   if (usingCookieSessions()) return { encrypted_tokens: sessionId };
 
   const { data } = await supabaseAdmin()
@@ -177,39 +160,14 @@ async function refreshSession(sessionId: string, previous: string, tokens: Token
 export async function getValidAccessToken(sessionId: string | undefined): Promise<string | null> {
   if (!sessionId) return null;
 
-  if (usingMemorySessions()) {
-    const entry = memorySessions.get(sessionId);
-    if (!entry) return null;
-
-    if (Date.now() >= entry.createdAt + SESSION_TTL_MS) {
-      memorySessions.delete(sessionId);
-      return null;
-    }
-
-    if (Date.now() < entry.tokens.expiresAt) return entry.tokens.accessToken;
-
-    if (!entry.inflightRefresh) {
-      entry.inflightRefresh = refreshTokens(entry.tokens.refreshToken).finally(() => {
-        entry.inflightRefresh = undefined;
-      });
-    }
-
-    try {
-      const fresh = await entry.inflightRefresh;
-      entry.tokens = fresh;
-      return fresh.accessToken;
-    } catch {
-      memorySessions.delete(sessionId);
-      return null;
-    }
-  }
-
   const row = await readSession(sessionId);
   if (!row) return null;
 
   let tokens: TokenSet;
   try {
-    tokens = decryptTokenSet(row.encrypted_tokens);
+    tokens = usingPortableCookieSessions()
+      ? decodePortableTokenSet(row.encrypted_tokens)
+      : decryptTokenSet(row.encrypted_tokens);
   } catch {
     // Clave de cifrado rotada o fila corrupta: la sesion ya no es recuperable.
     await destroySession(sessionId);
