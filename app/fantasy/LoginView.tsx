@@ -44,7 +44,7 @@ export function LoginView({ onLogin }: { onLogin: (manager: Manager) => void }) 
     <Card>
       <h1 className="mb-1 text-xl font-semibold">Entra con tu cuenta de LALIGA Fantasy</h1>
       <p className="mb-4 text-sm text-neutral-600">
-        Solo lectura: esta app no puja, no vende y no cambia tu alineación.
+        Consulta tu liga y gestiona tus propias pujas desde el mercado.
       </p>
 
       <form onSubmit={submit} className="space-y-3">

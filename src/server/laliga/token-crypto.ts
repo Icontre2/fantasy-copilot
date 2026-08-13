@@ -27,14 +27,24 @@ function ephemeralDevSecret(): string {
 }
 
 function configuredSecret(): string {
-  const secret = process.env.SESSION_ENCRYPTION_KEY?.trim();
-  if (secret) return secret;
+  const explicit = process.env.SESSION_ENCRYPTION_KEY?.trim();
+  if (explicit) return explicit;
+
+  /*
+   * Vercel inyecta VERCEL_OIDC_TOKEN como secreto de alta entropia en cada
+   * despliegue. Es un respaldo seguro para instalaciones personales que aun no
+   * han configurado SESSION_ENCRYPTION_KEY: el token nunca llega al navegador y
+   * solo se usa como material para derivar la clave AES. Una clave explicita
+   * sigue teniendo prioridad porque conserva sesiones entre despliegues.
+   */
+  const vercelSecret = process.env.VERCEL_OIDC_TOKEN?.trim();
+  if (vercelSecret) return vercelSecret;
 
   // En produccion la falta de clave es un error de configuracion y debe verse.
   // En local no: obligar a generar una clave antes de poder mirar la app es
   // friccion sin ganancia, porque lo que cifra no sale del proceso.
   if (process.env.NODE_ENV === 'production') {
-    throw new Error('Falta SESSION_ENCRYPTION_KEY para cifrar las sesiones.');
+    throw new Error('Falta SESSION_ENCRYPTION_KEY para cifrar las sesiones y Vercel no proporcionó OIDC.');
   }
   return ephemeralDevSecret();
 }
