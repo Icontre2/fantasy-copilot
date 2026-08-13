@@ -1,4 +1,4 @@
-import type { MarketValuePoint, SquadPlayer } from '@/src/domain/fantasy';
+import type { MarketValuePoint, Player, SquadPlayer } from '@/src/domain/fantasy';
 
 /**
  * Alertas de clausula: jugadores cuyo valor de mercado se acerca a su clausula
@@ -75,7 +75,7 @@ export type MissingReason =
   | 'tendencia_no_positiva'; // el valor no sube: la estimacion no tiene sentido
 
 export type ClauseAlert = {
-  player: { id: string; name: string; team: string; position: string; status: string };
+  player: Player;
   owner: { teamId: string; managerId: string; managerName: string };
 
   /** DATOS OFICIALES DE LALIGA, tal cual los publica. */
@@ -233,13 +233,7 @@ export function buildAlert(
   if (!level) return null;
 
   return {
-    player: {
-      id: player.id,
-      name: player.name,
-      team: player.team,
-      position: player.position,
-      status: player.status,
-    },
+    player,
     owner,
     official: {
       marketValue: player.marketValue,

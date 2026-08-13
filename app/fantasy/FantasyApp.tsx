@@ -94,9 +94,9 @@ export default function FantasyApp() {
     <Shell>
       <header className="flex items-center justify-between gap-3 pt-1">
         <div className="flex min-w-0 items-center gap-3">
-          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[#101a39] text-lg font-black text-[#d6ff75]">FC</span>
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[#101a39] text-lg font-black text-[#d6ff75]">LL</span>
           <div className="min-w-0">
-            <p className="text-xs font-medium text-neutral-400">Fantasy Copilot</p>
+            <p className="text-xs font-medium text-neutral-400">LigaLab</p>
             <p className="truncate font-bold text-[#101a39]">Hola, {manager.name}</p>
           </div>
         </div>

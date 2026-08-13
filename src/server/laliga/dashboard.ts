@@ -1,7 +1,7 @@
 import type { LeagueTeam, Position, SquadPlayer } from '@/src/domain/fantasy';
 import { getProbableTeam } from '@/src/server/futbolfantasy/lineups';
 import { matchExternalPlayer } from '@/src/server/futbolfantasy/match';
-import { getLeagueSnapshot, getMarketValueHistory, getMyLeagues, getPlayerCatalog } from './read';
+import { getLeagueSnapshot, getMyLeagues, getPlayerCatalog } from './read';
 
 type PlayerWithProbability = SquadPlayer & { lineupProbability?: number };
 
@@ -48,24 +48,6 @@ function bestEleven(players: PlayerWithProbability[]): { formation: string; star
   };
 }
 
-async function squadHistory(players: SquadPlayer[]): Promise<{ points: { date: string; value: number }[]; coveredPlayers: number }> {
-  const histories = await mapConcurrent(players, 6, async (player) => {
-    try { return await getMarketValueHistory(player.id); } catch { return []; }
-  });
-  const totals = new Map<string, number>();
-  let coveredPlayers = 0;
-  for (const history of histories) {
-    if (history.length) coveredPlayers += 1;
-    for (const point of history.slice(-45)) {
-      totals.set(point.date, (totals.get(point.date) ?? 0) + point.marketValue);
-    }
-  }
-  return {
-    points: [...totals].sort(([a], [b]) => a.localeCompare(b)).slice(-30).map(([date, value]) => ({ date, value })),
-    coveredPlayers,
-  };
-}
-
 export async function buildDashboard(accessToken: string, leagueId: string) {
   const [snapshot, leagues, catalog] = await Promise.all([
     getLeagueSnapshot(accessToken, leagueId),
@@ -77,12 +59,9 @@ export async function buildDashboard(accessToken: string, leagueId: string) {
   if (!myTeam) throw new Error('LALIGA no indicó cuál es tu equipo dentro de esta liga.');
 
   const teamIds = [...new Set(myTeam.players.flatMap((player) => player.teamId ? [player.teamId] : []))];
-  const [probable, history] = await Promise.all([
-    mapConcurrent(teamIds, 5, async (teamId) => {
-      try { return await getProbableTeam(teamId, catalog); } catch { return null; }
-    }),
-    squadHistory(myTeam.players),
-  ]);
+  const probable = await mapConcurrent(teamIds, 5, async (teamId) => {
+    try { return await getProbableTeam(teamId, catalog); } catch { return null; }
+  });
   const probableByTeam = new Map(probable.flatMap((team) => team ? [[team.teamId, team] as const] : []));
   const players: PlayerWithProbability[] = myTeam.players.map((player) => {
     const team = player.teamId ? probableByTeam.get(player.teamId) : undefined;
@@ -102,8 +81,6 @@ export async function buildDashboard(accessToken: string, leagueId: string) {
       netWorth: (myTeam.teamValue ?? 0) + (myTeam.teamMoney ?? 0),
     },
     lineup: bestEleven(players),
-    history: history.points,
-    historyCoverage: { covered: history.coveredPlayers, total: myTeam.players.length },
     competitors: snapshot.teams
       .filter((team) => team.teamId !== myTeam.teamId)
       .map((team: LeagueTeam) => ({
