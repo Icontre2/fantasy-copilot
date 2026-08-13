@@ -40,6 +40,8 @@ export default function FantasyApp() {
 
   const [leagues, setLeagues] = useState<League[]>([]);
   const [leagueId, setLeagueId] = useState<string | null>(null);
+  const [leaguesLoading, setLeaguesLoading] = useState(true);
+  const [leaguesError, setLeaguesError] = useState<string | null>(null);
   const [section, setSection] = useState<Section>("liga");
 
   useEffect(() => {
@@ -56,7 +58,12 @@ export default function FantasyApp() {
         setLeagues(data.leagues);
         setLeagueId((current) => current ?? data.leagues[0]?.id ?? null);
       })
-      .catch(() => setLeagues([]));
+      .catch((error: unknown) => {
+        setLeagues([]);
+        setLeagueId(null);
+        setLeaguesError(error instanceof Error ? error.message : "No se pudieron cargar tus ligas.");
+      })
+      .finally(() => setLeaguesLoading(false));
   }, [manager]);
 
   async function logout() {
@@ -65,6 +72,8 @@ export default function FantasyApp() {
     // usuario, no por sincronizar con nada externo.
     setLeagues([]);
     setLeagueId(null);
+    setLeaguesLoading(true);
+    setLeaguesError(null);
     setManager(null);
   }
 
@@ -131,7 +140,11 @@ export default function FantasyApp() {
         ))}
       </nav>
 
-      {leagueId ? (
+      {leaguesLoading ? (
+        <Spinner label="Cargando tus ligas…" />
+      ) : leaguesError ? (
+        <ErrorBox message={leaguesError} />
+      ) : leagueId ? (
         <SectionContent section={section} leagueId={leagueId} />
       ) : (
         <Card>
