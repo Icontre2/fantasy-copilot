@@ -87,7 +87,7 @@ export type ManagerEconomy = {
   /** `puntos * 100.000`. */
   bonusPuntos: number;
 
-  /** Ventas − compras + bonus de puntos dentro del histórico observable. */
+  /** Ventas − compras + bonus de puntos del tramo observable; admite resultados negativos. */
   flujoConocido: number;
 
   /** `inicial - compras + ventas + bonus`. Lo que sabemos explicar. */
