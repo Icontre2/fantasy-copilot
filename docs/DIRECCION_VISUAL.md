@@ -105,3 +105,10 @@ diseñar una tarjeta alrededor de un dato, hay que saber si el dato está.
 | Nº de pujas | Disponible en vivo | `numberOfBids`. El histórico llega siempre a 0: no sirve como serie. |
 | Pujas ajenas | **No existe** | LALIGA no las publica ni en vivo. El encargo ya lo excluye. |
 | Evolución 7D / 30D | Disponible | Serie diaria pública. Ojo: entre temporadas se congela — ver `MAX_HISTORY_AGE_DAYS` en `alerts/clause-alerts.ts`. |
+
+## Caja y valor de plantilla
+
+- `teamValue` es solo el valor actual de los jugadores. Nunca se suma ni se resta para inferir caja.
+- La caja puede ser negativa; ningún cálculo debe recortarla a cero.
+- Si el historial de actividad no cubre desde el inicio de la liga, para rivales solo se muestra el flujo conocido (ventas − compras + bonus de puntos), no una caja absoluta inventada.
+- El saldo oficial solo se etiqueta como tal cuando LALIGA publica `teamMoney`.
