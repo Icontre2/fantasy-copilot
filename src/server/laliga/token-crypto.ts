@@ -3,6 +3,22 @@ import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'node:
 import type { TokenSet } from './auth';
 
 const VERSION = 'v1';
+const PORTABLE_VERSION = 'p1';
+
+function validateTokenSet(value: unknown): TokenSet {
+  if (!value || typeof value !== 'object') {
+    throw new Error('La sesión no es válida.');
+  }
+  const candidate = value as Partial<TokenSet>;
+  if (
+    typeof candidate.accessToken !== 'string' ||
+    typeof candidate.refreshToken !== 'string' ||
+    typeof candidate.expiresAt !== 'number'
+  ) {
+    throw new Error('La sesión no contiene tokens válidos.');
+  }
+  return candidate as TokenSet;
+}
 
 function keyFromSecret(secret: string): Buffer {
   if (secret.length < 32) {
@@ -63,6 +79,26 @@ export function hasConfiguredEncryptionSecret(): boolean {
   );
 }
 
+/**
+ * Respaldo serverless cuando aun no hay clave en Vercel.
+ *
+ * El valor solo se entrega como cookie Secure + HttpOnly, por lo que JavaScript
+ * del navegador no puede leerlo. No sustituye al cifrado: en cuanto existe una
+ * clave estable se usa AES-GCM. A diferencia de un Map en memoria, este formato
+ * funciona aunque login y lecturas caigan en funciones distintas.
+ */
+export function encodePortableTokenSet(tokens: TokenSet): string {
+  return `${PORTABLE_VERSION}.${Buffer.from(JSON.stringify(tokens), 'utf8').toString('base64url')}`;
+}
+
+export function decodePortableTokenSet(value: string): TokenSet {
+  const [version, payload, extra] = value.split('.');
+  if (version !== PORTABLE_VERSION || !payload || extra !== undefined) {
+    throw new Error('La sesión portátil no tiene un formato válido.');
+  }
+  return validateTokenSet(JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')));
+}
+
 export function encryptTokenSet(tokens: TokenSet, secret = configuredSecret()): string {
   const iv = randomBytes(12);
   const cipher = createCipheriv('aes-256-gcm', keyFromSecret(secret), iv);
@@ -90,15 +126,5 @@ export function decryptTokenSet(value: string, secret = configuredSecret()): Tok
     decipher.update(Buffer.from(encodedPayload, 'base64url')),
     decipher.final(),
   ]).toString('utf8');
-  const parsed: unknown = JSON.parse(raw);
-  if (!parsed || typeof parsed !== 'object') throw new Error('La sesión descifrada no es válida.');
-  const candidate = parsed as Partial<TokenSet>;
-  if (
-    typeof candidate.accessToken !== 'string' ||
-    typeof candidate.refreshToken !== 'string' ||
-    typeof candidate.expiresAt !== 'number'
-  ) {
-    throw new Error('La sesión descifrada no contiene tokens válidos.');
-  }
-  return candidate as TokenSet;
+  return validateTokenSet(JSON.parse(raw));
 }
