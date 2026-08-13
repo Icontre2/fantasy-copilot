@@ -1,8 +1,14 @@
 import { isAuthorizedCronRequest, runScheduledSyncs } from "@/src/server/laliga/economy/schedule";
 
 export const dynamic = "force-dynamic";
-/** Varias ligas x varios managers cada una: el limite por defecto se queda corto. */
-export const maxDuration = 300;
+/**
+ * Varias ligas x varios managers cada una: el limite por defecto se queda corto.
+ *
+ * 60 s es el techo del plan Hobby de Vercel. Pedir mas no se ignora: rechaza el
+ * despliegue entero. Si la sincronizacion no cabe, el limite de ligas por
+ * ejecucion (`MAX_LEAGUES_PER_RUN`) es la palanca correcta, no este numero.
+ */
+export const maxDuration = 60;
 
 /**
  * GET /api/cron/economy-sync
