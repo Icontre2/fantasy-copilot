@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 
 import { Banknote, Coins, Trophy, Users } from "lucide-react";
 import Image from "next/image";
 import type { DashboardResponse } from "./types";
-import { millions } from "./format";
+import { millions, signedMillions } from "./format";
 
 type Range = 7 | 30 | 90 | "MAX";
 type PortfolioPoint = {
@@ -56,8 +56,8 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
         <ValueChart points={myPoints} />
 
         <div className="mt-4 grid grid-cols-2 gap-2">
-          <Metric icon={<Coins size={16} />} label={`Caja ${data.me.cashSource === "OFICIAL" ? "oficial" : "reconstruida"}`} value={millions(data.me.teamMoney)} accent />
-          <Metric icon={<Banknote size={16} />} label="Patrimonio total" value={millions(data.me.netWorth)} />
+          <Metric icon={<Coins size={16} />} label="Caja oficial" value={millions(data.me.teamMoney)} accent />
+          <Metric icon={<Banknote size={16} />} label="Flujo conocido" value={signedMillions(data.me.knownCashFlow)} />
         </div>
         <p className="mt-3 text-[10px] leading-4 text-white/45">
           Valores oficiales guardados en este dispositivo. El seguimiento empieza en la primera visita; no reconstruimos ni inventamos fechas anteriores.
@@ -92,8 +92,8 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
                 </div>
                 <MiniChart points={points} />
                 <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
-                  <SmallMetric label="Caja reconstruida" value={millions(competitor.teamMoney)} lime />
-                  <SmallMetric label="Patrimonio" value={millions(competitor.netWorth)} />
+                  <SmallMetric label="Flujo conocido" value={signedMillions(competitor.knownCashFlow)} lime={competitor.knownCashFlow >= 0} />
+                  <SmallMetric label="Caja oficial" value={millions(competitor.teamMoney)} />
                 </div>
                 {/*
                   LALIGA solo publica la caja del manager conectado (comprobado
@@ -101,9 +101,9 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
                   no se puede calcular. Se dice aqui en vez de dejar dos guiones
                   sin explicacion, que parecerian un fallo de carga.
                 */}
-                {competitor.cashSource === "RECONSTRUIDA" && (
+                {competitor.cashSource === "NO_PUBLICADA" && (
                   <p className="mt-2 text-[10px] leading-4 text-neutral-400">
-                    Estimada desde 100 M€ + puntos + ventas − compras del historial que publica LALIGA.
+                    LALIGA no publica su caja. El flujo puede ser negativo y solo suma movimientos visibles; no incluye el valor de la plantilla.
                   </p>
                 )}
               </article>
@@ -152,7 +152,7 @@ function currentPoint(data: DashboardResponse): PortfolioPoint {
     current.managers[team.teamId] = {
       teamValue: team.teamValue ?? 0,
       teamMoney: team.teamMoney ?? null,
-      netWorth: team.netWorth,
+      netWorth: null,
     };
   }
   return current;

@@ -30,7 +30,8 @@ export type DashboardResponse = {
     points?: number;
     /** `null` cuando LALIGA no publica la caja: no se rellena con el valor de plantilla. */
     netWorth: number | null;
-    cashSource: "OFICIAL" | "RECONSTRUIDA";
+    cashSource: "OFICIAL" | "NO_PUBLICADA";
+    knownCashFlow: number;
   };
   lineup: {
     formation: string;
@@ -46,7 +47,8 @@ export type DashboardResponse = {
     teamMoney?: number;
     /** Patrimonio con caja oficial propia o caja rival reconstruida. */
     netWorth: number | null;
-    cashSource: "OFICIAL" | "RECONSTRUIDA";
+    cashSource: "OFICIAL" | "NO_PUBLICADA";
+    knownCashFlow: number;
   }>;
   failedTeamIds: string[];
 };

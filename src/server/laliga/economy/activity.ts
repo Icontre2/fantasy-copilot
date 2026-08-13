@@ -87,6 +87,9 @@ export type ManagerEconomy = {
   /** `puntos * 100.000`. */
   bonusPuntos: number;
 
+  /** Ventas − compras + bonus de puntos dentro del histórico observable. */
+  flujoConocido: number;
+
   /** `inicial - compras + ventas + bonus`. Lo que sabemos explicar. */
   cajaReconstruida: number;
   /** DATO OFICIAL de LALIGA. `null` si no lo publica (solo lo da del usuario). */
@@ -179,7 +182,8 @@ export function buildEconomy(input: BuildInput): ManagerEconomy[] {
       .reduce((total, entry) => total + entry.amount, 0);
 
     const bonusPuntos = manager.puntos * EUROS_POR_PUNTO;
-    const cajaReconstruida = SALDO_INICIAL - compras + ventas + bonusPuntos;
+    const flujoConocido = -compras + ventas + bonusPuntos;
+    const cajaReconstruida = SALDO_INICIAL + flujoConocido;
     const diferencia = manager.cajaOficial === null ? null : manager.cajaOficial - cajaReconstruida;
 
     const recompensasQueCuadrarian =
@@ -195,6 +199,7 @@ export function buildEconomy(input: BuildInput): ManagerEconomy[] {
       ventas,
       puntos: manager.puntos,
       bonusPuntos,
+      flujoConocido,
       cajaReconstruida,
       cajaOficial: manager.cajaOficial,
       diferencia,

@@ -33,7 +33,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ leag
       managers: snapshot.teams.map((team) => ({
         managerId: team.manager.id,
         managerName: team.manager.name,
-        puntos: team.teamPoints ?? 0,
+        puntos: snapshot.standing.find((row) => row.teamId === team.teamId)?.points ?? team.teamPoints ?? 0,
         // LALIGA solo publica la caja del manager conectado. Para el resto va
         // `null`, y la diferencia de conciliacion queda sin calcular en vez de
         // compararse contra un cero inventado.
@@ -52,14 +52,15 @@ export async function GET(request: Request, { params }: { params: Promise<{ leag
       actividadDesde: fechas[0] ?? null,
       actividadHasta: fechas.at(-1) ?? null,
       operaciones: activity.length,
-      economies: economies.sort((a, b) => b.cajaReconstruida - a.cajaReconstruida),
+      economies: economies.sort((a, b) => b.flujoConocido - a.flujoConocido),
       dataNotes: [
-        `Todos los managers empiezan con ${(SALDO_INICIAL / 1_000_000).toFixed(0)} M€. La caja se reconstruye restando compras, sumando ventas y añadiendo 100.000 € por punto.`,
+        `Todos los managers empezaron con ${(SALDO_INICIAL / 1_000_000).toFixed(0)} M€, pero la actividad disponible puede empezar después que la liga. Por eso para rivales se muestra el flujo conocido, no una caja absoluta.`,
         "Los importes de compras y ventas los PUBLICA LALIGA en la actividad de la liga: son exactos, no estimados.",
         fechas[0]
           ? `La actividad disponible empieza el ${fechas[0].slice(0, 10)}. LALIGA no guarda lo anterior, así que esos movimientos aparecen dentro de la diferencia.`
           : "LALIGA no ha devuelto ninguna operación de esta liga.",
-        "«Caja oficial» solo la publica LALIGA para tu cuenta. La de los demás es reconstruida, y su diferencia no se puede comprobar.",
+        "«Caja oficial» solo la publica LALIGA para tu cuenta. Para los demás, ventas − compras + puntos es un flujo del periodo observable y puede ser negativo.",
+        "El valor de la plantilla nunca se usa para calcular la caja ni el flujo.",
         "La diferencia es lo que la actividad disponible no explica: recompensas diarias reclamadas, operaciones anteriores al inicio del histórico o movimientos que LALIGA no publica. Se muestra siempre.",
         "Solo se sugiere «días de recompensa» cuando la diferencia es positiva y múltiplo exacto de 100.000 €. En cualquier otro caso queda sin explicar.",
       ],

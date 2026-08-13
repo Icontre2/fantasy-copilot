@@ -189,3 +189,12 @@ test("el libro resuelve el nombre del jugador cuando el catálogo lo conoce", ()
   });
   assert.equal(economy?.entries[0]?.playerName, "Oskarsson");
 });
+
+test("el flujo conocido puede ser negativo y no se recorta a cero", () => {
+  const [economy] = buildEconomy({
+    managers: [manager("A")],
+    activity: [entrada({ activityTypeId: ACTIVITY_TYPE.COMPRA, user1Id: "A", amount: 125_000_000 })],
+  });
+  assert.equal(economy?.flujoConocido, -125_000_000);
+  assert.equal(economy?.cajaReconstruida, -25_000_000);
+});

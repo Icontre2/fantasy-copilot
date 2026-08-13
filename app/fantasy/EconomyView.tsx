@@ -40,7 +40,7 @@ export function EconomyView({ data }: { data: EconomyResponse }) {
             <thead>
               <tr>
                 <Th>Manager</Th>
-                <Th align="right">Caja</Th>
+                <Th align="right">Flujo conocido</Th>
                 <Th align="right">Compras</Th>
                 <Th align="right">Ventas</Th>
                 <Th align="right">Puntos</Th>
@@ -61,7 +61,7 @@ export function EconomyView({ data }: { data: EconomyResponse }) {
                     )}
                   </Td>
                   <Td align="right" className="font-semibold">
-                    {millions(economy.cajaOficial ?? economy.cajaReconstruida)}
+                    {signedMillions(economy.flujoConocido)}
                   </Td>
                   <Td align="right" className="text-red-700">−{millions(economy.compras)}</Td>
                   <Td align="right" className="text-green-700">+{millions(economy.ventas)}</Td>
@@ -76,8 +76,7 @@ export function EconomyView({ data }: { data: EconomyResponse }) {
         </TableWrap>
 
         <p className="mt-2 text-xs text-neutral-500">
-          Toca un manager para ver su libro. «Calculada» = LALIGA no publica su caja, así que es
-          nuestra reconstrucción y su diferencia no se puede comprobar.
+          El flujo puede ser negativo. No incluye el valor de plantilla ni se presenta como caja disponible.
         </p>
       </Card>
 
@@ -110,7 +109,8 @@ function LibroCard({ economy, saldoInicial }: { economy: ManagerEconomy; saldoIn
           value={`+${millions(economy.bonusPuntos)}`}
           tone="green"
         />
-        <Linea label="Caja reconstruida" value={millions(economy.cajaReconstruida)} strong />
+        <Linea label="Flujo conocido del periodo" value={signedMillions(economy.flujoConocido)} strong />
+        <Linea label="Saldo teórico si el historial fuese completo" value={millions(economy.cajaReconstruida)} />
 
         {economy.cajaOficial !== null ? (
           <>
@@ -123,8 +123,8 @@ function LibroCard({ economy, saldoInicial }: { economy: ManagerEconomy; saldoIn
           </>
         ) : (
           <p className="pt-2 text-xs text-neutral-500">
-            LALIGA no publica la caja de otros managers, así que no hay cifra oficial contra la que
-            comprobar esta reconstrucción.
+            LALIGA no publica la caja de otros managers. El saldo teórico no es su caja real si faltan
+            movimientos anteriores al primer registro disponible.
           </p>
         )}
       </dl>

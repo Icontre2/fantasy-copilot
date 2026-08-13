@@ -81,7 +81,8 @@ export async function buildDashboard(accessToken: string, leagueId: string) {
     })),
     activity,
   }).map((economy) => [economy.managerId, economy]));
-  const cashOf = (team: LeagueTeam) => team.teamMoney ?? economyByManager.get(team.manager.id)?.cajaReconstruida;
+  const officialCashOf = (team: LeagueTeam) => team.teamMoney;
+  const knownFlowOf = (team: LeagueTeam) => economyByManager.get(team.manager.id)?.flujoConocido ?? 0;
 
   return {
     league: league ?? { id: leagueId, name: 'Mi liga' },
@@ -90,9 +91,10 @@ export async function buildDashboard(accessToken: string, leagueId: string) {
       players,
       position: standingByTeam.get(myTeam.teamId)?.position,
       points: standingByTeam.get(myTeam.teamId)?.points ?? myTeam.teamPoints,
-      teamMoney: cashOf(myTeam),
-      cashSource: myTeam.teamMoney === undefined ? 'RECONSTRUIDA' : 'OFICIAL',
-      netWorth: netWorthOf(myTeam.teamValue, cashOf(myTeam)),
+      teamMoney: officialCashOf(myTeam),
+      cashSource: 'OFICIAL',
+      knownCashFlow: knownFlowOf(myTeam),
+      netWorth: null,
     },
     lineup: bestEleven(players),
     competitors: snapshot.teams
@@ -103,9 +105,10 @@ export async function buildDashboard(accessToken: string, leagueId: string) {
         position: standingByTeam.get(team.teamId)?.position,
         points: standingByTeam.get(team.teamId)?.points ?? team.teamPoints,
         teamValue: team.teamValue,
-        teamMoney: cashOf(team),
-        cashSource: team.teamMoney === undefined ? 'RECONSTRUIDA' : 'OFICIAL',
-        netWorth: netWorthOf(team.teamValue, cashOf(team)),
+        teamMoney: officialCashOf(team),
+        cashSource: team.teamMoney === undefined ? 'NO_PUBLICADA' : 'OFICIAL',
+        knownCashFlow: knownFlowOf(team),
+        netWorth: null,
       }))
       .sort((a, b) => (a.position ?? 999) - (b.position ?? 999)),
     failedTeamIds: snapshot.failedTeamIds,
@@ -125,7 +128,3 @@ export async function buildDashboard(accessToken: string, leagueId: string) {
  * cuando lo cierto es que no se sabe. Un manager con 30 M en caja aparecia
  * igual que uno arruinado.
  */
-function netWorthOf(teamValue: number | undefined, teamMoney: number | undefined): number | null {
-  if (teamValue === undefined || teamMoney === undefined) return null;
-  return teamValue + teamMoney;
-}
