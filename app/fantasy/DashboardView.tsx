@@ -56,8 +56,9 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
         <ValueChart points={myPoints} />
 
         <div className="mt-4 grid grid-cols-2 gap-2">
-          <Metric icon={<Coins size={16} />} label="Caja oficial" value={millions(data.me.teamMoney)} accent />
-          <Metric icon={<Banknote size={16} />} label="Movido desde el inicio" value={signedMillions(data.me.knownCashFlow)} />
+          {/* Las mismas dos cifras que en cada rival, para poder compararte de un vistazo. */}
+          <Metric icon={<Coins size={16} />} label="Caja" value={millions(data.me.teamMoney)} accent />
+          <Metric icon={<Banknote size={16} />} label="Valor equipo" value={millions(data.me.teamValue)} />
         </div>
         <p className="mt-3 text-[10px] leading-4 text-white/45">
           Valores oficiales guardados en este dispositivo. El seguimiento empieza en la primera visita; no reconstruimos ni inventamos fechas anteriores.
@@ -91,30 +92,41 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
                   <p className="text-sm font-bold text-white">{millions(competitor.teamValue)}</p>
                 </div>
                 <MiniChart points={points} />
-                <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
-                  <SmallMetric label="Caja estimada" value={millions(competitor.estimatedCash)} lime />
-                  <SmallMetric label="Caja oficial" value={millions(competitor.teamMoney)} />
-                </div>
                 {/*
-                  LALIGA solo publica la caja del manager conectado (comprobado
-                  contra una liga real). Sin ese dato, el patrimonio de un rival
-                  no se puede calcular. Se dice aqui en vez de dejar dos guiones
-                  sin explicacion, que parecerian un fallo de carga.
+                  Dos cifras y ninguna mas: caja y valor del equipo. Es lo que se
+                  viene a mirar aqui.
+
+                  La caja de un rival NO la publica LALIGA (comprobado contra una
+                  liga real: llega `null` en todos menos en el propio usuario), asi
+                  que es una reconstruccion. Eso no se cuenta con un parrafo en
+                  cada tarjeta — se marca con `~` y se explica una sola vez debajo
+                  de la lista. Un simbolo basta para no dar por exacto lo que no
+                  lo es; ocho parrafos identicos solo estorban.
                 */}
-                {competitor.cashSource === "NO_PUBLICADA" && (
-                  <p className="mt-2 text-[10px] leading-4 text-neutral-400">
-                    LALIGA no publica su caja. Esta es una estimación: 100 M€ iniciales más lo que
-                    se le ha visto mover{data.activityFrom ? ` desde el ${data.activityFrom.slice(8, 10)}/${data.activityFrom.slice(5, 7)}` : ""}.
-                    {data.estimationError !== null && (
-                      <> A ti esta misma cuenta te falla en <strong>{signedMillions(data.estimationError)}</strong>,
-                      porque faltan las operaciones anteriores. La suya se desviará algo parecido.</>
-                    )}
-                  </p>
-                )}
+                <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
+                  <SmallMetric
+                    label="Caja"
+                    value={
+                      competitor.teamMoney !== undefined
+                        ? millions(competitor.teamMoney)
+                        : `~${millions(competitor.estimatedCash)}`
+                    }
+                    lime
+                  />
+                  <SmallMetric label="Valor equipo" value={millions(competitor.teamValue)} />
+                </div>
               </article>
             );
           })}
         </div>
+        <p className="mt-3 text-[11px] leading-4 text-neutral-500">
+          <strong>~</strong> = caja reconstruida. LALIGA solo publica la tuya; la de los demás son
+          100 M€ menos lo comprado más lo vendido
+          {data.activityFrom ? `, desde el ${data.activityFrom.slice(8, 10)}/${data.activityFrom.slice(5, 7)}` : ""}.
+          {data.estimationError !== null && (
+            <> Falta lo anterior: a ti esa cuenta se desvía {signedMillions(data.estimationError)}.</>
+          )}
+        </p>
       </section>
     </div>
   );
