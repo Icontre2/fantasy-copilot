@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { millions, shortDate, signedMillions, UNKNOWN } from "./format";
 import type { EconomyResponse, ManagerEconomy } from "./types";
-import { Card, DataNotes, Empty, SectionTitle, TableWrap, Td, Th } from "./ui";
+import { DataNotes, Empty, TableWrap, Td, Th } from "./ui";
 
 /**
  * Economía: de dónde sale el dinero de cada manager.
@@ -25,10 +25,11 @@ export function EconomyView({ data }: { data: EconomyResponse }) {
 
   return (
     <div className="space-y-4">
-      <Card>
-        <SectionTitle>Economía de la liga</SectionTitle>
+      <section className="overflow-hidden rounded-[28px] border border-[#7c3aed]/30 bg-[linear-gradient(145deg,#17121f,#251440)] p-5 text-white shadow-[0_22px_65px_rgba(0,0,0,.45)]">
+        <p className="text-xs font-semibold uppercase tracking-[.14em] text-[#a78bfa]">De dónde sale el dinero</p>
+        <h2 className="mt-1 text-2xl font-bold tracking-tight">Economía</h2>
 
-        <p className="mb-3 text-sm text-neutral-600">
+        <p className="mt-2 text-sm leading-5 text-white/55">
           Todos empezaron con <strong>{millions(data.saldoInicial)}</strong>.{" "}
           {data.actividadDesde
             ? `Actividad conocida desde el ${shortDate(data.actividadDesde)} (${data.operaciones} operaciones).`
@@ -36,7 +37,7 @@ export function EconomyView({ data }: { data: EconomyResponse }) {
         </p>
 
         <TableWrap>
-          <table className="w-full min-w-[640px] border-collapse">
+          <table className="w-full min-w-[640px] border-collapse text-white">
             <thead>
               <tr>
                 <Th>Manager</Th>
@@ -51,22 +52,22 @@ export function EconomyView({ data }: { data: EconomyResponse }) {
               {data.economies.map((economy) => (
                 <tr
                   key={economy.managerId}
-                  className="cursor-pointer hover:bg-neutral-50"
+                  className="cursor-pointer hover:bg-white/5"
                   onClick={() => setAbierto(abierto === economy.managerId ? null : economy.managerId)}
                 >
                   <Td className="font-medium">
                     {economy.managerName}
                     {economy.cajaOficial === null && (
-                      <span className="ml-1 text-[10px] font-normal text-neutral-400">calculada</span>
+                      <span className="ml-1 text-[10px] font-normal text-neutral-500">calculada</span>
                     )}
                   </Td>
                   <Td align="right" className="font-semibold">
                     {signedMillions(economy.flujoConocido)}
                   </Td>
-                  <Td align="right" className="text-red-700">−{millions(economy.compras)}</Td>
-                  <Td align="right" className="text-green-700">+{millions(economy.ventas)}</Td>
+                  <Td align="right" className="text-rose-400">−{millions(economy.compras)}</Td>
+                  <Td align="right" className="text-emerald-400">+{millions(economy.ventas)}</Td>
                   <Td align="right">{millions(economy.bonusPuntos)}</Td>
-                  <Td align="right" className={economy.diferencia === null ? "text-neutral-400" : "text-neutral-600"}>
+                  <Td align="right" className={economy.diferencia === null ? "text-neutral-600" : "text-neutral-300"}>
                     {economy.diferencia === null ? UNKNOWN : signedMillions(economy.diferencia)}
                   </Td>
                 </tr>
@@ -75,10 +76,10 @@ export function EconomyView({ data }: { data: EconomyResponse }) {
           </table>
         </TableWrap>
 
-        <p className="mt-2 text-xs text-neutral-500">
-          El flujo puede ser negativo. No incluye el valor de plantilla ni se presenta como caja disponible.
+        <p className="mt-3 text-xs text-white/45">
+          Toca un manager para ver su libro. El flujo puede ser negativo. No incluye el valor de plantilla ni se presenta como caja disponible.
         </p>
-      </Card>
+      </section>
 
       {detalle && <LibroCard economy={detalle} saldoInicial={data.saldoInicial} />}
 
@@ -96,18 +97,18 @@ const KIND_LABEL: Record<ManagerEconomy["entries"][number]["kind"], string> = {
 
 function LibroCard({ economy, saldoInicial }: { economy: ManagerEconomy; saldoInicial: number }) {
   return (
-    <Card>
-      <SectionTitle>Libro de {economy.managerName}</SectionTitle>
+    <section className="rounded-[26px] border border-white/8 bg-[#121214] p-4 text-white shadow-[0_10px_35px_rgba(0,0,0,.3)]">
+      <h3 className="mb-3 text-[17px] font-bold tracking-tight">Libro de {economy.managerName}</h3>
 
       {/* El cuadre completo, línea a línea, para poder auditar cada euro. */}
       <dl className="mb-4 space-y-1 text-sm">
         <Linea label="Saldo inicial" value={millions(saldoInicial)} />
-        <Linea label="Compras" value={`−${millions(economy.compras)}`} tone="red" />
-        <Linea label="Ventas" value={`+${millions(economy.ventas)}`} tone="green" />
+        <Linea label="Compras" value={`−${millions(economy.compras)}`} tone="rose" />
+        <Linea label="Ventas" value={`+${millions(economy.ventas)}`} tone="emerald" />
         <Linea
           label={`Puntos (${economy.puntos} × 100.000 €)`}
           value={`+${millions(economy.bonusPuntos)}`}
-          tone="green"
+          tone="emerald"
         />
         <Linea label="Flujo conocido del periodo" value={signedMillions(economy.flujoConocido)} strong />
         <Linea label="Saldo teórico si el historial fuese completo" value={millions(economy.cajaReconstruida)} />
@@ -118,7 +119,7 @@ function LibroCard({ economy, saldoInicial }: { economy: ManagerEconomy; saldoIn
             <Linea
               label="Diferencia"
               value={signedMillions(economy.diferencia)}
-              tone={economy.diferencia === 0 ? "green" : undefined}
+              tone={economy.diferencia === 0 ? "emerald" : undefined}
             />
           </>
         ) : (
@@ -130,7 +131,7 @@ function LibroCard({ economy, saldoInicial }: { economy: ManagerEconomy; saldoIn
       </dl>
 
       {economy.recompensasQueCuadrarian !== null && (
-        <p className="mb-4 rounded-lg border border-sky-200 bg-sky-50 p-3 text-xs text-sky-900">
+        <p className="mb-4 rounded-2xl border border-[#7c3aed]/30 bg-[#7c3aed]/10 p-3 text-xs text-[#c4b5fd]">
           La diferencia encaja exactamente con{" "}
           <strong>{economy.recompensasQueCuadrarian} recompensas diarias</strong> de 100.000 €. Es
           una lectura posible, no un dato: LALIGA no publica quién las reclama.
@@ -144,7 +145,7 @@ function LibroCard({ economy, saldoInicial }: { economy: ManagerEconomy; saldoIn
           {economy.entries.map((entry) => (
             <li
               key={entry.activityId}
-              className="flex items-start justify-between gap-3 border-b border-neutral-100 pb-2 text-sm"
+              className="flex items-start justify-between gap-3 border-b border-white/5 pb-2 text-sm"
             >
               <span>
                 <strong>{KIND_LABEL[entry.kind]}</strong>
@@ -155,7 +156,7 @@ function LibroCard({ economy, saldoInicial }: { economy: ManagerEconomy; saldoIn
               </span>
               <span
                 className={`shrink-0 tabular-nums font-medium ${
-                  entry.amount > 0 ? "text-green-700" : "text-red-700"
+                  entry.amount > 0 ? "text-emerald-400" : "text-rose-400"
                 }`}
               >
                 {signedMillions(entry.amount)}
@@ -164,7 +165,7 @@ function LibroCard({ economy, saldoInicial }: { economy: ManagerEconomy; saldoIn
           ))}
         </ul>
       )}
-    </Card>
+    </section>
   );
 }
 
@@ -176,13 +177,13 @@ function Linea({
 }: {
   label: string;
   value: string;
-  tone?: "red" | "green";
+  tone?: "rose" | "emerald";
   strong?: boolean;
 }) {
-  const color = tone === "red" ? "text-red-700" : tone === "green" ? "text-green-700" : "";
+  const color = tone === "rose" ? "text-rose-400" : tone === "emerald" ? "text-emerald-400" : "";
   return (
-    <div className={`flex items-baseline justify-between gap-3 ${strong ? "border-t border-neutral-200 pt-1" : ""}`}>
-      <dt className={strong ? "font-semibold" : "text-neutral-600"}>{label}</dt>
+    <div className={`flex items-baseline justify-between gap-3 ${strong ? "border-t border-white/10 pt-1" : ""}`}>
+      <dt className={strong ? "font-semibold" : "text-neutral-400"}>{label}</dt>
       <dd className={`tabular-nums ${strong ? "font-semibold" : ""} ${color}`}>{value}</dd>
     </div>
   );
