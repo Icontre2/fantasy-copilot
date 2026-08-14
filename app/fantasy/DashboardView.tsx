@@ -84,10 +84,8 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
               const value = point.managers[competitor.teamId]?.teamValue;
               return value === undefined ? [] : [{ date: point.date, value }];
             });
-            // La actividad empieza tarde. Corregimos el mismo sesgo que se puede
-            // medir comparando nuestra estimacion con nuestra caja oficial.
-            // No usa el valor de la plantilla y no se recorta a cero.
-            const estimatedCash = competitor.estimatedCash + (data.estimationError ?? 0);
+            // Respaldo individual: nunca se le aplica el ajuste de otro manager.
+            const estimatedCash = competitor.estimatedCash;
             return (
               <article key={competitor.teamId} className="overflow-hidden rounded-[26px] glass p-4">
                 <div className="flex items-center gap-3">
@@ -122,17 +120,23 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
           de la estimacion. Mientras no la publique, se enseña la aproximacion
           con su metodo escrito aqui debajo, para que se pueda juzgar.
         */}
-        {data.competitors.some((competitor) => competitor.teamMoney !== undefined) ? (
+        {data.competitors.every((competitor) => competitor.teamMoney !== undefined) ? (
           <p className="mt-3 text-[11px] leading-4 text-neutral-500">
             Cajas oficiales de LALIGA. En <strong>Economía</strong> tienes el detalle de compras y
             ventas de cada uno.
+          </p>
+        ) : data.competitors.some((competitor) => competitor.teamMoney !== undefined) ? (
+          <p className="mt-3 text-[11px] leading-4 text-neutral-500">
+            Las cifras sin ≈ son cajas oficiales. Donde LALIGA no publica la caja ni equipo a equipo,
+            se muestra 100 M + operaciones visibles + puntos de ese manager, sin usar el valor del equipo
+            ni trasladarle el ajuste de otra persona.
           </p>
         ) : (
           <p className="mt-3 text-[11px] leading-4 text-neutral-500">
             <strong>Caja aproximada</strong>, no oficial: LALIGA no publica la caja ajena ni en la
             liga entera ni equipo a equipo, así que se calcula con 100 M iniciales + operaciones
-            visibles + puntos, corregida con el error medido entre tu cálculo y tu caja real. Puede
-            ser negativa y no incluye el valor del equipo. Los rivales que ficharon antes del
+            visibles + puntos de cada manager. Puede ser negativa y no incluye el valor del equipo.
+            Los rivales que ficharon antes del
             {data.activityFrom ? ` ${data.activityFrom.slice(8, 10)}/${data.activityFrom.slice(5, 7)}` : " inicio del histórico"}{" "}
             son los que peor cuadran. En <strong>Economía</strong> están sus compras y ventas con
             importes reales.
