@@ -100,7 +100,7 @@ export default function FantasyApp() {
             <p className="truncate font-bold text-white">Hola, {manager.name}</p>
           </div>
         </div>
-        <button type="button" onClick={logout} aria-label="Salir" className="grid h-10 w-10 place-items-center rounded-full border border-white/10 bg-white/5 text-neutral-400">
+        <button type="button" onClick={logout} aria-label="Salir" className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-white/10 bg-white/5 text-neutral-400">
           <LogOut size={18}/>
         </button>
       </header>

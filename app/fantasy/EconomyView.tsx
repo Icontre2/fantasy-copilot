@@ -17,7 +17,6 @@ import { DataNotes, Empty } from "./ui";
  */
 export function EconomyView({ data }: { data: EconomyResponse }) {
   const [abierto, setAbierto] = useState<string | null>(null);
-  const detalle = data.economies.find((economy) => economy.managerId === abierto);
 
   if (data.economies.length === 0) {
     return <Empty>No se ha podido leer ningún manager de esta liga.</Empty>;
@@ -57,19 +56,32 @@ export function EconomyView({ data }: { data: EconomyResponse }) {
                     abiertoAqui ? "border-[#7c3aed]/50 bg-[#7c3aed]/10" : "border-white/10 bg-white/[.03]"
                   }`}
                 >
-                  <div className="flex items-baseline justify-between gap-3">
-                    <span className="min-w-0 truncate font-bold text-white">
-                      {economy.managerName}
+                  {/*
+                    La cifra grande NO es la caja: es lo que ha movido en el
+                    periodo. Sin etiqueta se leia como "todos en numeros rojos",
+                    que es justo lo que no dice. El rotulo va siempre pegado al
+                    numero, no en una nota al pie.
+                  */}
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="min-w-0">
+                      <span className="block truncate font-bold text-white">{economy.managerName}</span>
                       {economy.cajaOficial === null && (
-                        <span className="ml-1 text-[10px] font-normal text-neutral-500">calculada</span>
+                        <span className="block truncate text-[10px] text-neutral-500">
+                          LALIGA no publica su caja
+                        </span>
                       )}
                     </span>
-                    <span
-                      className={`shrink-0 tabular-nums font-bold ${
-                        economy.flujoConocido >= 0 ? "text-emerald-400" : "text-rose-400"
-                      }`}
-                    >
-                      {signedMillions(economy.flujoConocido)}
+                    <span className="shrink-0 text-right">
+                      <span className="block text-[9px] uppercase tracking-wider text-neutral-500">
+                        Saldo de operaciones
+                      </span>
+                      <span
+                        className={`block tabular-nums font-bold ${
+                          economy.flujoConocido >= 0 ? "text-emerald-400" : "text-rose-400"
+                        }`}
+                      >
+                        {signedMillions(economy.flujoConocido)}
+                      </span>
                     </span>
                   </div>
                   <div className="mt-2 grid grid-cols-4 gap-2 text-[11px]">
@@ -82,17 +94,23 @@ export function EconomyView({ data }: { data: EconomyResponse }) {
                     />
                   </div>
                 </button>
+
+                {/*
+                  El libro se abre AQUI, debajo del manager que has tocado. Antes
+                  salia al final de la pantalla y en un movil parecia que el
+                  toque no habia hecho nada.
+                */}
+                {abiertoAqui && <LibroCard economy={economy} saldoInicial={data.saldoInicial} />}
               </li>
             );
           })}
         </ul>
 
-        <p className="mt-3 text-xs text-white/45">
-          Toca un manager para ver su libro. El flujo puede ser negativo. No incluye el valor de plantilla ni se presenta como caja disponible.
+        <p className="mt-3 text-xs leading-4 text-white/45">
+          Toca un manager para ver su libro. El saldo de operaciones es lo que ha entrado menos lo que
+          ha salido desde que empieza el historial: puede ser negativo y no es su caja disponible.
         </p>
       </section>
-
-      {detalle && <LibroCard economy={detalle} saldoInicial={data.saldoInicial} />}
 
       <DataNotes notes={data.dataNotes} />
     </div>
@@ -108,8 +126,8 @@ const KIND_LABEL: Record<ManagerEconomy["entries"][number]["kind"], string> = {
 
 function LibroCard({ economy, saldoInicial }: { economy: ManagerEconomy; saldoInicial: number }) {
   return (
-    <section className="rounded-[26px] border border-white/8 bg-[#121214] p-4 text-white shadow-[0_10px_35px_rgba(0,0,0,.3)]">
-      <h3 className="mb-3 text-[17px] font-bold tracking-tight">Libro de {economy.managerName}</h3>
+    <section className="mt-2 rounded-[22px] border border-white/8 bg-[#0d0d0f] p-4 text-white">
+      <h3 className="mb-3 text-[15px] font-bold tracking-tight">Libro de {economy.managerName}</h3>
 
       {/* El cuadre completo, línea a línea, para poder auditar cada euro. */}
       <dl className="mb-4 space-y-1 text-sm">
@@ -121,7 +139,8 @@ function LibroCard({ economy, saldoInicial }: { economy: ManagerEconomy; saldoIn
           value={`+${millions(economy.bonusPuntos)}`}
           tone="emerald"
         />
-        <Linea label="Flujo conocido del periodo" value={signedMillions(economy.flujoConocido)} strong />
+        {/* Mismo nombre que en la fila de arriba: dos rotulos para la misma cifra confunden. */}
+        <Linea label="Saldo de operaciones" value={signedMillions(economy.flujoConocido)} strong />
         <Linea label="Saldo teórico si el historial fuese completo" value={millions(economy.cajaReconstruida)} />
 
         {economy.cajaOficial !== null ? (
@@ -205,7 +224,7 @@ function Linea({
   return (
     <div className={`flex items-baseline justify-between gap-3 ${strong ? "border-t border-white/10 pt-1" : ""}`}>
       <dt className={strong ? "font-semibold" : "text-neutral-400"}>{label}</dt>
-      <dd className={`tabular-nums ${strong ? "font-semibold" : ""} ${color}`}>{value}</dd>
+      <dd className={`shrink-0 whitespace-nowrap tabular-nums ${strong ? "font-semibold" : ""} ${color}`}>{value}</dd>
     </div>
   );
 }

@@ -29,6 +29,15 @@ const ORDENES: Array<{ id: Orden; label: string }> = [
   { id: "MEDIA", label: "Media" },
 ];
 
+/**
+ * "1 puja" y no "1 pujas". Cuando LALIGA no publica el numero se dice que no se
+ * sabe, que no es lo mismo que decir que no hay ninguna.
+ */
+function pujas(numero: number | undefined): string {
+  if (numero === undefined) return `${UNKNOWN} pujas`;
+  return numero === 1 ? "1 puja" : `${numero} pujas`;
+}
+
 /** Horas que faltan para que expire, o `null` si LALIGA no publica la fecha. */
 function horasParaCierre(expiresAt: string | undefined, now: number): number | null {
   if (!expiresAt) return null;
@@ -108,15 +117,19 @@ export function MarketView({ data, leagueId, onChanged }: { data: MarketResponse
     <div className="space-y-3">
       <div><p className="text-xs font-semibold uppercase tracking-[.14em] text-neutral-500">En vivo</p><h2 className="text-2xl font-bold tracking-tight text-white">Mercado · {visible.length}</h2></div>
       <label className="flex min-h-12 items-center gap-2 rounded-2xl border border-white/10 bg-[#121214] px-4 text-neutral-400"><Search size={18}/><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar jugador o equipo…" className="w-full bg-transparent text-sm text-white outline-none placeholder:text-neutral-600"/></label>
-      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none]">{(["TODAS","POR","DEF","MED","DEL"] as PositionFilter[]).map((item) => <button key={item} type="button" onClick={() => setPosition(item)} className={`min-h-10 shrink-0 rounded-xl px-4 text-xs font-bold ${position === item ? "bg-[#7c3aed] text-white" : "border border-white/10 bg-[#121214] text-neutral-400"}`}>{item}</button>)}</div>
-      <div className="grid grid-cols-3 gap-2">{([['TODOS','Todos'],['MERCADO','Liga'],['MANAGER','Managers']] as const).map(([id,label]) => <button key={id} type="button" onClick={() => setSource(id)} className={`min-h-10 rounded-xl text-xs font-bold ${source === id ? "bg-[#7c3aed]/20 text-[#c4b5fd] ring-1 ring-[#7c3aed]" : "border border-white/10 bg-[#121214] text-neutral-500"}`}>{label}</button>)}</div>
-      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none]" aria-label="Ordenar">
-        <span className="grid shrink-0 place-items-center text-[11px] font-semibold uppercase tracking-wider text-neutral-600">Orden</span>
-        {ORDENES.map((item) => <button key={item.id} type="button" onClick={() => setOrden(item.id)} aria-pressed={orden === item.id} className={`min-h-10 shrink-0 rounded-xl px-3 text-xs font-bold ${orden === item.id ? "bg-white/10 text-white ring-1 ring-white/20" : "border border-white/10 bg-[#121214] text-neutral-500"}`}>{item.label}</button>)}
+      <div className="grid grid-cols-5 gap-1.5">{(["TODAS","POR","DEF","MED","DEL"] as PositionFilter[]).map((item) => <button key={item} type="button" onClick={() => setPosition(item)} aria-pressed={position === item} className={`min-h-11 rounded-xl px-1 text-[11px] font-bold ${position === item ? "bg-[#7c3aed] text-white" : "border border-white/10 bg-[#121214] text-neutral-400"}`}>{item}</button>)}</div>
+      <div className="grid grid-cols-3 gap-2">{([['TODOS','Todos'],['MERCADO','Liga'],['MANAGER','Managers']] as const).map(([id,label]) => <button key={id} type="button" onClick={() => setSource(id)} aria-pressed={source === id} className={`min-h-11 rounded-xl text-xs font-bold ${source === id ? "bg-[#7c3aed]/20 text-[#c4b5fd] ring-1 ring-[#7c3aed]" : "border border-white/10 bg-[#121214] text-neutral-500"}`}>{label}</button>)}</div>
+      {/*
+        Las filas de filtros iban en scroll horizontal y el ultimo boton se veia
+        cortado por el borde de la pantalla: parecia texto mal recortado, no un
+        carrusel. Con `grid` cabe todo y no hay nada escondido.
+      */}
+      <div className="grid grid-cols-4 gap-1.5" aria-label="Ordenar">
+        {ORDENES.map((item) => <button key={item.id} type="button" onClick={() => setOrden(item.id)} aria-pressed={orden === item.id} className={`min-h-11 rounded-xl px-1 text-[11px] font-bold ${orden === item.id ? "bg-white/10 text-white ring-1 ring-white/20" : "border border-white/10 bg-[#121214] text-neutral-500"}`}>{item.label}</button>)}
       </div>
       {message && <p className="rounded-2xl border border-white/10 bg-[#121214] p-4 text-sm text-neutral-200" role="status">{message}</p>}
       {visible.length === 0 ? <Empty>No hay jugadores que coincidan con estos filtros.</Empty> : visible.map((entry) => <article key={entry.marketId} className="rounded-[26px] border border-white/8 bg-[#121214] p-4 shadow-[0_10px_35px_rgba(0,0,0,.3)]">
-        <button type="button" onClick={() => setSelected(entry.player)} className="flex w-full items-center gap-3 text-left"><PlayerImage player={entry.player} size={58}/><div className="min-w-0 flex-1"><p className="truncate font-bold text-white">{entry.player.name}</p><p className="text-xs text-neutral-500">{entry.player.position} · {entry.player.team} · {entry.numberOfBids ?? UNKNOWN} pujas</p></div><div className="text-right"><p className="text-[10px] uppercase text-neutral-500">Salida</p><p className="font-bold text-white">{millions(entry.salePrice)}</p></div></button>
+        <button type="button" onClick={() => setSelected(entry.player)} className="flex w-full items-center gap-3 text-left"><PlayerImage player={entry.player} size={58}/><div className="min-w-0 flex-1"><p className="truncate font-bold text-white">{entry.player.name}</p><p className="text-xs text-neutral-500">{entry.player.position} · {entry.player.team} · {pujas(entry.numberOfBids)}</p></div><div className="text-right"><p className="text-[10px] uppercase text-neutral-500">Salida</p><p className="font-bold text-white">{millions(entry.salePrice)}</p></div></button>
         <div className="mt-3 grid grid-cols-4 gap-2 text-center text-xs"><MarketMetric label="Valor" value={millions(entry.player.marketValue)}/><MarketMetric label="Media" value={entry.player.averagePoints > 0 ? entry.player.averagePoints.toFixed(1) : UNKNOWN}/><MarketMetric label="Tu puja" value={entry.myBid ? millions(entry.myBid.amount) : UNKNOWN}/><MarketMetric label="Expira" value={shortDate(entry.expiresAt)}/></div>
         <Cierre horas={horasParaCierre(entry.expiresAt, now)}/>
         <div className="mt-3 flex gap-2">{entry.myBid ? <><button disabled={busy === entry.marketId} type="button" onClick={() => act(entry, "modify")} className="min-h-11 flex-1 rounded-2xl bg-[#7c3aed] px-3 text-sm font-bold text-white">Cambiar puja</button><button disabled={busy === entry.marketId} type="button" onClick={() => act(entry, "cancel")} className="min-h-11 rounded-2xl border border-red-500/30 px-4 text-sm font-semibold text-red-400">Cancelar</button></> : <button disabled={busy === entry.marketId} type="button" onClick={() => act(entry, "create")} className="min-h-12 w-full rounded-2xl bg-[#7c3aed] px-4 text-sm font-black text-white">Pujar ahora</button>}</div>

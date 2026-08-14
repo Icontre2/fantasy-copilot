@@ -112,3 +112,26 @@ diseñar una tarjeta alrededor de un dato, hay que saber si el dato está.
 - La caja puede ser negativa; ningún cálculo debe recortarla a cero.
 - Si el historial de actividad no cubre desde el inicio de la liga, para rivales solo se muestra el flujo conocido (ventas − compras + bonus de puntos), no una caja absoluta inventada.
 - El saldo oficial solo se etiqueta como tal cuando LALIGA publica `teamMoney`.
+
+## Revisión móvil hecha (390 × 844)
+
+Las doce pantallas se han recorrido con datos de prueba en un viewport de
+iPhone 14, con captura completa de cada una. Resultado: **ninguna desborda a lo
+ancho, ninguna produce errores de consola**, y todos los elementos tocables
+llegan a 44 px salvo los `<input>`, que van dentro de una etiqueta de 48 px que
+es la que recibe el toque.
+
+Lo que la revisión encontró y se ha corregido:
+
+| Pantalla | Fallo | Arreglo |
+| --- | --- | --- |
+| Exportar | Los dos botones de descarga eran texto casi negro sobre fondo negro: ilegibles | Tarjeta con icono, texto blanco y borde morado |
+| Liga completa | Tabla de seis columnas con `min-w-[560px]`: se leía «Valor planti…» cortado | Una fila por manager con sus cifras debajo; la plantilla se despliega ahí mismo |
+| Inicio | Cabecera azul marino y lima de la etapa anterior; el hueco «sin histórico» era una barra blanca que parecía un error de carga | Cabecera negra con morado; el hueco es oscuro y lleva texto |
+| Onces probables | Tarjetas gris claro y enlace blanco sobre app negra | Tarjetas oscuras; el color del porcentaje va acompañado de «Probable / Duda / Poco probable» |
+| Mercado | La fila de orden se salía por el borde; «1 pujas» | Rejilla sin scroll lateral; singular correcto |
+| Alertas | Un jugador sin tendencia mostraba solo dos guiones, sin decir por qué | La tarjeta explica si falta histórico, si está congelado o si el valor no sube |
+| Economía | La cifra grande no tenía rótulo y se leía como «todos en negativo»; el libro se abría al final de la pantalla | Rótulo «Saldo de operaciones» pegado al número; el libro se abre bajo el manager que tocas |
+
+Lo que **no** se ha tocado: ninguna cifra, ningún cálculo y ninguna ruta de
+servidor. Esta pasada es solo de presentación.

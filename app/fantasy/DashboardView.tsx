@@ -36,17 +36,17 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
 
   return (
     <div className="space-y-5">
-      <section className="overflow-hidden rounded-[30px] bg-[linear-gradient(145deg,#101a39_0%,#172754_58%,#1f3767_100%)] p-5 text-white shadow-[0_24px_70px_rgba(12,22,52,.24)]">
+      <section className="overflow-hidden rounded-[30px] border border-[#7c3aed]/30 bg-[linear-gradient(145deg,#17121f,#251440)] p-5 text-white shadow-[0_22px_65px_rgba(0,0,0,.45)]">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[.16em] text-white/55">Valor de tu plantilla</p>
+            <p className="text-xs font-semibold uppercase tracking-[.16em] text-[#a78bfa]">Valor de tu plantilla</p>
             <p className="mt-2 text-[36px] font-bold leading-none tracking-[-.04em]">{millions(data.me.teamValue)}</p>
-            <p className={`mt-2 text-sm ${delta === null ? "text-white/45" : delta >= 0 ? "text-[#d6ff75]" : "text-rose-300"}`}>
+            <p className={`mt-2 text-sm ${delta === null ? "text-white/45" : delta >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
               {delta === null ? "Seguimiento real iniciado" : `${delta >= 0 ? "+" : ""}${millions(delta)} en el periodo`}
             </p>
           </div>
-          <div className="rounded-2xl bg-white/10 px-3 py-2 text-center backdrop-blur">
-            <Trophy size={17} className="mx-auto text-[#d6ff75]" />
+          <div className="rounded-2xl bg-white/[.06] px-3 py-2 text-center backdrop-blur">
+            <Trophy size={17} className="mx-auto text-[#a78bfa]" />
             <p className="mt-1 text-lg font-bold">#{data.me.position ?? "—"}</p>
             <p className="text-[10px] text-white/55">posición</p>
           </div>
@@ -71,7 +71,7 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
             <p className="text-xs font-semibold uppercase tracking-[.12em] text-neutral-400">Tu liga</p>
             <h2 className="text-xl font-bold tracking-tight text-white">Competidores</h2>
           </div>
-          <span className="flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-neutral-600 shadow-sm">
+          <span className="flex items-center gap-1 rounded-full border border-white/10 bg-white/[.06] px-3 py-1.5 text-xs font-semibold text-neutral-300">
             <Users size={14} /> {data.competitors.length + 1}
           </span>
         </div>
@@ -204,18 +204,26 @@ function filterHistory(points: PortfolioPoint[], range: Range) {
 }
 
 function RangePicker({ value, onChange }: { value: Range; onChange: (value: Range) => void }) {
-  return <div className="mt-5 grid grid-cols-4 rounded-2xl bg-white/8 p-1" aria-label="Periodo del histórico">{RANGE_OPTIONS.map((option) => <button key={String(option.value)} type="button" onClick={() => onChange(option.value)} className={`min-h-9 rounded-xl text-xs font-bold transition ${value === option.value ? "bg-white text-[#101a39] shadow" : "text-white/55"}`} aria-pressed={value === option.value}>{option.label}</button>)}</div>;
+  return <div className="mt-5 grid grid-cols-4 gap-1 rounded-2xl bg-white/[.06] p-1" aria-label="Periodo del histórico">{RANGE_OPTIONS.map((option) => <button key={String(option.value)} type="button" onClick={() => onChange(option.value)} className={`min-h-11 rounded-xl text-xs font-bold transition ${value === option.value ? "bg-[#7c3aed] text-white" : "text-white/55"}`} aria-pressed={value === option.value}>{option.label}</button>)}</div>;
 }
 
 function ValueChart({ points }: { points: { date: string; value: number }[] }) {
   if (points.length < 2) return <div className="mt-3 grid h-28 place-items-center rounded-2xl border border-dashed border-white/15 bg-white/5 px-6 text-center text-xs leading-5 text-white/45">Necesitamos dos días reales para dibujar la evolución.</div>;
   const coords = chartCoordinates(points, 92, 72);
-  return <div className="mt-3 h-32"><svg viewBox="0 0 100 100" preserveAspectRatio="none" className="h-full w-full overflow-visible" role="img" aria-label="Histórico real del valor de plantilla"><defs><linearGradient id="valueArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#d6ff75" stopOpacity=".35"/><stop offset="1" stopColor="#d6ff75" stopOpacity="0"/></linearGradient></defs><polygon points={`0,100 ${coords} 100,100`} fill="url(#valueArea)"/><polyline points={coords} fill="none" stroke="#d6ff75" strokeWidth="2.2" vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round"/></svg></div>;
+  const sube = (points.at(-1)?.value ?? 0) >= (points[0]?.value ?? 0);
+  const color = sube ? "#34d399" : "#fb7185";
+  return <div className="mt-3 h-32"><svg viewBox="0 0 100 100" preserveAspectRatio="none" className="h-full w-full overflow-visible" role="img" aria-label="Histórico real del valor de plantilla"><defs><linearGradient id="valueArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor={color} stopOpacity=".3"/><stop offset="1" stopColor={color} stopOpacity="0"/></linearGradient></defs><polygon points={`0,100 ${coords} 100,100`} fill="url(#valueArea)"/><polyline points={coords} fill="none" stroke={color} strokeWidth="2.2" vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round"/></svg></div>;
 }
 
+/*
+ * El hueco de "todavia no hay historico" era una barra clara: en una pantalla
+ * negra se leia como un error de carga. Ahora es un hueco oscuro CON TEXTO,
+ * porque un espacio vacio no explica por que esta vacio.
+ */
 function MiniChart({ points }: { points: { date: string; value: number }[] }) {
-  if (points.length < 2) return <div className="mt-3 h-8 rounded-xl bg-[linear-gradient(90deg,#f4f6f8,#fafbfc)]" aria-label="Histórico pendiente"/>;
-  return <svg viewBox="0 0 100 24" preserveAspectRatio="none" className="mt-3 h-8 w-full" role="img" aria-label="Evolución del competidor"><polyline points={chartCoordinates(points, 21, 18)} fill="none" stroke="#86b72d" strokeWidth="1.6" vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round"/></svg>;
+  if (points.length < 2) return <p className="mt-3 grid h-8 place-items-center rounded-xl border border-dashed border-white/10 text-[10px] text-neutral-600">Sin histórico todavía</p>;
+  const sube = (points.at(-1)?.value ?? 0) >= (points[0]?.value ?? 0);
+  return <svg viewBox="0 0 100 24" preserveAspectRatio="none" className="mt-3 h-8 w-full" role="img" aria-label="Evolución del competidor"><polyline points={chartCoordinates(points, 21, 18)} fill="none" stroke={sube ? "#34d399" : "#fb7185"} strokeWidth="1.6" vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round"/></svg>;
 }
 
 function chartCoordinates(points: { value: number }[], bottom: number, height: number) {
@@ -226,12 +234,12 @@ function chartCoordinates(points: { value: number }[], bottom: number, height: n
 }
 
 function Metric({ icon, label, value, accent = false }: { icon: React.ReactNode; label: string; value: string; accent?: boolean }) {
-  return <div className={`rounded-2xl p-3 ${accent ? "bg-[#d6ff75] text-[#101a39]" : "bg-white/10"}`}><div className="flex items-center gap-2 text-xs opacity-70">{icon}{label}</div><p className="mt-1 text-lg font-bold tracking-tight">{value}</p></div>;
+  return <div className={`rounded-2xl p-3 ${accent ? "bg-[#7c3aed]/20 ring-1 ring-[#7c3aed]/40" : "bg-white/[.06]"}`}><div className="flex items-center gap-2 text-xs text-white/60">{icon}{label}</div><p className={`mt-1 text-lg font-bold tracking-tight ${accent ? "text-[#c4b5fd]" : "text-white"}`}>{value}</p></div>;
 }
 function SmallMetric({ label, value, lime = false }: { label: string; value: string; lime?: boolean }) {
   return <div className={`rounded-2xl px-3 py-2 ${lime ? "bg-emerald-500/10" : "bg-white/[.04]"}`}><p className="text-neutral-500">{label}</p><p className={`mt-0.5 font-bold ${lime ? "text-emerald-400" : "text-white"}`}>{value}</p></div>;
 }
 function Avatar({ name, image }: { name: string; image?: string }) {
   if (image) return <Image src={image} alt="" width={40} height={40} unoptimized className="h-10 w-10 rounded-full bg-neutral-100 object-cover" />;
-  return <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#101a39] text-sm font-bold text-[#d6ff75]">{name.slice(0, 1).toUpperCase()}</span>;
+  return <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#7c3aed]/20 text-sm font-bold text-[#c4b5fd]">{name.slice(0, 1).toUpperCase()}</span>;
 }

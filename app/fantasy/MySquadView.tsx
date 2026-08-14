@@ -13,10 +13,10 @@ export function MySquadView({ data }: { data: DashboardResponse }) {
   const groups = groupByPosition(data.lineup.starters);
   return (
     <div className="space-y-4">
-      <section className="rounded-[28px] bg-[#101a39] p-4 text-white shadow-[0_22px_65px_rgba(12,22,52,.2)]">
+      <section className="rounded-[28px] border border-[#7c3aed]/30 bg-[linear-gradient(145deg,#17121f,#251440)] p-4 text-white shadow-[0_22px_65px_rgba(0,0,0,.45)]">
         <div className="mb-4 flex items-center justify-between">
-          <div><p className="text-xs uppercase tracking-[.14em] text-white/45">Tu once más probable</p><h2 className="mt-1 text-xl font-bold">{data.lineup.formation}</h2></div>
-          <div className="rounded-2xl bg-white/10 px-3 py-2 text-right"><p className="text-[10px] text-white/45">Valor equipo</p><p className="font-bold text-[#d6ff75]">{millions(data.me.teamValue)}</p></div>
+          <div><p className="text-xs font-semibold uppercase tracking-[.14em] text-[#a78bfa]">Tu once más probable</p><h2 className="mt-1 text-xl font-bold">{data.lineup.formation}</h2></div>
+          <div className="rounded-2xl bg-white/[.06] px-3 py-2 text-right"><p className="text-[10px] text-white/45">Valor equipo</p><p className="font-bold text-white">{millions(data.me.teamValue)}</p></div>
         </div>
         <div className="relative overflow-hidden rounded-[24px] border border-white/20 bg-[linear-gradient(180deg,#32845f,#1f6548)] px-2 py-5 shadow-inner">
           <PitchLines />
@@ -50,10 +50,11 @@ function groupByPosition(players: PlayerWithProbability[]) {
   }, {});
 }
 function PitchPlayer({ player, onSelect }: { player: PlayerWithProbability; onSelect: (player: PlayerWithProbability) => void }) {
-  return <button type="button" onClick={() => onSelect(player)} className="flex w-[72px] flex-col items-center text-center active:scale-95" aria-label={`Ver histórico de ${player.name}`}><div className="relative"><PlayerImage player={player} size={52}/><Probability value={player.lineupProbability}/></div><p className="mt-1.5 w-full truncate rounded-lg bg-[#101a39]/85 px-1.5 py-1 text-[10px] font-semibold shadow">{player.name}</p></button>;
+  return <button type="button" onClick={() => onSelect(player)} className="flex w-[72px] flex-col items-center text-center active:scale-95" aria-label={`Ver histórico de ${player.name}`}><div className="relative"><PlayerImage player={player} size={52}/><Probability value={player.lineupProbability}/></div><p className="mt-1.5 w-full truncate rounded-lg bg-black/70 px-1.5 py-1 text-[10px] font-semibold shadow">{player.name}</p></button>;
 }
+/** `?` cuando FutbolFantasy no publica al jugador: no se rellena con un cero. */
 function Probability({ value }: { value?: number }) {
-  const tone = value === undefined ? "bg-neutral-500" : value >= 70 ? "bg-[#d6ff75] text-[#101a39]" : value >= 40 ? "bg-amber-300 text-[#101a39]" : "bg-rose-400";
+  const tone = value === undefined ? "bg-neutral-600 text-white" : value >= 70 ? "bg-emerald-400 text-emerald-950" : value >= 40 ? "bg-amber-300 text-amber-950" : "bg-rose-400 text-rose-950";
   return <span className={`absolute -bottom-1 -right-2 rounded-full border-2 border-[#286f50] px-1.5 py-0.5 text-[9px] font-black ${tone}`}>{value === undefined ? "?" : `${value}%`}</span>;
 }
 function BenchPlayer({ player, onSelect }: { player: PlayerWithProbability; onSelect: (player: PlayerWithProbability) => void }) {

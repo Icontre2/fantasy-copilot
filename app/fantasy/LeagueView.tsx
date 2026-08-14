@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { euros, millions, UNKNOWN } from "./format";
+import { ChevronDown } from "lucide-react";
+import { millions, UNKNOWN } from "./format";
 import type { TeamsResponse } from "./types";
-import { Card, Empty, SectionTitle, Td, Th, TableWrap } from "./ui";
+import { Card, Empty, SectionTitle } from "./ui";
 import { PlayerDetails } from "./PlayerDetails";
 import { PlayerImage } from "./PlayerImage";
 import type { Player } from "./types";
@@ -13,6 +14,11 @@ import type { Player } from "./types";
  *
  * No hay ningun indicador de "compra", "vende" ni "recomendado": esta pantalla
  * enseña lo que publica LALIGA y nada mas.
+ *
+ * Esto era una tabla de seis columnas con `min-w-[560px]`. En un movil de 390
+ * px se veian tres y el resto quedaba detras de un scroll horizontal que nadie
+ * descubre: "Valor planti…" cortado a mitad de palabra. Ahora es una fila por
+ * manager con las cifras debajo, que es lo que pide docs/DIRECCION_VISUAL.md.
  */
 export function LeagueView({ data }: { data: TeamsResponse }) {
   const [openTeamId, setOpenTeamId] = useState<string | null>(null);
@@ -29,101 +35,115 @@ export function LeagueView({ data }: { data: TeamsResponse }) {
   return (
     <div className="space-y-4">
       {data.failedTeamIds.length > 0 && (
-        <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+        <p className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-300">
           No se pudieron leer {data.failedTeamIds.length} plantilla(s). Lo que ves está incompleto.
         </p>
       )}
 
       <Card>
         <SectionTitle>Participantes</SectionTitle>
-        <TableWrap>
-          <table className="w-full min-w-[560px] border-collapse">
-            <thead>
-              <tr>
-                <Th>#</Th>
-                <Th>Manager</Th>
-                <Th align="right">Puntos</Th>
-                <Th align="right">Valor plantilla</Th>
-                <Th align="right">Saldo</Th>
-                <Th align="right">Jugadores</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => {
-                const team = byTeamId.get(row.teamId);
-                const isOpen = openTeamId === row.teamId;
-                return (
-                  <tr
-                    key={row.teamId}
-                    className="cursor-pointer hover:bg-neutral-50"
-                    onClick={() => setOpenTeamId(isOpen ? null : row.teamId)}
-                  >
-                    <Td>{row.position}</Td>
-                    <Td className="font-medium">{row.manager.name}</Td>
-                    <Td align="right">{row.points}</Td>
-                    <Td align="right">{millions(team?.teamValue)}</Td>
-                    <Td align="right">{millions(team?.teamMoney)}</Td>
-                    <Td align="right">{team?.players.length ?? UNKNOWN}</Td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </TableWrap>
-        <p className="mt-2 text-xs text-neutral-500">
-          Toca un manager para ver su plantilla. Todos estos datos los publica LALIGA.
+        <ul className="space-y-2">
+          {rows.map((row) => {
+            const team = byTeamId.get(row.teamId);
+            const isOpen = openTeamId === row.teamId;
+            return (
+              <li key={row.teamId}>
+                <button
+                  type="button"
+                  onClick={() => setOpenTeamId(isOpen ? null : row.teamId)}
+                  aria-expanded={isOpen}
+                  className={`w-full rounded-2xl border p-3 text-left transition ${
+                    isOpen ? "border-[#7c3aed]/50 bg-[#7c3aed]/10" : "border-white/10 bg-white/[.03]"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-white/[.06] text-sm font-bold text-neutral-300">
+                      {row.position}
+                    </span>
+                    <span className="min-w-0 flex-1 truncate font-bold text-white">{row.manager.name}</span>
+                    <span className="shrink-0 tabular-nums text-sm font-bold text-white">{row.points} pts</span>
+                    <ChevronDown
+                      size={16}
+                      className={`shrink-0 text-neutral-500 transition ${isOpen ? "rotate-180" : ""}`}
+                    />
+                  </div>
+                  <div className="mt-2 grid grid-cols-3 gap-2 text-[11px]">
+                    <Dato label="Valor plantilla" value={millions(team?.teamValue)} />
+                    {/* La caja ajena no la publica LALIGA: sale `—`, no un cero. */}
+                    <Dato label="Caja" value={millions(team?.teamMoney)} />
+                    <Dato label="Jugadores" value={team ? String(team.players.length) : UNKNOWN} />
+                  </div>
+                </button>
+
+                {isOpen && team && <Plantilla team={team} onPlayer={setSelectedPlayer} />}
+              </li>
+            );
+          })}
+        </ul>
+        <p className="mt-3 text-xs leading-4 text-neutral-500">
+          Toca un manager para ver su plantilla. Todos estos datos los publica LALIGA. La caja solo
+          es visible en tu propio equipo.
         </p>
       </Card>
 
-      {openTeamId && <SquadCard team={byTeamId.get(openTeamId)} onPlayer={setSelectedPlayer} />}
       {selectedPlayer && <PlayerDetails player={selectedPlayer} onClose={() => setSelectedPlayer(null)} />}
     </div>
   );
 }
 
-function SquadCard({ team, onPlayer }: { team: TeamsResponse["teams"][number] | undefined; onPlayer: (player: Player) => void }) {
-  if (!team) return null;
-
+/** Plantilla del manager abierto, justo debajo de su fila. */
+function Plantilla({
+  team,
+  onPlayer,
+}: {
+  team: TeamsResponse["teams"][number];
+  onPlayer: (player: Player) => void;
+}) {
   return (
-    <Card>
-      <SectionTitle>Plantilla de {team.manager.name}</SectionTitle>
-      <p className="mb-3 text-sm text-neutral-600">
-        Saldo {euros(team.teamMoney)} · Valor {euros(team.teamValue)} · {team.teamPoints ?? UNKNOWN} puntos
-      </p>
-      <TableWrap>
-        <table className="w-full min-w-[520px] border-collapse">
-          <thead>
-            <tr>
-              <Th>Jugador</Th>
-              <Th>Pos</Th>
-              <Th>Equipo</Th>
-              <Th align="right">Valor</Th>
-              <Th align="right">Cláusula</Th>
-              <Th align="right">Puntos</Th>
-            </tr>
-          </thead>
-          <tbody>
-            {team.players.map((player) => (
-              <tr key={player.id}>
-                <Td className="font-medium">
-                  <button type="button" onClick={() => onPlayer(player)} className="flex items-center gap-2 text-left hover:underline"><PlayerImage player={player} size={38} /><span>{player.name}</span></button>
-                  {player.isShielded && (
-                    <span className="ml-1 text-xs text-neutral-500" title="Blindado">
-                      🛡
-                    </span>
-                  )}
-                </Td>
-                <Td>{player.position}</Td>
-                <Td>{player.team}</Td>
-                <Td align="right">{millions(player.marketValue)}</Td>
-                {/* Sin clausula publicada se pinta el guion, no un cero. */}
-                <Td align="right">{millions(player.buyoutClause)}</Td>
-                <Td align="right">{player.points}</Td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </TableWrap>
-    </Card>
+    <ul className="mt-2 space-y-1.5 border-l border-[#7c3aed]/30 pl-2">
+      {team.players.map((player) => (
+        <li key={player.id}>
+          <button
+            type="button"
+            onClick={() => onPlayer(player)}
+            className="flex w-full items-center gap-2.5 rounded-2xl bg-white/[.03] p-2 text-left active:scale-[.99]"
+            aria-label={`Ver histórico de ${player.name}`}
+          >
+            <PlayerImage player={player} size={38} />
+            <span className="min-w-0 flex-1">
+              <span className="flex items-center gap-1">
+                <span className="truncate text-sm font-semibold text-white">{player.name}</span>
+                {player.isShielded && (
+                  <span className="shrink-0 text-[10px] text-neutral-500" title="Blindado">
+                    🛡
+                  </span>
+                )}
+              </span>
+              <span className="block truncate text-[11px] text-neutral-500">
+                {player.position} · {player.team} · {player.points} pts
+              </span>
+            </span>
+            <span className="shrink-0 text-right">
+              <span className="block text-sm font-bold tabular-nums text-white">
+                {millions(player.marketValue)}
+              </span>
+              {/* Sin clausula publicada se pinta el guion, no un cero. */}
+              <span className="block text-[10px] tabular-nums text-neutral-500">
+                Cláusula {millions(player.buyoutClause)}
+              </span>
+            </span>
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function Dato({ label, value }: { label: string; value: string }) {
+  return (
+    <span className="min-w-0">
+      <span className="block truncate text-[10px] text-neutral-500">{label}</span>
+      <span className="block truncate font-semibold tabular-nums text-neutral-200">{value}</span>
+    </span>
   );
 }

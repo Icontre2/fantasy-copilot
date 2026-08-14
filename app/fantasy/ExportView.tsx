@@ -1,5 +1,6 @@
 "use client";
 
+import { Download } from "lucide-react";
 import { Card, SectionTitle } from "./ui";
 
 /**
@@ -31,12 +32,12 @@ export function ExportView({ leagueId }: { leagueId: string }) {
 
       <Card>
         <SectionTitle>Qué no traen estos CSV</SectionTitle>
-        <p className="text-sm text-neutral-600">
-          Estas columnas se han pedido y <strong>no se emiten</strong>, porque LALIGA no las publica
-          en ningún endpoint. Se omiten en vez de salir siempre vacías, para que nadie construya un
-          análisis sobre un dato que no existe:
+        <p className="text-sm leading-5 text-neutral-400">
+          Estas columnas se han pedido y <strong className="text-neutral-200">no se emiten</strong>,
+          porque LALIGA no las publica en ningún endpoint. Se omiten en vez de salir siempre vacías,
+          para que nadie construya un análisis sobre un dato que no existe:
         </p>
-        <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-neutral-600">
+        <ul className="mt-2 list-disc space-y-1 pl-5 text-sm leading-5 text-neutral-400 marker:text-[#7c3aed]">
           <li>
             <strong>Precio de adquisición</strong> y <strong>fecha de adquisición</strong> de cada
             jugador. El precio estimado de las compras detectadas sí está, pero en Economía, marcado
@@ -68,10 +69,15 @@ function ExportLink({
   return (
     <a
       href={href}
-      className="block rounded-lg border border-neutral-200 p-3 hover:border-neutral-400 hover:bg-neutral-50"
+      className="flex min-h-14 items-center gap-3 rounded-2xl border border-[#7c3aed]/25 bg-[#7c3aed]/10 p-3.5 active:scale-[.99]"
     >
-      <span className="block font-medium text-neutral-900">{title} ⭳</span>
-      <span className="block text-sm text-neutral-600">{description}</span>
+      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[#7c3aed] text-white">
+        <Download size={19} />
+      </span>
+      <span className="min-w-0">
+        <span className="block font-bold text-white">{title}</span>
+        <span className="mt-0.5 block text-xs leading-4 text-neutral-400">{description}</span>
+      </span>
     </a>
   );
 }
