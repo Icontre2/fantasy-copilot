@@ -20,3 +20,24 @@ test('extrae todos los candidatos, sus posiciones y porcentajes', () => {
 test('no publica una lista vacía cuando cambia el marcado', () => {
   assert.throws(() => parseProbableLineup('<p>otro formato</p>'), /cambió el formato/);
 });
+
+test('recupera el once titular cuando el equipo no publica porcentajes', () => {
+  const source = `<div class="jugador_10960 campo camiseta-wrapper" data-onceFF="titular">
+    <a class="camiseta"><img alt="Azzedine Ounahi"></a>
+    <span class="truncate-name">Ounahi</span>
+  </div>`;
+  assert.deepEqual(parseProbableLineup(source), [{
+    externalId: '10960',
+    name: 'Ounahi',
+    position: '',
+    expectedStarter: true,
+  }]);
+});
+
+test('no inventa un porcentaje para un titular cualitativo', () => {
+  const [player] = parseProbableLineup(
+    '<div class="jugador_1 campo" data-onceFF="titular"><img alt="Jugador"></div>',
+  );
+  assert.equal(player?.expectedStarter, true);
+  assert.equal(player?.probability, undefined);
+});
