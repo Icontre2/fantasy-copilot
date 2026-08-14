@@ -137,13 +137,27 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
           Un numero con ese sesgo es peor que un hueco: el hueco se nota, el sesgo
           no. Se muestra lo que consta y punto.
         */}
-        <p className="mt-3 text-[11px] leading-4 text-neutral-500">
-          LALIGA solo publica tu caja, no la de los demás. Reconstruirla desde la actividad
-          disponible daría cifras infladas para quien fichó antes del
-          {data.activityFrom ? ` ${data.activityFrom.slice(8, 10)}/${data.activityFrom.slice(5, 7)}` : " inicio del histórico"},
-          así que no se muestra. En <strong>Economía</strong> tienes sus compras y ventas conocidas,
-          con importes reales.
-        </p>
+        {/*
+          El texto cambia segun lo que haya pasado DE VERDAD en esta carga. Si
+          alguna caja rival aparece, esta nota sobra y se calla; si no aparece
+          ninguna, dice ademas que se ha preguntado por las dos vias, para que se
+          note la diferencia entre "la app no lo intenta" y "LALIGA no lo da".
+        */}
+        {data.competitors.every((competitor) => competitor.teamMoney === undefined) ? (
+          <p className="mt-3 text-[11px] leading-4 text-neutral-500">
+            La caja de los demás no la publica LALIGA: se pide la liga entera y además cada equipo
+            por separado, y en ninguna de las dos viene. Reconstruirla desde la actividad daría
+            cifras infladas para quien fichó antes del
+            {data.activityFrom ? ` ${data.activityFrom.slice(8, 10)}/${data.activityFrom.slice(5, 7)}` : " inicio del histórico"},
+            así que preferimos el hueco. En <strong>Economía</strong> tienes sus compras y ventas
+            con importes reales.
+          </p>
+        ) : (
+          <p className="mt-3 text-[11px] leading-4 text-neutral-500">
+            Cajas oficiales de LALIGA. En <strong>Economía</strong> tienes el detalle de compras y
+            ventas de cada uno.
+          </p>
+        )}
       </section>
     </div>
   );

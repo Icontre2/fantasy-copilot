@@ -10,6 +10,7 @@ import type { ActivityEntry } from './economy/activity';
 import { privateFetch, publicFetch } from './client';
 import { COMPETITION_ID } from './config';
 import { apiActivitySchema } from './schemas';
+import { equiposSinCaja, mezclarCajas } from './team-money.ts';
 import {
   mapLeague,
   mapLeagueTeam,
@@ -162,11 +163,38 @@ export type LeagueSnapshot = {
  * se devuelve su id en `failedTeamIds` para que la UI diga que esa parte falta,
  * en vez de presentar una liga incompleta como si estuviera entera.
  */
+/**
+ * Pide por separado la caja de los equipos a los que el listado plural no se la
+ * pone. Ver `team-money.ts` para el porque.
+ *
+ * Nunca falla hacia fuera: si una consulta se cae, ese equipo simplemente sigue
+ * sin caja conocida, que es como estaba.
+ */
+async function completarCajas(
+  accessToken: string,
+  leagueId: string,
+  teams: LeagueTeam[],
+): Promise<LeagueTeam[]> {
+  const pendientes = equiposSinCaja(teams);
+  if (pendientes.length === 0) return teams;
+
+  const resultados = await Promise.allSettled(
+    pendientes.map((team) => getLeagueTeam(accessToken, leagueId, team.teamId)),
+  );
+  const encontradas = new Map<string, number | undefined>();
+  resultados.forEach((resultado, index) => {
+    const teamId = pendientes[index]?.teamId;
+    if (teamId && resultado.status === 'fulfilled') encontradas.set(teamId, resultado.value.teamMoney);
+  });
+
+  return mezclarCajas(teams, encontradas);
+}
+
 export async function getLeagueSnapshot(accessToken: string, leagueId: string): Promise<LeagueSnapshot> {
   const standingPromise = getLeagueStanding(accessToken, leagueId);
   try {
     const [standing, teams] = await Promise.all([standingPromise, getLeagueTeams(accessToken, leagueId)]);
-    return { standing, teams, failedTeamIds: [] };
+    return { standing, teams: await completarCajas(accessToken, leagueId, teams), failedTeamIds: [] };
   } catch {
     // Compatibilidad: si LALIGA retira la ruta plural, seguimos pudiendo leer
     // la liga equipo a equipo e informar exactamente de los que fallen.
