@@ -46,6 +46,7 @@ export function EconomyView({ data }: { data: EconomyResponse }) {
         <ul className="mt-4 space-y-2">
           {data.economies.map((economy) => {
             const abiertoAqui = abierto === economy.managerId;
+            const displayedCash = economy.cajaOficial ?? economy.cajaReconstruida + (data.estimationError ?? 0);
             return (
               <li key={economy.managerId}>
                 <button
@@ -56,31 +57,25 @@ export function EconomyView({ data }: { data: EconomyResponse }) {
                     abiertoAqui ? "border-[#7c3aed]/50 bg-[#7c3aed]/10" : "border-white/10 bg-white/[.03]"
                   }`}
                 >
-                  {/*
-                    La cifra grande NO es la caja: es lo que ha movido en el
-                    periodo. Sin etiqueta se leia como "todos en numeros rojos",
-                    que es justo lo que no dice. El rotulo va siempre pegado al
-                    numero, no en una nota al pie.
-                  */}
                   <div className="flex items-center justify-between gap-3">
                     <span className="min-w-0">
                       <span className="block truncate font-bold text-white">{economy.managerName}</span>
                       {economy.cajaOficial === null && (
                         <span className="block truncate text-[10px] text-neutral-500">
-                          LALIGA no publica su caja
+                          Estimación corregida · no usa valor de equipo
                         </span>
                       )}
                     </span>
                     <span className="shrink-0 text-right">
                       <span className="block text-[9px] uppercase tracking-wider text-neutral-500">
-                        Saldo de operaciones
+                        {economy.cajaOficial === null ? "Caja aprox." : "Caja oficial"}
                       </span>
                       <span
                         className={`block tabular-nums font-bold ${
-                          economy.flujoConocido >= 0 ? "text-emerald-400" : "text-rose-400"
+                          displayedCash >= 0 ? "text-emerald-400" : "text-rose-400"
                         }`}
                       >
-                        {signedMillions(economy.flujoConocido)}
+                        {economy.cajaOficial === null ? "≈ " : ""}{millions(displayedCash)}
                       </span>
                     </span>
                   </div>
@@ -107,8 +102,8 @@ export function EconomyView({ data }: { data: EconomyResponse }) {
         </ul>
 
         <p className="mt-3 text-xs leading-4 text-white/45">
-          Toca un manager para ver su libro. El saldo de operaciones es lo que ha entrado menos lo que
-          ha salido desde que empieza el historial: puede ser negativo y no es su caja disponible.
+          Toca un manager para ver su libro. La caja aproximada puede ser negativa, no incluye el valor
+          del equipo y corrige el hueco del historial con el error medido en tu propia caja.
         </p>
       </section>
 
