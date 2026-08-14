@@ -46,7 +46,7 @@ export function EconomyView({ data }: { data: EconomyResponse }) {
         <ul className="mt-4 space-y-2">
           {data.economies.map((economy) => {
             const abiertoAqui = abierto === economy.managerId;
-            const displayedCash = economy.cajaOficial ?? economy.cajaReconstruida + (data.estimationError ?? 0);
+            const displayedCash = economy.cajaOficial ?? economy.cajaReconstruida;
             return (
               <li key={economy.managerId}>
                 <button
@@ -62,7 +62,7 @@ export function EconomyView({ data }: { data: EconomyResponse }) {
                       <span className="block truncate font-bold text-white">{economy.managerName}</span>
                       {economy.cajaOficial === null && (
                         <span className="block truncate text-[10px] text-neutral-500">
-                          Estimación corregida · no usa valor de equipo
+                          Reconstrucción propia · no usa valor de equipo
                         </span>
                       )}
                     </span>
@@ -103,7 +103,7 @@ export function EconomyView({ data }: { data: EconomyResponse }) {
 
         <p className="mt-3 text-xs leading-4 text-white/45">
           Toca un manager para ver su libro. La caja aproximada puede ser negativa, no incluye el valor
-          del equipo y corrige el hueco del historial con el error medido en tu propia caja.
+          del equipo y nunca hereda el ajuste calculado para otro manager.
         </p>
       </section>
 
