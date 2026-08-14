@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { ArrowUpRight, Clock3, Search, ShieldCheck, ShieldOff, TriangleAlert } from "lucide-react";
 import { post } from "./api";
-import { days, millions, percent, signedMillions, UNKNOWN } from "./format";
+import { days, millions, percent, shortDate, signedMillions, UNKNOWN } from "./format";
 import type { AlertsResponse, ClauseAlert, Player } from "./types";
 import { DataNotes, Empty } from "./ui";
 import { PlayerDetails } from "./PlayerDetails";
@@ -77,10 +77,24 @@ function AlertCard({ alert, mine, cash, busy, onSelect, onBuyout }: { alert: Cla
       es que a la app le faltan datos, y son cosas muy distintas.
     */}
     {motivoSinTendencia(alert) && <p className="mt-2 rounded-xl bg-white/[.03] px-3 py-2 text-[11px] leading-4 text-neutral-500">{motivoSinTendencia(alert)}</p>}
-    <div className="mt-3 flex items-center justify-between gap-3 text-xs"><span className={`flex items-center gap-1 ${alert.official.isShielded ? "text-rose-400" : "text-emerald-400"}`}>{alert.official.isShielded ? <ShieldCheck size={14}/> : <ShieldOff size={14}/>} {alert.official.isShielded ? "Bloqueada · sin fecha publicada" : "Desbloqueada"}</span><span className="text-neutral-500">Faltan {millions(Math.max(0, alert.calculated.gap))}</span></div>
+    <div className="mt-3 flex items-center justify-between gap-3 text-xs"><span className={`flex items-center gap-1 ${alert.official.isShielded ? "text-rose-400" : "text-emerald-400"}`}>{alert.official.isShielded ? <ShieldCheck size={14}/> : <ShieldOff size={14}/>} {alert.official.isShielded ? blindaje(alert) : "Desbloqueada"}</span><span className="text-neutral-500">Faltan {millions(Math.max(0, alert.calculated.gap))}</span></div>
     {!mine && <button type="button" disabled={disabled} onClick={() => onBuyout(alert)} className="mt-3 min-h-11 w-full rounded-2xl bg-[#7c3aed] px-4 text-sm font-bold text-white disabled:bg-white/5 disabled:text-neutral-600">{busy ? "Confirmando…" : alert.official.isShielded ? "Cláusula bloqueada" : cannotAfford ? "Caja insuficiente" : `Pagar ${millions(alert.official.buyoutClause)}`}</button>}
   </article>;
 }
+/**
+ * Cuanto le queda al blindaje.
+ *
+ * Si LALIGA publica la fecha, se dice el plazo Y la fecha. Si no la publica, se
+ * dice eso mismo: no se calcula un plazo tipico ni se asume la duracion de
+ * ningun blindaje anterior.
+ */
+function blindaje(alert: ClauseAlert): string {
+  const { daysUntilUnshielded: dias, shieldedUntil } = alert.official;
+  if (dias === null || shieldedUntil === null) return "Bloqueada · LALIGA no publica hasta cuándo";
+  if (dias < 1) return `Bloqueada · se abre hoy (${shortDate(shieldedUntil)})`;
+  return `Bloqueada · ${days(dias)} (${shortDate(shieldedUntil)})`;
+}
+
 /**
  * Por que esta alerta no trae subida diaria ni estimacion de dias.
  *

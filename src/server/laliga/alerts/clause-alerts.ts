@@ -83,6 +83,16 @@ export type ClauseAlert = {
     marketValue: number;
     buyoutClause: number;
     isShielded: boolean;
+    /** Fecha ISO de fin del blindaje, si LALIGA la publica. */
+    shieldedUntil: string | null;
+    /**
+     * Dias que faltan para que se levante el blindaje.
+     *
+     * Es una RESTA de dos fechas reales, no una prevision: sale de la fecha que
+     * publica LALIGA menos ahora. `null` cuando esa fecha no viene, y entonces
+     * la pantalla lo dice en vez de estimar un plazo.
+     */
+    daysUntilUnshielded: number | null;
   };
 
   /** CALCULO DE ESTA APP a partir de los oficiales. Todo en euros salvo ratios. */
@@ -187,6 +197,19 @@ export type OwnedPlayer = {
 };
 
 /**
+ * Dias que faltan hasta `iso`, o `null` si no hay fecha o no es una fecha.
+ *
+ * Nunca devuelve negativo: una fecha ya pasada significa que el blindaje se
+ * levanto, no que falten dias en negativo.
+ */
+export function daysUntil(iso: string | undefined, now: Date): number | null {
+  if (!iso) return null;
+  const target = Date.parse(iso);
+  if (Number.isNaN(target)) return null;
+  return Math.max(0, (target - now.getTime()) / 86_400_000);
+}
+
+/**
  * Construye la alerta de un jugador, o `null` si no llega a ningun nivel.
  *
  * Un jugador sin `buyoutClause` publicada **no genera alerta**: sin clausula no
@@ -239,6 +262,8 @@ export function buildAlert(
       marketValue: player.marketValue,
       buyoutClause: clause,
       isShielded: player.isShielded ?? false,
+      shieldedUntil: player.shieldedUntil ?? null,
+      daysUntilUnshielded: daysUntil(player.shieldedUntil, now),
     },
     calculated: {
       gap,

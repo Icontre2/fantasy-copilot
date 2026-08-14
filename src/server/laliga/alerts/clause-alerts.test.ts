@@ -320,3 +320,41 @@ test("una cotizacion congelada no puede colar una INFORMATIVA por subida vieja",
 
   assert.equal(alert, null);
 });
+
+/*
+ * Blindaje: cuantos dias faltan para que se pueda pagar la clausula.
+ *
+ * El dato es de LALIGA y la resta es nuestra. Lo que estos tests fijan es que
+ * cuando LALIGA NO manda la fecha, la app no se la inventa.
+ */
+
+test("los dias de blindaje salen de la fecha que publica LALIGA", () => {
+  const alert = buildAlert(
+    { player: player({ isShielded: true, shieldedUntil: "2026-08-17T12:00:00.000Z" }), owner, history: [] },
+    NOW,
+  );
+  assert.equal(alert?.official.daysUntilUnshielded, 4);
+  assert.equal(alert?.official.shieldedUntil, "2026-08-17T12:00:00.000Z");
+});
+
+test("sin fecha publicada no se estima ningun plazo", () => {
+  const alert = buildAlert({ player: player({ isShielded: true }), owner, history: [] }, NOW);
+  assert.equal(alert?.official.shieldedUntil, null);
+  assert.equal(alert?.official.daysUntilUnshielded, null);
+});
+
+test("una fecha ya pasada son cero dias, no dias negativos", () => {
+  const alert = buildAlert(
+    { player: player({ isShielded: true, shieldedUntil: "2026-08-01T00:00:00.000Z" }), owner, history: [] },
+    NOW,
+  );
+  assert.equal(alert?.official.daysUntilUnshielded, 0);
+});
+
+test("una fecha ilegible se trata como ausente, no rompe la alerta", () => {
+  const alert = buildAlert(
+    { player: player({ isShielded: true, shieldedUntil: "manana por la tarde" }), owner, history: [] },
+    NOW,
+  );
+  assert.equal(alert?.official.daysUntilUnshielded, null);
+});

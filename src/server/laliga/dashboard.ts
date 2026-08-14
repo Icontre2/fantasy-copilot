@@ -60,13 +60,30 @@ export async function buildDashboard(accessToken: string, leagueId: string) {
   const myTeam = snapshot.teams.find((team) => team.teamId === league?.myTeamId);
   if (!myTeam) throw new Error('LALIGA no indicó cuál es tu equipo dentro de esta liga.');
 
-  const teamIds = [...new Set(myTeam.players.flatMap((player) => player.teamId ? [player.teamId] : []))];
+  /*
+   * De que equipo real es cada jugador de mi plantilla.
+   *
+   * La probabilidad de titularidad se busca POR EQUIPO: primero se descarga la
+   * alineacion probable de cada club y luego se cruza. Si un jugador se queda
+   * sin `teamId`, no hay equipo que mirar y pierde el porcentaje — y como el
+   * fallo es el mismo para los veinticuatro, la pantalla entera se queda sin
+   * porcentajes, que es justo lo que se estaba viendo.
+   *
+   * El catalogo publico si trae el equipo de cada jugador, asi que sirve de
+   * respaldo cuando la plantilla no lo trae. No es un dato inventado: es el
+   * mismo dato, leido de la otra fuente de LALIGA.
+   */
+  const teamIdFromCatalog = new Map(catalog.flatMap((player) => player.teamId ? [[player.id, player.teamId] as const] : []));
+  const teamIdOf = (player: { id: string; teamId?: string }) => player.teamId ?? teamIdFromCatalog.get(player.id);
+
+  const teamIds = [...new Set(myTeam.players.flatMap((player) => { const id = teamIdOf(player); return id ? [id] : []; }))];
   const probable = await mapConcurrent(teamIds, 5, async (teamId) => {
     try { return await getProbableTeam(teamId, catalog); } catch { return null; }
   });
   const probableByTeam = new Map(probable.flatMap((team) => team ? [[team.teamId, team] as const] : []));
   const players: PlayerWithProbability[] = myTeam.players.map((player) => {
-    const team = player.teamId ? probableByTeam.get(player.teamId) : undefined;
+    const teamId = teamIdOf(player);
+    const team = teamId ? probableByTeam.get(teamId) : undefined;
     const signal = team?.players.find((entry) => entry.playerId === player.id) ??
       (team ? matchExternalPlayer(team.players, player.name) : undefined);
     return { ...player, lineupProbability: signal?.probability };

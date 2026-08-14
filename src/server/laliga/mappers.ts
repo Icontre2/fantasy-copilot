@@ -20,7 +20,7 @@ import type {
   ApiTeamPlayer,
   ApiUser,
 } from './schemas';
-import { FALLBACK_TEAMS } from './teams';
+import { resolveTeamId, shortTeamName } from './player-team.ts';
 
 /**
  * Traduccion de la API de LALIGA al dominio de la app.
@@ -71,24 +71,21 @@ export function mapStandingRow(api: ApiStandingRow): StandingRow {
   };
 }
 
-/** Abreviatura del equipo real: mapa oficial y, si falta, derivada del nombre. */
-function shortTeamName(teamId: string | undefined, fullName: string | undefined): string {
-  if (teamId && FALLBACK_TEAMS[teamId]) return FALLBACK_TEAMS[teamId].shortName;
-  if (!fullName) return '—';
-  const letters = fullName.replace(/[^A-Za-zÀ-ÿ ]/g, '').trim();
-  const words = letters.split(/\s+/).filter((word) => !/^(cf|fc|rc|cd|ud|sd|ca|rcd)$/i.test(word));
-  return (words[0] ?? letters).toUpperCase().slice(0, 3);
-}
 
 export function mapPlayerMaster(pm: ApiPlayerMaster): Player | null {
   const position = toPosition(pm.positionId);
   if (!position) return null;
 
+  // Anidado o plano, lo que venga. Sin esto el jugador se quedaba sin `teamId` y
+  // con el se cae en cadena la probabilidad de titularidad, que se busca por
+  // equipo. Ver `player-team.ts`.
+  const teamId = resolveTeamId(pm.team?.id, pm.teamId);
+
   return {
     id: pm.id,
     name: pm.nickname,
-    team: shortTeamName(pm.team?.id, pm.team?.name),
-    teamId: pm.team?.id,
+    team: shortTeamName(teamId, pm.team?.name),
+    teamId,
     position,
     marketValue: pm.marketValue,
     points: pm.points,
@@ -104,7 +101,12 @@ export function mapSquadPlayer(api: ApiTeamPlayer): SquadPlayer | null {
   if (!base) return null;
   // `buyoutClause` se propaga tal cual: si la API no la trae, queda undefined y
   // aguas abajo se trata como "clausula desconocida", nunca como 0.
-  return { ...base, buyoutClause: api.buyoutClause, isShielded: api.isShielded };
+  return {
+    ...base,
+    buyoutClause: api.buyoutClause,
+    isShielded: api.isShielded,
+    shieldedUntil: api.buyoutClauseLockedEndTime,
+  };
 }
 
 const POSITION_ORDER: Record<Position, number> = { POR: 0, DEF: 1, MED: 2, DEL: 3 };

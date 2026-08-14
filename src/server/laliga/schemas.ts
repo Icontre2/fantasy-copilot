@@ -92,6 +92,13 @@ export const apiPlayerMasterSchema = z.object({
   lastSeasonPoints: numeric.nullable().optional(),
   images: z.object({ transparent: z.record(z.string(), z.string()).optional() }).partial().optional(),
   team: z.object({ id: z.string(), name: z.string(), slug: z.string().optional() }).partial().optional(),
+  /**
+   * El equipo llega de DOS formas segun el endpoint: anidado en `team` o plano
+   * en `teamId`. El catalogo publico (`/api/v5/players`) usa la plana — 792
+   * jugadores, ninguno con `team` — y aqui solo se leia la anidada, asi que el
+   * jugador se quedaba sin equipo. Se aceptan las dos y se resuelve en el mapper.
+   */
+  teamId: z.union([z.string(), z.number()]).transform(String).optional(),
 });
 
 /** Jugador dentro de la plantilla de un participante. */
@@ -103,6 +110,16 @@ export const apiTeamPlayerSchema = z.object({
    */
   buyoutClause: numeric.optional(),
   isShielded: z.boolean().optional(),
+  /**
+   * Fecha en la que se levanta el blindaje.
+   *
+   * Se lee si viene y no se rellena si no viene: hasta ahora el esquema ni
+   * siquiera la miraba, asi que aunque LALIGA la enviara, Zod la descartaba y la
+   * app no podia decir nunca cuantos dias faltan. Si de verdad no llega, la
+   * pantalla sigue diciendo "sin fecha publicada" — que es la verdad, no un
+   * hueco que haya que rellenar con una cuenta inventada.
+   */
+  buyoutClauseLockedEndTime: z.string().optional(),
   playerMaster: apiPlayerMasterSchema,
 });
 

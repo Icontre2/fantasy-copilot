@@ -59,6 +59,11 @@ export type SquadPlayer = Player & {
   /** Clausula de rescision en euros. Ausente si la API no la publica. */
   buyoutClause?: number;
   isShielded?: boolean;
+  /**
+   * Fecha ISO en la que se levanta el blindaje, tal cual la publica LALIGA.
+   * Ausente = no la publica: entonces se dice eso, no se estima.
+   */
+  shieldedUntil?: string;
 };
 
 /** Plantilla completa de un participante. */
