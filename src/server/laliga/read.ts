@@ -7,7 +7,7 @@ import type {
   StandingRow,
 } from '@/src/domain/fantasy';
 import type { ActivityEntry } from './economy/activity';
-import { privateFetch, publicFetch } from './client';
+import { privateFetch, seasonFetch } from './client';
 import { COMPETITION_ID } from './config';
 import { apiActivitySchema } from './schemas';
 import { equiposSinCaja, mezclarCajas } from './team-money.ts';
@@ -45,7 +45,12 @@ import { FALLBACK_TEAMS } from './teams';
  *   GET /api/v1/competition/{c}/leagues/{id}/teams/{teamId}
  *   GET /api/v1/competition/{c}/league/{id}/market
  *   GET /api/v1/competition/{c}/week/current
- *   GET /api/v3/player/{id}/market-value          (publico, sin token)
+ *   GET /api/v1/competition/{c}/players           (sin token)
+ *   GET /api/v1/competition/{c}/player/{id}/market-value   (sin token)
+ *
+ * Las dos ultimas viven en el host de la temporada en curso pero responden sin
+ * `Authorization`. El host `api-fantasy`, que es el que parecia "el publico",
+ * sirve todavia la temporada pasada y por eso ya no se usa para nada.
  */
 
 const CMP = `/api/v1/competition/${COMPETITION_ID}`;
@@ -113,21 +118,39 @@ export async function getCurrentWeek(accessToken: string): Promise<{ weekNumber:
 }
 
 /**
- * Historico diario de cotizacion de un jugador. Es un endpoint PUBLICO: no
- * consume la sesion del usuario y se puede pedir en lote sin gastar cuota
- * privada. Es la unica fuente de la tendencia que usan las alertas de clausula.
+ * Historico diario de cotizacion de un jugador, DE LA TEMPORADA EN CURSO.
+ *
+ * Sin sesion: no consume la cuota de nadie y se puede pedir en lote. Es la unica
+ * fuente de la tendencia que usan las alertas de clausula.
+ *
+ * ── Por que no se usa `api-fantasy/api/v3` ──────────────────────────────────
+ * Porque va una temporada por detras. Medido sobre el jugador 2443:
+ *
+ *   api-fantasy   /api/v3/player/2443/market-value
+ *                 359 puntos, del 07/07/2025 al 30/06/2026, acaba en 1,67 M€
+ *   fantasy-api   /api/v1/competition/1/player/2443/market-value
+ *                 47 puntos, del 29/06/2026 a HOY,          acaba en 17,13 M€
+ *
+ * Los 17,13 M€ son exactamente el valor que LALIGA da para ese jugador en la
+ * plantilla. Con la serie vieja, la cotizacion estaba congelada desde hacia mes
+ * y medio: las alertas se quedaban sin tendencia ni dias estimados y la ficha
+ * dibujaba una curva de la temporada anterior.
  */
 export async function getMarketValueHistory(playerId: string): Promise<MarketValuePoint[]> {
-  const history = await publicFetch(
-    `/api/v3/player/${encodeURIComponent(playerId)}/market-value`,
+  const history = await seasonFetch(
+    `${CMP}/player/${encodeURIComponent(playerId)}/market-value`,
     apiMarketValueHistorySchema,
   );
   return mapMarketValueHistory(history);
 }
 
-/** Catálogo público completo, usado para fotos y cruces con fuentes externas. */
+/**
+ * Catalogo completo de la temporada en curso, para fotos y cruces con fuentes
+ * externas. Mismo cambio de host y por el mismo motivo que el historico: el
+ * catalogo de `api-fantasy` daba el valor y los puntos del año pasado.
+ */
 export async function getPlayerCatalog(): Promise<import('@/src/domain/fantasy').Player[]> {
-  const players = await publicFetch('/api/v5/players', apiPlayersSchema);
+  const players = await seasonFetch(`${CMP}/players`, apiPlayersSchema);
   return players.flatMap((player) => {
     const position = toPosition(player.positionId);
     if (!position) return [];

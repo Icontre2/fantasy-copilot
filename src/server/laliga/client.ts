@@ -82,9 +82,25 @@ async function fetchAndParse<T>(
   throw new LaligaError('network', `Fallo al consultar ${path}.`, path);
 }
 
-/** GET al host publico (catalogo, cotizaciones). Sin credenciales. */
+/** GET al host publico (`api-fantasy`). Sin credenciales. */
 export function publicFetch<T>(path: string, schema: z.ZodType<T>): Promise<T> {
   return fetchAndParse(LALIGA_PUBLIC_BASE_URL, path, schema);
+}
+
+/**
+ * GET al host de la temporada en curso SIN credenciales.
+ *
+ * No es una contradiccion: `fantasy-api` es el host donde vive la temporada
+ * actual, pero no todo lo suyo esta protegido. El catalogo de jugadores y las
+ * cotizaciones responden 200 sin `Authorization` — comprobado — mientras que
+ * `/user/me` responde 401. Tu liga sigue necesitando el token; el precio de un
+ * jugador es publico, igual que en la web.
+ *
+ * Importa que no lo lleve: asi estas lecturas se pueden hacer sin sesion, se
+ * comparten entre usuarios y no gastan la cuota de nadie.
+ */
+export function seasonFetch<T>(path: string, schema: z.ZodType<T>): Promise<T> {
+  return fetchAndParse(LALIGA_PRIVATE_BASE_URL, path, schema);
 }
 
 /** GET al host privado con el Bearer de la sesion del usuario. */
