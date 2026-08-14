@@ -53,7 +53,10 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
         </div>
 
         <RangePicker value={range} onChange={setRange} />
-        <ValueChart points={myPoints} />
+        {/* `history` es todo lo guardado; `myPoints` solo lo que cae en el rango
+            elegido. Para explicar la espera hay que contar lo primero: si llevas
+            tres dias y miras "7D", el problema no es que falten dias. */}
+        <ValueChart points={myPoints} diasGuardados={history.length} />
 
         <div className="mt-4 grid grid-cols-2 gap-2">
           {/* Las mismas dos cifras que en cada rival, para poder compararte de un vistazo. */}
@@ -104,10 +107,16 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
                   lo es; ocho parrafos identicos solo estorban.
                 */}
                 <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
+                  {/*
+                    Un guion solo se lee como "la app esta rota". Lleva al lado,
+                    en pequeño, de quien es la culpa: LALIGA no publica la caja
+                    ajena. Asi el hueco se entiende sin bajar a la nota del pie.
+                  */}
                   <SmallMetric
                     label="Caja"
                     value={competitor.teamMoney !== undefined ? millions(competitor.teamMoney) : UNKNOWN}
                     lime={competitor.teamMoney !== undefined}
+                    nota={competitor.teamMoney === undefined ? "no la publica LALIGA" : undefined}
                   />
                   <SmallMetric label="Valor equipo" value={millions(competitor.teamValue)} />
                 </div>
@@ -207,8 +216,28 @@ function RangePicker({ value, onChange }: { value: Range; onChange: (value: Rang
   return <div className="mt-5 grid grid-cols-4 gap-1 rounded-2xl bg-white/[.06] p-1" aria-label="Periodo del histórico">{RANGE_OPTIONS.map((option) => <button key={String(option.value)} type="button" onClick={() => onChange(option.value)} className={`min-h-11 rounded-xl text-xs font-bold transition ${value === option.value ? "bg-[#7c3aed] text-white" : "text-white/55"}`} aria-pressed={value === option.value}>{option.label}</button>)}</div>;
 }
 
-function ValueChart({ points }: { points: { date: string; value: number }[] }) {
-  if (points.length < 2) return <div className="mt-3 grid h-28 place-items-center rounded-2xl border border-dashed border-white/15 bg-white/5 px-6 text-center text-xs leading-5 text-white/45">Necesitamos dos días reales para dibujar la evolución.</div>;
+function ValueChart({ points, diasGuardados }: { points: { date: string; value: number }[]; diasGuardados: number }) {
+  /*
+   * Por que este hueco existe y no se rellena solo.
+   *
+   * LALIGA no publica el historico del valor de una PLANTILLA: solo el valor de
+   * hoy. Asi que la serie se construye guardando una foto por dia en este
+   * dispositivo, desde la primera vez que abres la app. No hay forma de
+   * reconstruir hacia atras sin inventarla, y por eso no se inventa.
+   *
+   * Lo que si se puede hacer es dejar de repetir el mismo mensaje vago: se dice
+   * cuantos dias llevan guardados y cuando aparece la linea.
+   */
+  if (points.length < 2) {
+    return <div className="mt-3 grid h-28 place-items-center rounded-2xl border border-dashed border-white/15 bg-white/5 px-6 text-center text-xs leading-5 text-white/45">
+      <span>
+        {diasGuardados <= 1
+          ? "Hoy es el primer día guardado. Mañana, al abrir la app, aparece la primera línea."
+          : `Llevas ${diasGuardados} días guardados, pero ninguno cae en este periodo. Prueba «Todo».`}
+        <span className="mt-1 block text-white/30">LALIGA no publica el histórico del valor de una plantilla: se va guardando aquí, día a día.</span>
+      </span>
+    </div>;
+  }
   const coords = chartCoordinates(points, 92, 72);
   const sube = (points.at(-1)?.value ?? 0) >= (points[0]?.value ?? 0);
   const color = sube ? "#34d399" : "#fb7185";
@@ -236,8 +265,8 @@ function chartCoordinates(points: { value: number }[], bottom: number, height: n
 function Metric({ icon, label, value, accent = false }: { icon: React.ReactNode; label: string; value: string; accent?: boolean }) {
   return <div className={`rounded-2xl p-3 ${accent ? "bg-[#7c3aed]/25 ring-1 ring-[#7c3aed]/45" : "glass-soft"}`}><div className="flex items-center gap-2 text-xs text-white/60">{icon}{label}</div><p className={`mt-1 text-lg font-bold tracking-tight ${accent ? "text-[#c4b5fd]" : "text-white"}`}>{value}</p></div>;
 }
-function SmallMetric({ label, value, lime = false }: { label: string; value: string; lime?: boolean }) {
-  return <div className={`rounded-2xl px-3 py-2 ${lime ? "bg-emerald-500/12 ring-1 ring-emerald-500/25" : "glass-soft"}`}><p className="text-neutral-500">{label}</p><p className={`mt-0.5 font-bold ${lime ? "text-emerald-400" : "text-white"}`}>{value}</p></div>;
+function SmallMetric({ label, value, lime = false, nota }: { label: string; value: string; lime?: boolean; nota?: string }) {
+  return <div className={`rounded-2xl px-3 py-2 ${lime ? "bg-emerald-500/12 ring-1 ring-emerald-500/25" : "glass-soft"}`}><p className="text-neutral-500">{label}</p><p className={`mt-0.5 font-bold ${lime ? "text-emerald-400" : "text-white"}`}>{value}</p>{nota && <p className="mt-0.5 text-[9px] leading-3 text-neutral-600">{nota}</p>}</div>;
 }
 function Avatar({ name, image }: { name: string; image?: string }) {
   if (image) return <Image src={image} alt="" width={40} height={40} unoptimized className="h-10 w-10 rounded-full bg-neutral-100 object-cover" />;

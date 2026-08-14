@@ -72,6 +72,16 @@ export async function buildDashboard(accessToken: string, leagueId: string) {
    * El catalogo publico si trae el equipo de cada jugador, asi que sirve de
    * respaldo cuando la plantilla no lo trae. No es un dato inventado: es el
    * mismo dato, leido de la otra fuente de LALIGA.
+   *
+   * OJO, y es importante: ese catalogo publico va con RETRASO DE UNA TEMPORADA
+   * (comprobado — la cotizacion que sirve termina el 30/06/2026), asi que su
+   * equipo puede ser el del año pasado. Se usa igualmente porque el peor caso es
+   * inofensivo: si el jugador cambio de club, no aparecera en la alineacion
+   * probable de su club antiguo y simplemente se quedara sin porcentaje, que es
+   * justo lo que pasa ahora. Nunca puede producir un porcentaje equivocado.
+   *
+   * Lo que NO se hace con este catalogo es rellenar el nombre del equipo que se
+   * PINTA en la ficha: ahi un dato viejo si seria una mentira visible.
    */
   const teamIdFromCatalog = new Map(catalog.flatMap((player) => player.teamId ? [[player.id, player.teamId] as const] : []));
   const teamIdOf = (player: { id: string; teamId?: string }) => player.teamId ?? teamIdFromCatalog.get(player.id);
