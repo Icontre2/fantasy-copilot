@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { millions, shortDate, signedMillions, UNKNOWN } from "./format";
 import type { EconomyResponse, ManagerEconomy } from "./types";
-import { DataNotes, Empty, TableWrap, Td, Th } from "./ui";
+import { DataNotes, Empty } from "./ui";
 
 /**
  * Economía: de dónde sale el dinero de cada manager.
@@ -36,45 +36,56 @@ export function EconomyView({ data }: { data: EconomyResponse }) {
             : "LALIGA no ha devuelto operaciones de esta liga."}
         </p>
 
-        <TableWrap>
-          <table className="w-full min-w-[640px] border-collapse text-white">
-            <thead>
-              <tr>
-                <Th>Manager</Th>
-                <Th align="right">Flujo conocido</Th>
-                <Th align="right">Compras</Th>
-                <Th align="right">Ventas</Th>
-                <Th align="right">Puntos</Th>
-                <Th align="right">Diferencia</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.economies.map((economy) => (
-                <tr
-                  key={economy.managerId}
-                  className="cursor-pointer hover:bg-white/5"
-                  onClick={() => setAbierto(abierto === economy.managerId ? null : economy.managerId)}
+        {/*
+          Tarjetas, no tabla.
+
+          Eran seis columnas en 390 px: cabian tres y el resto quedaba detras de
+          un scroll horizontal que en un movil no se ve. La misma informacion en
+          tarjeta se lee entera de un vistazo, que es lo que pide
+          docs/DIRECCION_VISUAL.md.
+        */}
+        <ul className="mt-4 space-y-2">
+          {data.economies.map((economy) => {
+            const abiertoAqui = abierto === economy.managerId;
+            return (
+              <li key={economy.managerId}>
+                <button
+                  type="button"
+                  onClick={() => setAbierto(abiertoAqui ? null : economy.managerId)}
+                  aria-expanded={abiertoAqui}
+                  className={`w-full rounded-2xl border p-3 text-left transition ${
+                    abiertoAqui ? "border-[#7c3aed]/50 bg-[#7c3aed]/10" : "border-white/10 bg-white/[.03]"
+                  }`}
                 >
-                  <Td className="font-medium">
-                    {economy.managerName}
-                    {economy.cajaOficial === null && (
-                      <span className="ml-1 text-[10px] font-normal text-neutral-500">calculada</span>
-                    )}
-                  </Td>
-                  <Td align="right" className="font-semibold">
-                    {signedMillions(economy.flujoConocido)}
-                  </Td>
-                  <Td align="right" className="text-rose-400">−{millions(economy.compras)}</Td>
-                  <Td align="right" className="text-emerald-400">+{millions(economy.ventas)}</Td>
-                  <Td align="right">{millions(economy.bonusPuntos)}</Td>
-                  <Td align="right" className={economy.diferencia === null ? "text-neutral-600" : "text-neutral-300"}>
-                    {economy.diferencia === null ? UNKNOWN : signedMillions(economy.diferencia)}
-                  </Td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </TableWrap>
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="min-w-0 truncate font-bold text-white">
+                      {economy.managerName}
+                      {economy.cajaOficial === null && (
+                        <span className="ml-1 text-[10px] font-normal text-neutral-500">calculada</span>
+                      )}
+                    </span>
+                    <span
+                      className={`shrink-0 tabular-nums font-bold ${
+                        economy.flujoConocido >= 0 ? "text-emerald-400" : "text-rose-400"
+                      }`}
+                    >
+                      {signedMillions(economy.flujoConocido)}
+                    </span>
+                  </div>
+                  <div className="mt-2 grid grid-cols-4 gap-2 text-[11px]">
+                    <Dato label="Compras" value={millions(economy.compras)} tone="rose" />
+                    <Dato label="Ventas" value={millions(economy.ventas)} tone="emerald" />
+                    <Dato label="Puntos" value={millions(economy.bonusPuntos)} />
+                    <Dato
+                      label="Dif."
+                      value={economy.diferencia === null ? UNKNOWN : signedMillions(economy.diferencia)}
+                    />
+                  </div>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
 
         <p className="mt-3 text-xs text-white/45">
           Toca un manager para ver su libro. El flujo puede ser negativo. No incluye el valor de plantilla ni se presenta como caja disponible.
@@ -166,6 +177,16 @@ function LibroCard({ economy, saldoInicial }: { economy: ManagerEconomy; saldoIn
         </ul>
       )}
     </section>
+  );
+}
+
+function Dato({ label, value, tone }: { label: string; value: string; tone?: "rose" | "emerald" }) {
+  const color = tone === "rose" ? "text-rose-400" : tone === "emerald" ? "text-emerald-400" : "text-neutral-300";
+  return (
+    <span className="min-w-0">
+      <span className="block truncate text-[10px] text-neutral-500">{label}</span>
+      <span className={`block truncate tabular-nums font-semibold ${color}`}>{value}</span>
+    </span>
   );
 }
 
