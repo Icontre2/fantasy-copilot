@@ -48,12 +48,36 @@
   body {
     margin: 0;
     min-height: 100vh;
-    background:
-      radial-gradient(circle at 90% -10%, rgba(124, 58, 237, 0.2), transparent 28rem),
-      linear-gradient(180deg, #08070a 0%, var(--paper) 60%, #020203 100%);
+    background: linear-gradient(180deg, #08070a 0%, var(--paper) 60%, #020203 100%);
     color: var(--ink);
     font-family: var(--font-geist-sans), Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
+  }
+
+  /*
+   * La luz que hay DETRAS del cristal.
+   *
+   * Sin esto el efecto no existe: difuminar negro sobre negro no da cristal, da
+   * negro. Estas manchas de color son lo que las tarjetas refractan al pasar por
+   * encima, y van `fixed` a proposito — al no moverse con el scroll, el
+   * contenido se desliza sobre ellas y el cristal cambia de tono segun donde
+   * este. Es lo que hace que parezca material y no una textura pegada.
+   *
+   * Opacidades bajas y medidas: el texto blanco tiene que seguir teniendo
+   * contraste de sobra encima de cualquiera de ellas.
+   */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(34rem 34rem at 6% -10%, rgba(124, 58, 237, 0.42), transparent 70%),
+      radial-gradient(30rem 30rem at 100% 6%, rgba(59, 110, 255, 0.24), transparent 70%),
+      radial-gradient(30rem 30rem at 96% 58%, rgba(168, 85, 247, 0.2), transparent 70%),
+      radial-gradient(32rem 32rem at 4% 62%, rgba(76, 121, 255, 0.16), transparent 70%),
+      radial-gradient(28rem 28rem at 60% 104%, rgba(139, 92, 246, 0.22), transparent 70%);
   }
 
   button,
@@ -90,6 +114,128 @@
   select:focus-visible {
     outline: 3px solid rgba(115, 87, 255, 0.24);
     outline-offset: 2px;
+  }
+}
+
+/*
+ * ── Cristal liquido ──────────────────────────────────────────────────────────
+ *
+ * Van en `@layer components` A PROPOSITO, por lo mismo que los resets estan en
+ * `base`: en Tailwind v4 las utilidades viven en su propia capa y ganan a las
+ * capas anteriores. Asi `bg-*` o `border-*` puede seguir sobrescribiendo el
+ * cristal cuando una pieza concreta lo necesite, en vez de pelearse con el.
+ *
+ * Cada superficie son tres cosas superpuestas:
+ *   1. el `backdrop-filter`, que difumina y satura lo que hay detras;
+ *   2. un degradado de blanco muy tenue, que es el grosor del vidrio;
+ *   3. un `inset` claro arriba, que es el brillo del canto — el detalle que
+ *      hace que se lea como un borde biselado y no como un rectangulo gris.
+ *
+ * El texto NO se apoya en el cristal para tener contraste: los colores de letra
+ * no cambian. Si el navegador no soporta `backdrop-filter`, o el usuario pide
+ * menos transparencia, cae a superficie opaca y todo sigue legible.
+ */
+@layer components {
+  .glass {
+    position: relative;
+    background:
+      linear-gradient(157deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.035) 46%, rgba(255, 255, 255, 0.06) 100%);
+    backdrop-filter: blur(20px) saturate(175%);
+    -webkit-backdrop-filter: blur(20px) saturate(175%);
+    border: 1px solid rgba(255, 255, 255, 0.11);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.2),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.04),
+      var(--shadow-sm);
+  }
+
+  /* Cabeceras de pantalla: mas grueso y con la tinta morada de la marca. */
+  .glass-strong {
+    position: relative;
+    background:
+      linear-gradient(157deg, rgba(255, 255, 255, 0.13) 0%, rgba(124, 58, 237, 0.16) 48%, rgba(255, 255, 255, 0.05) 100%),
+      rgba(13, 11, 18, 0.55);
+    backdrop-filter: blur(30px) saturate(190%);
+    -webkit-backdrop-filter: blur(30px) saturate(190%);
+    border: 1px solid rgba(167, 139, 250, 0.26);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.26),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.05),
+      var(--shadow-lg);
+  }
+
+  /*
+   * Panel que se abre ENCIMA de otra pantalla (la ficha de jugador).
+   *
+   * Aqui el cristal se cierra a proposito. Con la misma transparencia que una
+   * tarjeta, la lista de detras se colaba entre las lineas de la ficha: el
+   * nombre del jugador se cruzaba con los filtros del mercado y no se leia ni
+   * una cosa ni la otra. Sigue habiendo vidrio — se intuye el fondo y el canto
+   * brilla igual — pero con cuerpo suficiente para que lo de delante mande.
+   */
+  .glass-sheet {
+    position: relative;
+    background:
+      linear-gradient(157deg, rgba(255, 255, 255, 0.1) 0%, rgba(124, 58, 237, 0.1) 50%, rgba(255, 255, 255, 0.04) 100%),
+      rgba(11, 10, 14, 0.94);
+    backdrop-filter: blur(40px) saturate(180%);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
+    border: 1px solid rgba(167, 139, 250, 0.22);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.24),
+      var(--shadow-lg);
+  }
+
+  /*
+   * Piezas pequeñas DENTRO de una superficie de cristal: sin `backdrop-filter`.
+   *
+   * Un cristal dentro de otro cristal ya no tiene la pagina detras — solo tiene
+   * a su padre, asi que no refracta nada nuevo y cuesta otra capa de composicion
+   * en cada scroll. En un movil eso se nota. Aqui basta el blanco translucido y
+   * el brillo del canto.
+   */
+  .glass-soft {
+    background: linear-gradient(157deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.035));
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  }
+
+  /*
+   * La barra inferior flota sobre el contenido: es la que mas cristal pide y la
+   * unica que puede tener CUALQUIER cosa detras — una alerta roja, un boton
+   * morado, una foto. Por eso lleva una base oscura bajo el vidrio: sin ella,
+   * cuando pasa por encima de algo claro, sus cinco etiquetas se pierden. El
+   * cristal es un acabado, no una excusa para que algo deje de leerse.
+   */
+  .glass-nav {
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.05)),
+      rgba(9, 9, 12, 0.62);
+    backdrop-filter: blur(34px) saturate(200%);
+    -webkit-backdrop-filter: blur(34px) saturate(200%);
+    border: 1px solid rgba(255, 255, 255, 0.13);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.24),
+      0 18px 60px rgba(0, 0, 0, 0.66);
+  }
+
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .glass,
+    .glass-strong,
+    .glass-nav {
+      background: var(--surface);
+    }
+  }
+
+  /* Quien pide menos transparencia recibe superficie solida, no cristal. */
+  @media (prefers-reduced-transparency: reduce) {
+    .glass,
+    .glass-strong,
+    .glass-nav {
+      background: var(--surface);
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
   }
 }
 

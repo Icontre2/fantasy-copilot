@@ -26,7 +26,7 @@ export function LineupsView({ data }: { data: LineupsResponse }) {
   const team = data.teams.find((item) => item.teamId === teamId) ?? data.teams[0];
   const players = useMemo(() => team?.players.filter((player) => player.name.toLowerCase().includes(query.toLowerCase())) ?? [], [team, query]);
   return <div className="space-y-4">
-    <section className="overflow-hidden rounded-[28px] border border-[#7c3aed]/30 bg-[linear-gradient(145deg,#17121f,#251440)] p-5 text-white shadow-[0_22px_65px_rgba(0,0,0,.45)]">
+    <section className="glass-strong overflow-hidden rounded-[28px] p-5 text-white">
       <p className="text-xs font-semibold uppercase tracking-[.14em] text-[#a78bfa]">Jornada próxima</p>
       <h2 className="mt-1 text-2xl font-bold tracking-tight">Probabilidad de titularidad</h2>
       <p className="mt-2 text-sm leading-5 text-white/55">Todos los candidatos publicados por FútbolFantasy, no solo once nombres.</p>
@@ -35,7 +35,7 @@ export function LineupsView({ data }: { data: LineupsResponse }) {
       </div>
     </section>
 
-    {team && <section className="rounded-[26px] border border-white/8 bg-[#121214] p-4 shadow-[0_10px_35px_rgba(0,0,0,.3)]">
+    {team && <section className="rounded-[26px] glass p-4">
       <div className="flex items-center gap-3">{team.badge ? <Image src={team.badge} alt="" width={48} height={48} unoptimized className="h-12 w-12 shrink-0 object-contain"/> : null}<div className="min-w-0 flex-1"><h3 className="truncate text-xl font-bold text-white">{team.name}</h3><p className="text-xs text-neutral-500">{team.players.length} candidatos publicados</p></div></div>
       <label className="mt-4 flex min-h-12 items-center gap-2 rounded-2xl border border-white/10 bg-white/[.04] px-3"><Search size={17} className="text-neutral-500"/><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar jugador" className="w-full bg-transparent text-sm text-white outline-none placeholder:text-neutral-600"/></label>
       <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -43,7 +43,7 @@ export function LineupsView({ data }: { data: LineupsResponse }) {
       </div>
     </section>}
 
-    <a href={data.source} target="_blank" rel="noreferrer" className="flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-[#121214] p-3 text-xs font-semibold text-neutral-400">Fuente: FútbolFantasy <ExternalLink size={14}/></a>
+    <a href={data.source} target="_blank" rel="noreferrer" className="flex min-h-12 items-center justify-center gap-2 rounded-2xl glass p-3 text-xs font-semibold text-neutral-400">Fuente: FútbolFantasy <ExternalLink size={14}/></a>
     {data.failedTeams > 0 && <p className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 text-center text-xs text-amber-300">{data.failedTeams} equipos no pudieron actualizarse ahora mismo.</p>}
     {selected ? <PlayerDetails player={selected} onClose={() => setSelected(null)} /> : null}
   </div>;

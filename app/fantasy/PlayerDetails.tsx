@@ -12,14 +12,21 @@ export function PlayerDetails({ player, onClose }: { player: Player; onClose: ()
   const [days, setDays] = useState<7 | 30 | 90 | "MAX">(30);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
-    get<{ history: MarketValuePoint[] }>(`/api/fantasy/players/${encodeURIComponent(player.id)}/history`)
-      .then((data) => setHistory(data.history))
+    // Se comprueba que venga una lista antes de guardarla: una respuesta sin
+    // `history` (endpoint caido, cuerpo raro) tumbaba la ficha entera con un
+    // "Cannot read properties of undefined". Un histórico que falta es un hueco,
+    // no una pantalla rota.
+    get<{ history?: MarketValuePoint[] }>(`/api/fantasy/players/${encodeURIComponent(player.id)}/history`)
+      .then((data) => {
+        if (Array.isArray(data.history)) setHistory(data.history);
+        else setError("LALIGA no ha devuelto el histórico de este jugador.");
+      })
       .catch((caught: unknown) => setError(caught instanceof Error ? caught.message : "No se pudo cargar el histórico."));
   }, [player.id]);
   const visible = useMemo(() => days === "MAX" ? history : history.slice(-days), [days, history]);
   return (
-    <div className="fixed inset-0 z-50 grid place-items-end bg-black/40 p-0 sm:place-items-center sm:p-4" role="dialog" aria-modal="true" aria-label={`Ficha de ${player.name}`} onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
-      <section className="max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-t-[30px] border border-white/10 bg-[#121214] p-5 text-white shadow-2xl sm:rounded-[30px]">
+    <div className="fixed inset-0 z-50 grid place-items-end bg-black/55 p-0 sm:place-items-center sm:p-4" role="dialog" aria-modal="true" aria-label={`Ficha de ${player.name}`} onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+      <section className="max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-t-[30px] glass-sheet p-5 text-white sm:rounded-[30px]">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3"><PlayerImage player={player} size={72} /><div><p className="text-[10px] font-semibold uppercase tracking-[.14em] text-neutral-500">Ficha de jugador</p><h2 className="text-xl font-bold text-white">{player.name}</h2><p className="text-sm text-neutral-500">{player.position} · {player.team}</p></div></div>
           <button type="button" onClick={onClose} className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/8 text-white" aria-label="Cerrar"><X size={18}/></button>
@@ -34,7 +41,7 @@ export function PlayerDetails({ player, onClose }: { player: Player; onClose: ()
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) { return <div className="rounded-2xl bg-white/[.04] p-3"><dt className="text-xs text-neutral-500">{label}</dt><dd className="mt-1 font-semibold tabular-nums text-white">{value}</dd></div>; }
+function Stat({ label, value }: { label: string; value: string }) { return <div className="glass-soft rounded-2xl p-3"><dt className="text-xs text-neutral-500">{label}</dt><dd className="mt-1 font-semibold tabular-nums text-white">{value}</dd></div>; }
 
 function HistoryChart({ points }: { points: MarketValuePoint[] }) {
   const values = points.map((point) => point.marketValue); const min = Math.min(...values); const max = Math.max(...values); const span = Math.max(1, max - min);

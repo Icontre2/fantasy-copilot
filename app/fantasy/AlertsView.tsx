@@ -50,16 +50,16 @@ export function AlertsView({ data, onChanged }: { data: AlertsResponse; onChange
   }
 
   return <div className="space-y-4">
-    <section className="overflow-hidden rounded-[28px] border border-[#7c3aed]/30 bg-[linear-gradient(145deg,#17121f,#251440)] p-5 text-white shadow-[0_22px_65px_rgba(0,0,0,.45)]">
+    <section className="glass-strong overflow-hidden rounded-[28px] p-5 text-white">
       <div className="flex items-start justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-[.14em] text-[#a78bfa]">Vigila las cláusulas</p><h2 className="mt-1 text-2xl font-bold tracking-tight">Alertas</h2><p className="mt-2 text-sm leading-5 text-white/55">Datos oficiales, tendencia real y acción directa.</p></div><span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[#7c3aed] text-white"><TriangleAlert size={22}/></span></div>
       <div className="mt-4 grid grid-cols-2 gap-2"><Summary label="Alertas activas" value={String(data.alerts.length)}/><Summary label="Con cláusula" value={String(data.playersWithClause)}/></div>
     </section>
-    <label className="flex min-h-12 items-center gap-2 rounded-2xl border border-white/10 bg-[#121214] px-4 text-neutral-500"><Search size={18}/><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar jugador, equipo o manager…" className="w-full bg-transparent text-sm text-white outline-none placeholder:text-neutral-600"/></label>
+    <label className="flex min-h-12 items-center gap-2 rounded-2xl glass px-4 text-neutral-500"><Search size={18}/><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar jugador, equipo o manager…" className="w-full bg-transparent text-sm text-white outline-none placeholder:text-neutral-600"/></label>
     {/* En rejilla y no en scroll lateral: asi no queda ningun filtro cortado por el borde. */}
-    <div className="flex flex-wrap gap-2" aria-label="Filtrar alertas">{FILTERS.map((option) => <button key={option.id} type="button" onClick={() => setFilter(option.id)} aria-pressed={filter === option.id} className={`min-h-11 grow rounded-2xl px-3 text-sm font-bold ${filter === option.id ? "bg-[#7c3aed] text-white" : "border border-white/10 bg-[#121214] text-neutral-500"}`}>{option.label}</button>)}</div>
-    {message && <p className="rounded-2xl border border-white/10 bg-[#121214] p-4 text-sm text-neutral-200" role="status">{message}</p>}
+    <div className="flex flex-wrap gap-2" aria-label="Filtrar alertas">{FILTERS.map((option) => <button key={option.id} type="button" onClick={() => setFilter(option.id)} aria-pressed={filter === option.id} className={`min-h-11 grow rounded-2xl px-3 text-sm font-bold ${filter === option.id ? "bg-[#7c3aed] text-white" : "glass text-neutral-500"}`}>{option.label}</button>)}</div>
+    {message && <p className="rounded-2xl glass p-4 text-sm text-neutral-200" role="status">{message}</p>}
     {visible.length === 0 ? <Empty>Ningún jugador cumple este criterio ahora mismo.</Empty> : <div className="space-y-3">{visible.map((alert) => <AlertCard key={`${alert.owner.teamId}-${alert.player.id}`} alert={alert} mine={alert.owner.managerId === data.myManagerId} cash={data.myTeamMoney} busy={busy === alert.player.id} onSelect={setSelected} onBuyout={buyout}/>)}</div>}
-    <p className="rounded-2xl border border-white/8 bg-[#121214] px-4 py-3 text-xs leading-5 text-neutral-500">{data.playersWithoutClause} sin cláusula publicada · {data.skippedForBudget} fuera del límite de consultas{data.historyFailures > 0 ? ` · ${data.historyFailures} sin histórico` : ""}</p>
+    <p className="rounded-2xl glass px-4 py-3 text-xs leading-5 text-neutral-500">{data.playersWithoutClause} sin cláusula publicada · {data.skippedForBudget} fuera del límite de consultas{data.historyFailures > 0 ? ` · ${data.historyFailures} sin histórico` : ""}</p>
     <DataNotes notes={data.dataNotes}/>{selected ? <PlayerDetails player={selected} onClose={() => setSelected(null)}/> : null}
   </div>;
 }
@@ -67,7 +67,7 @@ export function AlertsView({ data, onChanged }: { data: AlertsResponse; onChange
 function AlertCard({ alert, mine, cash, busy, onSelect, onBuyout }: { alert: ClauseAlert; mine: boolean; cash: number | null; busy: boolean; onSelect: (player: Player) => void; onBuyout: (alert: ClauseAlert) => void }) {
   const cannotAfford = cash !== null && cash < alert.official.buyoutClause;
   const disabled = mine || alert.official.isShielded || cannotAfford || busy;
-  return <article className="rounded-[26px] border border-white/8 bg-[#121214] p-4 shadow-[0_10px_35px_rgba(0,0,0,.3)]">
+  return <article className="rounded-[26px] glass p-4">
     <button type="button" onClick={() => onSelect(alert.player)} className="flex w-full items-center gap-3 text-left"><PlayerImage player={alert.player} size={52}/><div className="min-w-0 flex-1"><p className="truncate font-bold text-white">{alert.player.name}</p><p className="truncate text-xs text-neutral-500">{alert.player.position} · {alert.player.team} · {alert.owner.managerName}</p></div><span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold ${LEVEL_STYLE[alert.level]}`}>{alert.level === "INFORMATIVA" ? "INFO" : alert.level}</span></button>
     <div className="mt-4 grid grid-cols-2 gap-2"><Metric label="Valor" value={millions(alert.official.marketValue)}/><Metric label="Cláusula" value={millions(alert.official.buyoutClause)} accent/></div>
     <div className="mt-2 grid grid-cols-3 gap-2"><CompactMetric icon={<ArrowUpRight size={13}/>} label="Subida/día" value={signedMillions(alert.calculated.dailyTrend)}/><CompactMetric label="Cubierta" value={percent(alert.calculated.valueToClauseRatio)}/><CompactMetric icon={<Clock3 size={13}/>} label="Estimación" value={alert.calculated.estimatedDays !== null ? days(alert.calculated.estimatedDays) : UNKNOWN}/></div>
@@ -98,6 +98,6 @@ function motivoSinTendencia(alert: ClauseAlert): string | null {
   return "Sin estimación: el valor no está subiendo, así que no hay ritmo del que deducir días.";
 }
 
-function Summary({ label, value }: { label: string; value: string }) { return <div className="rounded-2xl bg-white/8 p-3"><p className="text-[10px] text-white/45">{label}</p><p className="mt-1 text-xl font-bold text-[#a78bfa]">{value}</p></div>; }
-function Metric({ label, value, accent = false }: { label: string; value: string; accent?: boolean }) { return <div className={`rounded-2xl p-3 ${accent ? "bg-[#7c3aed]/15 ring-1 ring-[#7c3aed]/30" : "bg-white/[.04]"}`}><p className="text-[10px] text-neutral-500">{label}</p><p className="mt-1 font-bold text-white">{value}</p></div>; }
-function CompactMetric({ icon, label, value }: { icon?: React.ReactNode; label: string; value: string }) { return <div className="min-w-0 rounded-2xl bg-white/[.04] px-2 py-2 text-center"><p className="flex items-center justify-center gap-1 truncate text-[9px] text-neutral-500">{icon}{label}</p><p className="mt-1 truncate text-[11px] font-bold text-neutral-200">{value}</p></div>; }
+function Summary({ label, value }: { label: string; value: string }) { return <div className="glass-soft rounded-2xl p-3"><p className="text-[10px] text-white/45">{label}</p><p className="mt-1 text-xl font-bold text-[#a78bfa]">{value}</p></div>; }
+function Metric({ label, value, accent = false }: { label: string; value: string; accent?: boolean }) { return <div className={`rounded-2xl p-3 ${accent ? "bg-[#7c3aed]/20 ring-1 ring-[#7c3aed]/40" : "glass-soft"}`}><p className="text-[10px] text-neutral-500">{label}</p><p className="mt-1 font-bold text-white">{value}</p></div>; }
+function CompactMetric({ icon, label, value }: { icon?: React.ReactNode; label: string; value: string }) { return <div className="glass-soft min-w-0 rounded-2xl px-2 py-2 text-center"><p className="flex items-center justify-center gap-1 truncate text-[9px] text-neutral-500">{icon}{label}</p><p className="mt-1 truncate text-[11px] font-bold text-neutral-200">{value}</p></div>; }

@@ -7,7 +7,7 @@ import type { ReactNode } from "react";
 export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
     <section
-      className={`rounded-[26px] border border-white/8 bg-[#121214] p-4 text-white shadow-[0_10px_35px_rgba(0,0,0,.3)] ${className}`}
+      className={`rounded-[26px] glass p-4 text-white ${className}`}
     >
       {children}
     </section>
@@ -42,7 +42,7 @@ export function DataNotes({ notes }: { notes: string[] }) {
 }
 
 export function Empty({ children }: { children: ReactNode }) {
-  return <p className="rounded-2xl border border-white/8 bg-[#121214] p-6 text-center text-sm text-neutral-400">{children}</p>;
+  return <p className="rounded-2xl glass p-6 text-center text-sm text-neutral-400">{children}</p>;
 }
 
 export function ErrorBox({ message }: { message: string }) {

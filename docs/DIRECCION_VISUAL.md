@@ -135,3 +135,33 @@ Lo que la revisión encontró y se ha corregido:
 
 Lo que **no** se ha tocado: ninguna cifra, ningún cálculo y ninguna ruta de
 servidor. Esta pasada es solo de presentación.
+
+## Cristal líquido
+
+El acabado de las superficies es vidrio: `backdrop-filter` sobre un campo de luz
+de colores fijo detrás del contenido, más un brillo de canto (`inset`) que da el
+bisel. Vive en `app/globals.css`, en `@layer components`, con cuatro clases.
+
+| Clase | Dónde | Por qué así |
+| --- | --- | --- |
+| `.glass` | Tarjetas normales | Vidrio estándar, difumina 20 px |
+| `.glass-strong` | Cabeceras de pantalla | Más grueso y con tinta morada |
+| `.glass-sheet` | Ficha de jugador | Casi opaco: se abre encima de una lista |
+| `.glass-soft` | Chips dentro de una tarjeta | Sin `backdrop-filter` a propósito |
+| `.glass-nav` | Barra inferior | El más difuminado, con base oscura |
+
+Tres decisiones que no son estéticas y conviene no deshacer:
+
+1. **El fondo con manchas de color (`body::before`) no es decoración: es el
+   requisito.** Difuminar negro sobre negro da negro. Va `fixed`, así el
+   contenido se desliza por encima y el cristal cambia de tono según dónde esté.
+2. **La barra inferior y la ficha llevan una base oscura bajo el vidrio.** Son
+   las dos superficies que pueden tener cualquier cosa detrás. Sin esa base, la
+   ficha se cruzaba con los filtros del mercado y no se leía ninguna de las dos.
+3. **`.glass-soft` no difumina.** Un cristal dentro de otro cristal ya no tiene
+   la página detrás: no refracta nada nuevo y cuesta otra capa de composición en
+   cada scroll.
+
+Si el navegador no soporta `backdrop-filter`, o el sistema pide
+`prefers-reduced-transparency`, todas caen a superficie opaca. Los colores de
+texto no dependen del cristal en ningún caso.

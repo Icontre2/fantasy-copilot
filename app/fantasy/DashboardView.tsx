@@ -36,7 +36,7 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
 
   return (
     <div className="space-y-5">
-      <section className="overflow-hidden rounded-[30px] border border-[#7c3aed]/30 bg-[linear-gradient(145deg,#17121f,#251440)] p-5 text-white shadow-[0_22px_65px_rgba(0,0,0,.45)]">
+      <section className="glass-strong overflow-hidden rounded-[30px] p-5 text-white">
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[.16em] text-[#a78bfa]">Valor de tu plantilla</p>
@@ -82,7 +82,7 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
               return value === undefined ? [] : [{ date: point.date, value }];
             });
             return (
-              <article key={competitor.teamId} className="overflow-hidden rounded-[26px] border border-white/8 bg-[#121214] p-4 shadow-[0_10px_35px_rgba(0,0,0,.3)]">
+              <article key={competitor.teamId} className="overflow-hidden rounded-[26px] glass p-4">
                 <div className="flex items-center gap-3">
                   <Avatar name={competitor.manager.name} image={competitor.manager.avatar} />
                   <div className="min-w-0 flex-1">
@@ -234,10 +234,10 @@ function chartCoordinates(points: { value: number }[], bottom: number, height: n
 }
 
 function Metric({ icon, label, value, accent = false }: { icon: React.ReactNode; label: string; value: string; accent?: boolean }) {
-  return <div className={`rounded-2xl p-3 ${accent ? "bg-[#7c3aed]/20 ring-1 ring-[#7c3aed]/40" : "bg-white/[.06]"}`}><div className="flex items-center gap-2 text-xs text-white/60">{icon}{label}</div><p className={`mt-1 text-lg font-bold tracking-tight ${accent ? "text-[#c4b5fd]" : "text-white"}`}>{value}</p></div>;
+  return <div className={`rounded-2xl p-3 ${accent ? "bg-[#7c3aed]/25 ring-1 ring-[#7c3aed]/45" : "glass-soft"}`}><div className="flex items-center gap-2 text-xs text-white/60">{icon}{label}</div><p className={`mt-1 text-lg font-bold tracking-tight ${accent ? "text-[#c4b5fd]" : "text-white"}`}>{value}</p></div>;
 }
 function SmallMetric({ label, value, lime = false }: { label: string; value: string; lime?: boolean }) {
-  return <div className={`rounded-2xl px-3 py-2 ${lime ? "bg-emerald-500/10" : "bg-white/[.04]"}`}><p className="text-neutral-500">{label}</p><p className={`mt-0.5 font-bold ${lime ? "text-emerald-400" : "text-white"}`}>{value}</p></div>;
+  return <div className={`rounded-2xl px-3 py-2 ${lime ? "bg-emerald-500/12 ring-1 ring-emerald-500/25" : "glass-soft"}`}><p className="text-neutral-500">{label}</p><p className={`mt-0.5 font-bold ${lime ? "text-emerald-400" : "text-white"}`}>{value}</p></div>;
 }
 function Avatar({ name, image }: { name: string; image?: string }) {
   if (image) return <Image src={image} alt="" width={40} height={40} unoptimized className="h-10 w-10 rounded-full bg-neutral-100 object-cover" />;

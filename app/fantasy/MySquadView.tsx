@@ -13,7 +13,7 @@ export function MySquadView({ data }: { data: DashboardResponse }) {
   const groups = groupByPosition(data.lineup.starters);
   return (
     <div className="space-y-4">
-      <section className="rounded-[28px] border border-[#7c3aed]/30 bg-[linear-gradient(145deg,#17121f,#251440)] p-4 text-white shadow-[0_22px_65px_rgba(0,0,0,.45)]">
+      <section className="glass-strong rounded-[28px] p-4 text-white">
         <div className="mb-4 flex items-center justify-between">
           <div><p className="text-xs font-semibold uppercase tracking-[.14em] text-[#a78bfa]">Tu once más probable</p><h2 className="mt-1 text-xl font-bold">{data.lineup.formation}</h2></div>
           <div className="rounded-2xl bg-white/[.06] px-3 py-2 text-right"><p className="text-[10px] text-white/45">Valor equipo</p><p className="font-bold text-white">{millions(data.me.teamValue)}</p></div>
@@ -31,7 +31,7 @@ export function MySquadView({ data }: { data: DashboardResponse }) {
         <p className="mt-3 flex gap-2 text-[11px] leading-4 text-white/45"><Info size={14} className="shrink-0" />Once calculado por porcentaje de FútbolFantasy y formación válida. No cambia tu alineación oficial.</p>
       </section>
 
-      <section className="rounded-[26px] border border-white/8 bg-[#121214] p-4 shadow-[0_10px_35px_rgba(0,0,0,.3)]">
+      <section className="rounded-[26px] glass p-4">
         <button type="button" onClick={() => setShowBench((value) => !value)} className="flex w-full items-center justify-between text-left">
           <div><p className="text-xs font-semibold uppercase tracking-[.12em] text-neutral-500">Resto de plantilla</p><h3 className="text-lg font-bold text-white">Banquillo · {data.lineup.bench.length}</h3></div>
           <ChevronDown className={`transition ${showBench ? "rotate-180" : ""}`} />

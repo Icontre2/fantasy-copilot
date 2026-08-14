@@ -153,7 +153,7 @@ const NAV_ICONS: Record<string, React.ReactNode> = {
 
 function BottomNav({ section, onSelect }: { section: Section; onSelect: (section: Section) => void }) {
   const active = SECTIONS.some((item) => item.id === section) ? section : "mas";
-  return <nav className="fixed inset-x-3 bottom-[max(.75rem,env(safe-area-inset-bottom))] z-40 mx-auto grid max-w-md grid-cols-5 rounded-[24px] border border-white/10 bg-[#111114]/95 p-1.5 text-white shadow-[0_18px_60px_rgba(0,0,0,.65)] backdrop-blur-xl">{SECTIONS.map((item) => <button key={item.id} type="button" onClick={() => onSelect(item.id)} className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-[18px] text-[10px] font-semibold transition ${active === item.id ? "bg-[#7c3aed] text-white" : "text-white/45"}`} aria-current={active === item.id ? "page" : undefined}>{NAV_ICONS[item.id]}{item.label}</button>)}</nav>;
+  return <nav className="glass-nav fixed inset-x-3 bottom-[max(.75rem,env(safe-area-inset-bottom))] z-40 mx-auto grid max-w-md grid-cols-5 rounded-[24px] p-1.5 text-white">{SECTIONS.map((item) => <button key={item.id} type="button" onClick={() => onSelect(item.id)} className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-[18px] text-[10px] font-semibold transition ${active === item.id ? "bg-[#7c3aed] text-white shadow-[0_6px_18px_rgba(124,58,237,.5)]" : "text-white/50"}`} aria-current={active === item.id ? "page" : undefined}>{NAV_ICONS[item.id]}{item.label}</button>)}</nav>;
 }
 
 /**

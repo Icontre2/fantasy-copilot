@@ -42,7 +42,7 @@ export function LoginView({ onLogin }: { onLogin: (manager: Manager) => void }) 
   }
 
   return (
-    <section className="mx-auto mt-[8vh] w-full max-w-md overflow-hidden rounded-[32px] border border-white/10 bg-[#121214] shadow-[0_28px_90px_rgba(0,0,0,.55)]">
+    <section className="mx-auto mt-[8vh] w-full max-w-md overflow-hidden rounded-[32px] glass">
       <div className="bg-[linear-gradient(145deg,#17121f,#32175d)] p-6 text-white">
         <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[#7c3aed] text-lg font-black text-white">LL</span>
         <p className="mt-6 text-xs font-semibold uppercase tracking-[.16em] text-white/45">LigaLab</p>

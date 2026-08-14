@@ -24,7 +24,7 @@ export function EconomyView({ data }: { data: EconomyResponse }) {
 
   return (
     <div className="space-y-4">
-      <section className="overflow-hidden rounded-[28px] border border-[#7c3aed]/30 bg-[linear-gradient(145deg,#17121f,#251440)] p-5 text-white shadow-[0_22px_65px_rgba(0,0,0,.45)]">
+      <section className="glass-strong overflow-hidden rounded-[28px] p-5 text-white">
         <p className="text-xs font-semibold uppercase tracking-[.14em] text-[#a78bfa]">De dónde sale el dinero</p>
         <h2 className="mt-1 text-2xl font-bold tracking-tight">Economía</h2>
 
@@ -126,7 +126,7 @@ const KIND_LABEL: Record<ManagerEconomy["entries"][number]["kind"], string> = {
 
 function LibroCard({ economy, saldoInicial }: { economy: ManagerEconomy; saldoInicial: number }) {
   return (
-    <section className="mt-2 rounded-[22px] border border-white/8 bg-[#0d0d0f] p-4 text-white">
+    <section className="glass-soft mt-2 rounded-[22px] p-4 text-white">
       <h3 className="mb-3 text-[15px] font-bold tracking-tight">Libro de {economy.managerName}</h3>
 
       {/* El cuadre completo, línea a línea, para poder auditar cada euro. */}

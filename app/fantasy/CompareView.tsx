@@ -43,7 +43,7 @@ export function CompareView({ data }: { data: TeamsResponse }) {
       <Spark history={histories[first.id]}/>
       <Spark history={histories[second.id]}/>
     </div>
-    <section className="rounded-[26px] border border-white/8 bg-[#121214] p-4"><p className="mb-4 text-center text-xs text-neutral-500">Comparación con datos oficiales. La tendencia usa el histórico real de cotización.</p><div className="space-y-1">
+    <section className="rounded-[26px] glass p-4"><p className="mb-4 text-center text-xs text-neutral-500">Comparación con datos oficiales. La tendencia usa el histórico real de cotización.</p><div className="space-y-1">
       <Comparison label="Valor" left={millions(first.marketValue)} right={millions(second.marketValue)} leftNumber={first.marketValue} rightNumber={second.marketValue}/>
       <Comparison label="Cláusula" left={millions(first.buyoutClause)} right={millions(second.buyoutClause)} leftNumber={first.buyoutClause} rightNumber={second.buyoutClause}/>
       <Comparison label="Puntos" left={String(first.points)} right={String(second.points)} leftNumber={first.points} rightNumber={second.points}/>
@@ -67,15 +67,15 @@ export function CompareView({ data }: { data: TeamsResponse }) {
   </div>;
 }
 
-function Picker({ label, value, setValue, players }: { label: string; value: string; setValue: (value: string) => void; players: SquadPlayer[] }) { return <label className="text-xs font-semibold text-neutral-500">{label}<select value={value} onChange={(event) => setValue(event.target.value)} className="mt-1 min-h-12 w-full rounded-2xl border border-white/10 bg-[#121214] px-3 text-sm text-white">{players.map((player) => <option key={player.id} value={player.id}>{player.name}</option>)}</select></label>; }
-function PlayerCard({ player, owner, onSelect }: { player: SquadPlayer; owner?: string; onSelect: (player: Player) => void }) { return <button type="button" onClick={() => onSelect(player)} className="rounded-[24px] border border-[#7c3aed]/25 bg-[#121214] p-4 text-center"><span className="mx-auto block w-fit"><PlayerImage player={player} size={68}/></span><p className="mt-2 truncate font-bold text-white">{player.name}</p><p className="truncate text-xs text-neutral-500">{player.team} · {player.position}</p><p className="mt-1 truncate text-[11px] text-[#a78bfa]">{owner ?? UNKNOWN}</p></button>; }
+function Picker({ label, value, setValue, players }: { label: string; value: string; setValue: (value: string) => void; players: SquadPlayer[] }) { return <label className="text-xs font-semibold text-neutral-500">{label}<select value={value} onChange={(event) => setValue(event.target.value)} className="mt-1 min-h-12 w-full rounded-2xl glass px-3 text-sm text-white">{players.map((player) => <option key={player.id} value={player.id}>{player.name}</option>)}</select></label>; }
+function PlayerCard({ player, owner, onSelect }: { player: SquadPlayer; owner?: string; onSelect: (player: Player) => void }) { return <button type="button" onClick={() => onSelect(player)} className="glass rounded-[24px] p-4 text-center"><span className="mx-auto block w-fit"><PlayerImage player={player} size={68}/></span><p className="mt-2 truncate font-bold text-white">{player.name}</p><p className="truncate text-xs text-neutral-500">{player.team} · {player.position}</p><p className="mt-1 truncate text-[11px] text-[#a78bfa]">{owner ?? UNKNOWN}</p></button>; }
 function Comparison({ label, left, right, leftNumber, rightNumber }: { label: string; left: string; right: string; leftNumber?: number; rightNumber?: number }) { const leftWins = leftNumber !== undefined && rightNumber !== undefined && leftNumber > rightNumber; const rightWins = leftNumber !== undefined && rightNumber !== undefined && rightNumber > leftNumber; return <div className="grid grid-cols-[1fr_1.15fr_1fr] items-center gap-2 rounded-xl px-2 py-2.5 text-sm"><span className={`text-left font-bold ${leftWins ? "text-emerald-400" : "text-neutral-300"}`}>{left}</span><span className="text-center text-xs text-neutral-600">{label}</span><span className={`text-right font-bold ${rightWins ? "text-emerald-400" : "text-neutral-300"}`}>{right}</span></div>; }
 function trend(history: MarketValuePoint[] | undefined, range: number) { if (!history || history.length < 2) return UNKNOWN; const sorted = [...history].sort((a,b) => a.date.localeCompare(b.date)); const latest = sorted.at(-1); if (!latest) return UNKNOWN; const cutoff = Date.parse(latest.date) - range * 86_400_000; const first = sorted.find((point) => Date.parse(point.date) >= cutoff); if (!first || first === latest) return UNKNOWN; const delta = latest.marketValue - first.marketValue; return `${delta >= 0 ? "+" : "−"}${millions(Math.abs(delta))}`; }
 
 /** Linea del historico real de cotizacion. Sin datos no dibuja nada inventado. */
 function Spark({ history }: { history?: MarketValuePoint[] }) {
   if (!history || history.length < 2) {
-    return <div className="grid h-14 place-items-center rounded-2xl border border-white/8 bg-[#121214] text-[10px] text-neutral-600">Sin histórico</div>;
+    return <div className="grid h-14 place-items-center rounded-2xl glass text-[10px] text-neutral-600">Sin histórico</div>;
   }
   const sorted = [...history].sort((a, b) => a.date.localeCompare(b.date));
   const values = sorted.map((point) => point.marketValue);
@@ -86,7 +86,7 @@ function Spark({ history }: { history?: MarketValuePoint[] }) {
     .join(" ");
   const sube = (values.at(-1) ?? 0) >= (values[0] ?? 0);
   return (
-    <svg viewBox="0 0 100 24" preserveAspectRatio="none" className="h-14 w-full rounded-2xl border border-white/8 bg-[#121214] px-2" role="img" aria-label="Evolución del valor">
+    <svg viewBox="0 0 100 24" preserveAspectRatio="none" className="h-14 w-full rounded-2xl glass px-2" role="img" aria-label="Evolución del valor">
       <polyline points={coords} fill="none" stroke={sube ? "#34d399" : "#fb7185"} strokeWidth="1.6" vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
   );
