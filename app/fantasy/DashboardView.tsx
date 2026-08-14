@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 
 import { Banknote, Coins, Trophy, Users } from "lucide-react";
 import Image from "next/image";
 import type { DashboardResponse } from "./types";
-import { millions, signedMillions } from "./format";
+import { millions, UNKNOWN } from "./format";
 
 type Range = 7 | 30 | 90 | "MAX";
 type PortfolioPoint = {
@@ -106,12 +106,8 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
                 <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
                   <SmallMetric
                     label="Caja"
-                    value={
-                      competitor.teamMoney !== undefined
-                        ? millions(competitor.teamMoney)
-                        : `~${millions(competitor.estimatedCash)}`
-                    }
-                    lime
+                    value={competitor.teamMoney !== undefined ? millions(competitor.teamMoney) : UNKNOWN}
+                    lime={competitor.teamMoney !== undefined}
                   />
                   <SmallMetric label="Valor equipo" value={millions(competitor.teamValue)} />
                 </div>
@@ -119,13 +115,25 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
             );
           })}
         </div>
+        {/*
+          Aqui hubo una "caja estimada" (100 M + lo movido) y se retiro por estar
+          sesgada, no por ser imprecisa.
+
+          LALIGA solo publica la actividad de los ultimos dias. Quien construyo su
+          plantilla ANTES de esa ventana no tiene gastos visibles y salia con caja
+          alta; quien siguio operando dentro salia arruinado. Premiaba al que
+          estuvo quieto. Medido en el unico caso comprobable: al usuario le
+          calculaba 32,6 M cuando su caja real era 1,5 M.
+
+          Un numero con ese sesgo es peor que un hueco: el hueco se nota, el sesgo
+          no. Se muestra lo que consta y punto.
+        */}
         <p className="mt-3 text-[11px] leading-4 text-neutral-500">
-          <strong>~</strong> = caja reconstruida. LALIGA solo publica la tuya; la de los demás son
-          100 M€ menos lo comprado más lo vendido
-          {data.activityFrom ? `, desde el ${data.activityFrom.slice(8, 10)}/${data.activityFrom.slice(5, 7)}` : ""}.
-          {data.estimationError !== null && (
-            <> Falta lo anterior: a ti esa cuenta se desvía {signedMillions(data.estimationError)}.</>
-          )}
+          LALIGA solo publica tu caja, no la de los demás. Reconstruirla desde la actividad
+          disponible daría cifras infladas para quien fichó antes del
+          {data.activityFrom ? ` ${data.activityFrom.slice(8, 10)}/${data.activityFrom.slice(5, 7)}` : " inicio del histórico"},
+          así que no se muestra. En <strong>Economía</strong> tienes sus compras y ventas conocidas,
+          con importes reales.
         </p>
       </section>
     </div>
