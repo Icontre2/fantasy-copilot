@@ -1,7 +1,7 @@
 import type { LeagueTeam, Position, SquadPlayer } from '@/src/domain/fantasy';
 import { getProbableTeam } from '@/src/server/futbolfantasy/lineups';
 import { matchExternalPlayer } from '@/src/server/futbolfantasy/match';
-import { buildEconomy } from './economy/activity';
+import { buildEconomy, SALDO_INICIAL } from './economy/activity';
 import { getLeagueActivity, getLeagueSnapshot, getMyLeagues, getPlayerCatalog } from './read';
 
 type PlayerWithProbability = SquadPlayer & { lineupProbability?: number };
@@ -84,6 +84,24 @@ export async function buildDashboard(accessToken: string, leagueId: string) {
   const officialCashOf = (team: LeagueTeam) => team.teamMoney;
   const knownFlowOf = (team: LeagueTeam) => economyByManager.get(team.manager.id)?.flujoConocido ?? 0;
 
+  /*
+   * Caja estimada de un rival, y por que lleva un margen de error medido.
+   *
+   * `100 M + flujo conocido` daria la caja exacta SI la actividad cubriera toda
+   * la liga. No la cubre: LALIGA solo publica desde hace unos dias, y lo que se
+   * movio antes falta. Enseñar el flujo a secas (siempre negativo, porque en
+   * pretemporada todos gastan) no responde a "cuanto dinero tiene", y enseñar la
+   * estimacion a secas la haria pasar por exacta.
+   *
+   * La salida es medir el error con el unico caso comprobable: el propio
+   * usuario, de quien SI se conoce la caja oficial. Si a el la estimacion le
+   * falla en 31 M, a sus rivales le fallara en un orden parecido — y eso se
+   * puede decir en pantalla en vez de callarlo.
+   */
+  const myOfficialCash = officialCashOf(myTeam);
+  const myEstimate = SALDO_INICIAL + knownFlowOf(myTeam);
+  const estimationError = myOfficialCash === undefined ? null : myOfficialCash - myEstimate;
+
   return {
     league: league ?? { id: leagueId, name: 'Mi liga' },
     me: {
@@ -94,6 +112,7 @@ export async function buildDashboard(accessToken: string, leagueId: string) {
       teamMoney: officialCashOf(myTeam),
       cashSource: 'OFICIAL',
       knownCashFlow: knownFlowOf(myTeam),
+      estimatedCash: myEstimate,
       netWorth: null,
     },
     lineup: bestEleven(players),
@@ -108,10 +127,17 @@ export async function buildDashboard(accessToken: string, leagueId: string) {
         teamMoney: officialCashOf(team),
         cashSource: team.teamMoney === undefined ? 'NO_PUBLICADA' : 'OFICIAL',
         knownCashFlow: knownFlowOf(team),
+        estimatedCash: SALDO_INICIAL + knownFlowOf(team),
         netWorth: null,
       }))
       .sort((a, b) => (a.position ?? 999) - (b.position ?? 999)),
     failedTeamIds: snapshot.failedTeamIds,
+    /**
+     * Cuanto se desvia la estimacion en el unico caso comprobable. Negativo =
+     * la estimacion se queda ALTA porque faltan compras antiguas.
+     */
+    estimationError,
+    activityFrom: activity.map((entry) => entry.createdAt).sort()[0] ?? null,
   };
 }
 

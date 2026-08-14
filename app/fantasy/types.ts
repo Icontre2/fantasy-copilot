@@ -32,6 +32,8 @@ export type DashboardResponse = {
     netWorth: number | null;
     cashSource: "OFICIAL" | "NO_PUBLICADA";
     knownCashFlow: number;
+    /** `100 M€ + flujo conocido`. Estimación con el error medido en `estimationError`. */
+    estimatedCash: number;
   };
   lineup: {
     formation: string;
@@ -49,8 +51,17 @@ export type DashboardResponse = {
     netWorth: number | null;
     cashSource: "OFICIAL" | "NO_PUBLICADA";
     knownCashFlow: number;
+    /** `100 M€ + flujo conocido`. Estimación, no dato. */
+    estimatedCash: number;
   }>;
   failedTeamIds: string[];
+  /**
+   * Desviación medida de la estimación en el único caso comprobable: el propio
+   * usuario. Negativo = la estimación se queda alta porque faltan operaciones
+   * anteriores al inicio del histórico. `null` si LALIGA no publicó tu caja.
+   */
+  estimationError: number | null;
+  activityFrom: string | null;
 };
 
 export type AlertsResponse = {

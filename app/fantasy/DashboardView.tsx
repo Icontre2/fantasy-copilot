@@ -57,7 +57,7 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
 
         <div className="mt-4 grid grid-cols-2 gap-2">
           <Metric icon={<Coins size={16} />} label="Caja oficial" value={millions(data.me.teamMoney)} accent />
-          <Metric icon={<Banknote size={16} />} label="Flujo conocido" value={signedMillions(data.me.knownCashFlow)} />
+          <Metric icon={<Banknote size={16} />} label="Movido desde el inicio" value={signedMillions(data.me.knownCashFlow)} />
         </div>
         <p className="mt-3 text-[10px] leading-4 text-white/45">
           Valores oficiales guardados en este dispositivo. El seguimiento empieza en la primera visita; no reconstruimos ni inventamos fechas anteriores.
@@ -92,7 +92,7 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
                 </div>
                 <MiniChart points={points} />
                 <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
-                  <SmallMetric label="Flujo conocido" value={signedMillions(competitor.knownCashFlow)} lime={competitor.knownCashFlow >= 0} />
+                  <SmallMetric label="Caja estimada" value={millions(competitor.estimatedCash)} lime />
                   <SmallMetric label="Caja oficial" value={millions(competitor.teamMoney)} />
                 </div>
                 {/*
@@ -103,7 +103,12 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
                 */}
                 {competitor.cashSource === "NO_PUBLICADA" && (
                   <p className="mt-2 text-[10px] leading-4 text-neutral-400">
-                    LALIGA no publica su caja. El flujo puede ser negativo y solo suma movimientos visibles; no incluye el valor de la plantilla.
+                    LALIGA no publica su caja. Esta es una estimación: 100 M€ iniciales más lo que
+                    se le ha visto mover{data.activityFrom ? ` desde el ${data.activityFrom.slice(8, 10)}/${data.activityFrom.slice(5, 7)}` : ""}.
+                    {data.estimationError !== null && (
+                      <> A ti esta misma cuenta te falla en <strong>{signedMillions(data.estimationError)}</strong>,
+                      porque faltan las operaciones anteriores. La suya se desviará algo parecido.</>
+                    )}
                   </p>
                 )}
               </article>
