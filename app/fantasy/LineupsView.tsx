@@ -12,7 +12,7 @@ export type LineupsResponse = {
     name: string;
     shortName: string;
     badge: string;
-    players: Array<{ externalId: string; playerId?: string; name: string; position: string; probability: number; image?: string; player?: Player }>;
+    players: Array<{ externalId: string; playerId?: string; name: string; position: string; probability?: number; expectedStarter?: boolean; image?: string; player?: Player }>;
   }>;
   updatedAt: string;
   source: string;
@@ -29,7 +29,7 @@ export function LineupsView({ data }: { data: LineupsResponse }) {
     <section className="glass-strong overflow-hidden rounded-[28px] p-5 text-white">
       <p className="text-xs font-semibold uppercase tracking-[.14em] text-[#a78bfa]">Jornada próxima</p>
       <h2 className="mt-1 text-2xl font-bold tracking-tight">Probabilidad de titularidad</h2>
-      <p className="mt-2 text-sm leading-5 text-white/55">Todos los candidatos publicados por FútbolFantasy, no solo once nombres.</p>
+      <p className="mt-2 text-sm leading-5 text-white/55">Porcentajes cuando se publican; once titular indicado por FútbolFantasy cuando todavía no hay porcentajes.</p>
       <div className="-mx-5 mt-4 flex gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none]">
         {data.teams.map((item) => <button key={item.teamId} type="button" onClick={() => setTeamId(item.teamId)} aria-pressed={item.teamId === team?.teamId} className={`flex min-h-11 shrink-0 items-center gap-2 rounded-2xl px-3.5 text-xs font-bold transition ${item.teamId === team?.teamId ? "bg-[#7c3aed] text-white" : "border border-white/10 bg-white/[.06] text-white/70"}`}>{item.badge ? <Image src={item.badge} alt="" width={24} height={24} unoptimized className="h-6 w-6 object-contain"/> : null}{item.shortName}</button>)}
       </div>
@@ -57,13 +57,14 @@ export function LineupsView({ data }: { data: LineupsResponse }) {
  * El porcentaje es el de FutbolFantasy tal cual, sin retocar.
  */
 function PlayerProbability({ player, onSelect }: { player: LineupsResponse["teams"][number]["players"][number]; onSelect: (player: Player) => void }) {
-  const alta = player.probability >= 70;
-  const media = !alta && player.probability >= 40;
+  const alta = player.expectedStarter || (player.probability !== undefined && player.probability >= 70);
+  const media = !alta && player.probability !== undefined && player.probability >= 40;
   const tone = alta
     ? "bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/30"
     : media
       ? "bg-amber-500/15 text-amber-300 ring-1 ring-amber-500/30"
       : "bg-rose-500/15 text-rose-300 ring-1 ring-rose-500/30";
-  const etiqueta = alta ? "Probable" : media ? "Duda" : "Poco probable";
-  return <button type="button" disabled={!player.player} onClick={() => player.player && onSelect(player.player)} className="relative overflow-hidden rounded-2xl border border-white/8 bg-white/[.03] p-3 text-center transition active:scale-[.98] disabled:cursor-default" aria-label={player.player ? `Ver histórico de ${player.name}` : player.name}><div className="mx-auto grid h-16 w-16 place-items-center overflow-hidden rounded-full bg-white/[.06]">{player.image ? <Image src={player.image} alt="" width={64} height={64} unoptimized className="h-full w-full object-contain"/> : <span className="text-lg font-black text-neutral-600">{player.name.slice(0,1)}</span>}</div><p className="mt-2 truncate text-sm font-semibold text-white">{player.name}</p><p className="text-[10px] text-neutral-500">{player.position || "Jugador"}</p><span className={`mt-2 inline-flex flex-col rounded-xl px-2.5 py-1 text-xs font-black ${tone}`}>{player.probability}%<span className="text-[9px] font-semibold opacity-80">{etiqueta}</span></span></button>;
+  const etiqueta = player.expectedStarter ? "Titular publicado" : alta ? "Probable" : media ? "Duda" : "Poco probable";
+  const value = player.probability === undefined ? "Sin %" : `${player.probability}%`;
+  return <button type="button" disabled={!player.player} onClick={() => player.player && onSelect(player.player)} className="relative overflow-hidden rounded-2xl border border-white/8 bg-white/[.03] p-3 text-center transition active:scale-[.98] disabled:cursor-default" aria-label={player.player ? `Ver histórico de ${player.name}` : player.name}><div className="mx-auto grid h-16 w-16 place-items-center overflow-hidden rounded-full bg-white/[.06]">{player.image ? <Image src={player.image} alt="" width={64} height={64} unoptimized className="h-full w-full object-contain"/> : <span className="text-lg font-black text-neutral-600">{player.name.slice(0,1)}</span>}</div><p className="mt-2 truncate text-sm font-semibold text-white">{player.name}</p><p className="text-[10px] text-neutral-500">{player.position || "Jugador"}</p><span className={`mt-2 inline-flex flex-col rounded-xl px-2.5 py-1 text-xs font-black ${tone}`}>{value}<span className="text-[9px] font-semibold opacity-80">{etiqueta}</span></span></button>;
 }
