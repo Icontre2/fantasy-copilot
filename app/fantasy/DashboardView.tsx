@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 
 import { Banknote, Coins, Trophy, Users } from "lucide-react";
 import Image from "next/image";
 import type { DashboardResponse } from "./types";
-import { millions, UNKNOWN } from "./format";
+import { millions } from "./format";
 
 type Range = 7 | 30 | 90 | "MAX";
 type PortfolioPoint = {
@@ -84,6 +84,10 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
               const value = point.managers[competitor.teamId]?.teamValue;
               return value === undefined ? [] : [{ date: point.date, value }];
             });
+            // La actividad empieza tarde. Corregimos el mismo sesgo que se puede
+            // medir comparando nuestra estimacion con nuestra caja oficial.
+            // No usa el valor de la plantilla y no se recorta a cero.
+            const estimatedCash = competitor.estimatedCash + (data.estimationError ?? 0);
             return (
               <article key={competitor.teamId} className="overflow-hidden rounded-[26px] glass p-4">
                 <div className="flex items-center gap-3">
@@ -95,28 +99,12 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
                   <p className="text-sm font-bold text-white">{millions(competitor.teamValue)}</p>
                 </div>
                 <MiniChart points={points} />
-                {/*
-                  Dos cifras y ninguna mas: caja y valor del equipo. Es lo que se
-                  viene a mirar aqui.
-
-                  La caja de un rival NO la publica LALIGA (comprobado contra una
-                  liga real: llega `null` en todos menos en el propio usuario), asi
-                  que es una reconstruccion. Eso no se cuenta con un parrafo en
-                  cada tarjeta — se marca con `~` y se explica una sola vez debajo
-                  de la lista. Un simbolo basta para no dar por exacto lo que no
-                  lo es; ocho parrafos identicos solo estorban.
-                */}
                 <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
-                  {/*
-                    Un guion solo se lee como "la app esta rota". Lleva al lado,
-                    en pequeño, de quien es la culpa: LALIGA no publica la caja
-                    ajena. Asi el hueco se entiende sin bajar a la nota del pie.
-                  */}
                   <SmallMetric
-                    label="Caja"
-                    value={competitor.teamMoney !== undefined ? millions(competitor.teamMoney) : UNKNOWN}
-                    lime={competitor.teamMoney !== undefined}
-                    nota={competitor.teamMoney === undefined ? "no la publica LALIGA" : undefined}
+                    label={competitor.teamMoney !== undefined ? "Caja" : "Caja aprox."}
+                    value={competitor.teamMoney !== undefined ? millions(competitor.teamMoney) : `≈ ${millions(estimatedCash)}`}
+                    lime={(competitor.teamMoney ?? estimatedCash) >= 0}
+                    nota={competitor.teamMoney === undefined ? "estimada, no valor de equipo" : undefined}
                   />
                   <SmallMetric label="Valor equipo" value={millions(competitor.teamValue)} />
                 </div>
@@ -125,37 +113,29 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
           })}
         </div>
         {/*
-          Aqui hubo una "caja estimada" (100 M + lo movido) y se retiro por estar
-          sesgada, no por ser imprecisa.
+          Dos caminos, y el texto dice por cual se ha ido en ESTA carga.
+          Distinguirlos importa: "≈ 8 M" y "8 M" son cosas muy distintas y la
+          diferencia no puede quedarse en la cabeza de quien lo programo.
 
-          LALIGA solo publica la actividad de los ultimos dias. Quien construyo su
-          plantilla ANTES de esa ventana no tiene gastos visibles y salia con caja
-          alta; quien siguio operando dentro salia arruinado. Premiaba al que
-          estuvo quieto. Medido en el unico caso comprobable: al usuario le
-          calculaba 32,6 M cuando su caja real era 1,5 M.
-
-          Un numero con ese sesgo es peor que un hueco: el hueco se nota, el sesgo
-          no. Se muestra lo que consta y punto.
+          Si LALIGA acaba publicando la caja ajena —se le pregunta por la liga
+          entera y ademas equipo a equipo—, la cifra es oficial y sobra la nota
+          de la estimacion. Mientras no la publique, se enseña la aproximacion
+          con su metodo escrito aqui debajo, para que se pueda juzgar.
         */}
-        {/*
-          El texto cambia segun lo que haya pasado DE VERDAD en esta carga. Si
-          alguna caja rival aparece, esta nota sobra y se calla; si no aparece
-          ninguna, dice ademas que se ha preguntado por las dos vias, para que se
-          note la diferencia entre "la app no lo intenta" y "LALIGA no lo da".
-        */}
-        {data.competitors.every((competitor) => competitor.teamMoney === undefined) ? (
-          <p className="mt-3 text-[11px] leading-4 text-neutral-500">
-            La caja de los demás no la publica LALIGA: se pide la liga entera y además cada equipo
-            por separado, y en ninguna de las dos viene. Reconstruirla desde la actividad daría
-            cifras infladas para quien fichó antes del
-            {data.activityFrom ? ` ${data.activityFrom.slice(8, 10)}/${data.activityFrom.slice(5, 7)}` : " inicio del histórico"},
-            así que preferimos el hueco. En <strong>Economía</strong> tienes sus compras y ventas
-            con importes reales.
-          </p>
-        ) : (
+        {data.competitors.some((competitor) => competitor.teamMoney !== undefined) ? (
           <p className="mt-3 text-[11px] leading-4 text-neutral-500">
             Cajas oficiales de LALIGA. En <strong>Economía</strong> tienes el detalle de compras y
             ventas de cada uno.
+          </p>
+        ) : (
+          <p className="mt-3 text-[11px] leading-4 text-neutral-500">
+            <strong>Caja aproximada</strong>, no oficial: LALIGA no publica la caja ajena ni en la
+            liga entera ni equipo a equipo, así que se calcula con 100 M iniciales + operaciones
+            visibles + puntos, corregida con el error medido entre tu cálculo y tu caja real. Puede
+            ser negativa y no incluye el valor del equipo. Los rivales que ficharon antes del
+            {data.activityFrom ? ` ${data.activityFrom.slice(8, 10)}/${data.activityFrom.slice(5, 7)}` : " inicio del histórico"}{" "}
+            son los que peor cuadran. En <strong>Economía</strong> están sus compras y ventas con
+            importes reales.
           </p>
         )}
       </section>

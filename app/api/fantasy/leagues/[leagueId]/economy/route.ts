@@ -44,6 +44,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ leag
     });
 
     const fechas = activity.map((entry) => entry.createdAt).sort();
+    const ownEconomy = economies.find((economy) => economy.cajaOficial !== null);
+    const estimationError = ownEconomy?.diferencia ?? null;
 
     return privateJson({
       leagueId,
@@ -52,9 +54,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ leag
       actividadDesde: fechas[0] ?? null,
       actividadHasta: fechas.at(-1) ?? null,
       operaciones: activity.length,
+      estimationError,
       economies: economies.sort((a, b) => b.flujoConocido - a.flujoConocido),
       dataNotes: [
-        `Todos los managers empezaron con ${(SALDO_INICIAL / 1_000_000).toFixed(0)} M€, pero la actividad disponible puede empezar después que la liga. Por eso para rivales se muestra el flujo conocido, no una caja absoluta.`,
+        `Todos los managers empezaron con ${(SALDO_INICIAL / 1_000_000).toFixed(0)} M€. La caja rival se aproxima con operaciones y puntos, corrigiendo el hueco del historial con la diferencia medida en la caja propia.`,
         "Los importes de compras y ventas los PUBLICA LALIGA en la actividad de la liga: son exactos, no estimados.",
         fechas[0]
           ? `La actividad disponible empieza el ${fechas[0].slice(0, 10)}. LALIGA no guarda lo anterior, así que esos movimientos aparecen dentro de la diferencia.`

@@ -86,6 +86,8 @@ export type EconomyResponse = {
   actividadDesde: string | null;
   actividadHasta: string | null;
   operaciones: number;
+  /** Ajuste medido entre la reconstruccion propia y la caja oficial. */
+  estimationError: number | null;
   economies: ManagerEconomy[];
   dataNotes: string[];
 };
