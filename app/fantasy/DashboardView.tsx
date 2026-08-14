@@ -128,18 +128,15 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
         ) : data.competitors.some((competitor) => competitor.teamMoney !== undefined) ? (
           <p className="mt-3 text-[11px] leading-4 text-neutral-500">
             Las cifras sin ≈ son cajas oficiales. Donde LALIGA no publica la caja ni equipo a equipo,
-            se muestra 100 M + operaciones visibles + puntos de ese manager, sin usar el valor del equipo
+            se muestra 100 M + historial completo + puntos de ese manager, sin usar el valor del equipo
             ni trasladarle el ajuste de otra persona.
           </p>
         ) : (
           <p className="mt-3 text-[11px] leading-4 text-neutral-500">
             <strong>Caja aproximada</strong>, no oficial: LALIGA no publica la caja ajena ni en la
-            liga entera ni equipo a equipo, así que se calcula con 100 M iniciales + operaciones
-            visibles + puntos de cada manager. Puede ser negativa y no incluye el valor del equipo.
-            Los rivales que ficharon antes del
-            {data.activityFrom ? ` ${data.activityFrom.slice(8, 10)}/${data.activityFrom.slice(5, 7)}` : " inicio del histórico"}{" "}
-            son los que peor cuadran. En <strong>Economía</strong> están sus compras y ventas con
-            importes reales.
+            liga entera ni equipo a equipo, así que se calcula con 100 M iniciales + todo el historial
+            paginado + puntos de cada manager. Puede ser negativa y no incluye el valor del equipo.
+            En <strong>Economía</strong> están sus compras, cláusulas y ventas con importes reales.
           </p>
         )}
       </section>

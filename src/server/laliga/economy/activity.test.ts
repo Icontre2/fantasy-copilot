@@ -78,6 +78,26 @@ test("un traspaso mueve el dinero: user1 paga y user2 cobra lo mismo", () => {
   assert.equal(a.cajaReconstruida + b.cajaReconstruida, SALDO_INICIAL * 2);
 });
 
+test("una cláusula resta al comprador y suma al propietario anterior", () => {
+  const economies = buildEconomy({
+    managers: [manager("A"), manager("B")],
+    activity: [
+      entrada({
+        activityTypeId: ACTIVITY_TYPE.CLAUSULA,
+        user1Id: "A",
+        user2Id: "B",
+        amount: 72_100_000,
+      }),
+    ],
+  });
+
+  const [buyer, seller] = economies;
+  assert.equal(buyer?.compras, 72_100_000);
+  assert.equal(seller?.ventas, 72_100_000);
+  assert.equal(buyer?.entries[0]?.kind, "CLAUSULA_PAGADA");
+  assert.equal(seller?.entries[0]?.kind, "CLAUSULA_COBRADA");
+});
+
 test("un tipo no verificado se ignora en vez de asignarle un signo a ojo", () => {
   const [economy] = buildEconomy({
     managers: [manager("A")],

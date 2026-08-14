@@ -124,8 +124,8 @@ export async function buildDashboard(accessToken: string, leagueId: string) {
   const knownFlowOf = (team: LeagueTeam) => economyByManager.get(team.manager.id)?.flujoConocido ?? 0;
 
   // Respaldo solo cuando tampoco el endpoint individual publica la caja. No se
-  // corrige con el error de otro manager: cada uno pudo operar antes del tramo
-  // de actividad disponible y compartir ese ajuste seria matematicamente falso.
+  // corrige con el error de otro manager: las recompensas no reclamadas y otros
+  // movimientos no publicados son individuales.
   const myEstimate = SALDO_INICIAL + knownFlowOf(myTeam);
 
   return {

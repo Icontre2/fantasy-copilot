@@ -48,7 +48,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ leag
     return privateJson({
       leagueId,
       saldoInicial: SALDO_INICIAL,
-      /** Desde cuando hay operaciones. Lo anterior no lo guarda LALIGA. */
+      /** Primera operación tras recorrer todas las páginas del historial. */
       actividadDesde: fechas[0] ?? null,
       actividadHasta: fechas.at(-1) ?? null,
       operaciones: activity.length,
@@ -57,11 +57,11 @@ export async function GET(request: Request, { params }: { params: Promise<{ leag
         `Todos los managers empezaron con ${(SALDO_INICIAL / 1_000_000).toFixed(0)} M€. Si falta caja oficial, se reconstruye por manager con sus operaciones y puntos; nunca se traslada el ajuste de otra persona.`,
         "Los importes de compras y ventas los PUBLICA LALIGA en la actividad de la liga: son exactos, no estimados.",
         fechas[0]
-          ? `La actividad disponible empieza el ${fechas[0].slice(0, 10)}. LALIGA no guarda lo anterior, así que esos movimientos aparecen dentro de la diferencia.`
+          ? `Historial paginado completo: ${activity.length} entradas desde el ${fechas[0].slice(0, 10)}. Se recorren /activity/0, /1, /2… hasta la primera página vacía.`
           : "LALIGA no ha devuelto ninguna operación de esta liga.",
-        "La app intenta obtener la caja oficial en la lista y también equipo a equipo. Si ambas rutas la omiten, ventas − compras + puntos es un flujo del periodo observable y puede ser negativo.",
+        "La app intenta obtener la caja oficial en la lista y también equipo a equipo. Si ambas rutas la omiten, calcula 100 M + ventas − compras + puntos; el resultado puede ser negativo.",
         "El valor de la plantilla nunca se usa para calcular la caja ni el flujo.",
-        "La diferencia es lo que la actividad disponible no explica: recompensas diarias reclamadas, operaciones anteriores al inicio del histórico o movimientos que LALIGA no publica. Se muestra siempre.",
+        "La diferencia es lo que el historial no explica, principalmente recompensas diarias reclamadas u otros movimientos que LALIGA no publique. Se muestra siempre.",
         "Solo se sugiere «días de recompensa» cuando la diferencia es positiva y múltiplo exacto de 100.000 €. En cualquier otro caso queda sin explicar.",
       ],
     });

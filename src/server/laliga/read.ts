@@ -7,6 +7,7 @@ import type {
   StandingRow,
 } from '@/src/domain/fantasy';
 import type { ActivityEntry } from './economy/activity';
+import { collectActivityPages } from './activity-pages';
 import { privateFetch, seasonFetch } from './client';
 import { COMPETITION_ID } from './config';
 import { apiActivitySchema } from './schemas';
@@ -239,30 +240,22 @@ export async function getLeagueSnapshot(accessToken: string, leagueId: string): 
   return { standing, teams, failedTeamIds };
 }
 
-/**
- * Operaciones economicas de la liga, con importe publicado por LALIGA.
- *
- * Devuelve lo que guarde la API, que no es toda la temporada: en la liga con la
- * que se verifico llegaban 65 entradas desde el 7 de agosto, y pedir `limit=500`
- * devolvia las mismas. Lo anterior a la entrada mas antigua no es recuperable y
- * acaba dentro de la diferencia de conciliacion.
- */
+/** Operaciones economicas desde el principio de la liga, con importe publicado por LALIGA. */
 export async function getLeagueActivity(
   accessToken: string,
   leagueId: string,
 ): Promise<ActivityEntry[]> {
-  const raw = await privateFetch(
-    `${CMP}/leagues/${encodeURIComponent(leagueId)}/activity`,
-    accessToken,
-    apiActivitySchema,
-  );
-  return raw.map((entry) => ({
-    id: entry.id,
-    activityTypeId: entry.activityTypeId,
-    user1Id: entry.user1Id,
-    user2Id: entry.user2Id ?? undefined,
-    playerMasterId: entry.playerMasterId,
-    amount: entry.amount,
-    createdAt: entry.createdAt,
-  }));
+  const base = `${CMP}/leagues/${encodeURIComponent(leagueId)}/activity`;
+  return collectActivityPages(async (index) => {
+    const raw = await privateFetch(`${base}/${index}`, accessToken, apiActivitySchema);
+    return raw.map((entry) => ({
+      id: entry.id,
+      activityTypeId: entry.activityTypeId,
+      user1Id: entry.user1Id,
+      user2Id: entry.user2Id ?? undefined,
+      playerMasterId: entry.playerMasterId,
+      amount: entry.amount,
+      createdAt: entry.createdAt,
+    }));
+  });
 }

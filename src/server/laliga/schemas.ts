@@ -203,7 +203,7 @@ export type ApiMarketValuePoint = z.infer<typeof apiMarketValuePointSchema>;
 export type ApiWeek = z.infer<typeof apiWeekSchema>;
 
 /**
- * GET /api/v1/competition/{c}/leagues/{id}/activity
+ * GET /api/v1/competition/{c}/leagues/{id}/activity/{page}
  *
  * El libro de operaciones de la liga. Verificado contra una liga real: trae el
  * importe EXACTO, no una estimacion. `activityTypeId` no esta documentado; su
