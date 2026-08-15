@@ -2,6 +2,14 @@ import type { ActivityEntry } from './economy/activity.ts';
 
 const MAX_ACTIVITY_PAGES = 100;
 
+export type ActivityPageReport = {
+  index: number;
+  count: number;
+  added: number;
+  oldest: string | null;
+  newest: string | null;
+};
+
 /**
  * Recorre el historial paginado y elimina solapes entre paginas.
  *
@@ -12,13 +20,17 @@ const MAX_ACTIVITY_PAGES = 100;
  */
 export async function collectActivityPages(
   fetchPage: (index: number) => Promise<ActivityEntry[]>,
+  onPage?: (report: ActivityPageReport) => void,
 ): Promise<ActivityEntry[]> {
   const result: ActivityEntry[] = [];
   const seen = new Set<string>();
 
   for (let index = 0; index < MAX_ACTIVITY_PAGES; index += 1) {
     const page = await fetchPage(index);
-    if (page.length === 0) return result;
+    if (page.length === 0) {
+      onPage?.({ index, count: 0, added: 0, oldest: null, newest: null });
+      return result;
+    }
 
     let added = 0;
     for (const entry of page) {
@@ -27,6 +39,14 @@ export async function collectActivityPages(
       result.push(entry);
       added += 1;
     }
+    const dates = page.map((entry) => entry.createdAt).sort();
+    onPage?.({
+      index,
+      count: page.length,
+      added,
+      oldest: dates[0] ?? null,
+      newest: dates.at(-1) ?? null,
+    });
     if (added === 0) return result;
   }
 

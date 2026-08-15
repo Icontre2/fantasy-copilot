@@ -142,7 +142,14 @@ export async function getMarketValueHistory(playerId: string): Promise<MarketVal
     `${CMP}/player/${encodeURIComponent(playerId)}/market-value`,
     apiMarketValueHistorySchema,
   );
-  return mapMarketValueHistory(history);
+  const mapped = mapMarketValueHistory(history);
+  console.info('[laliga/player-history] complete', {
+    playerId,
+    points: mapped.length,
+    oldest: mapped[0]?.date ?? null,
+    newest: mapped.at(-1)?.date ?? null,
+  });
+  return mapped;
 }
 
 /**
@@ -246,7 +253,8 @@ export async function getLeagueActivity(
   leagueId: string,
 ): Promise<ActivityEntry[]> {
   const base = `${CMP}/leagues/${encodeURIComponent(leagueId)}/activity`;
-  return collectActivityPages(async (index) => {
+  let pagesWithData = 0;
+  const activity = await collectActivityPages(async (index) => {
     const raw = await privateFetch(`${base}/${index}`, accessToken, apiActivitySchema);
     return raw.map((entry) => ({
       id: entry.id,
@@ -257,5 +265,17 @@ export async function getLeagueActivity(
       amount: entry.amount,
       createdAt: entry.createdAt,
     }));
+  }, (page) => {
+    if (page.count > 0) pagesWithData += 1;
+    console.info('[laliga/activity] page', { leagueId, ...page });
   });
+  const dates = activity.map((entry) => entry.createdAt).sort();
+  console.info('[laliga/activity] complete', {
+    leagueId,
+    pages: pagesWithData,
+    entries: activity.length,
+    oldest: dates[0] ?? null,
+    newest: dates.at(-1) ?? null,
+  });
+  return activity;
 }
