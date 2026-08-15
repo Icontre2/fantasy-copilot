@@ -210,6 +210,22 @@ export function daysUntil(iso: string | undefined, now: Date): number | null {
 }
 
 /**
+ * Estado efectivo del bloqueo de cláusula.
+ *
+ * LALIGA publica `buyoutClauseLockedEndTime` con precisión de minutos. Cuando
+ * esa fecha es válida es la fuente de verdad: una fecha futura bloquea y una
+ * fecha pasada desbloquea, aunque el booleano `isShielded` venga ausente o
+ * desfasado. El booleano solo sirve como respaldo cuando no hay fecha legible.
+ */
+export function isClauseShielded(player: Pick<SquadPlayer, 'isShielded' | 'shieldedUntil'>, now: Date = new Date()): boolean {
+  if (player.shieldedUntil) {
+    const unlockAt = Date.parse(player.shieldedUntil);
+    if (!Number.isNaN(unlockAt)) return unlockAt > now.getTime();
+  }
+  return player.isShielded === true;
+}
+
+/**
  * Construye la alerta de un jugador, o `null` si no llega a ningun nivel.
  *
  * Un jugador sin `buyoutClause` publicada **no genera alerta**: sin clausula no
@@ -237,6 +253,7 @@ export function buildAlert(
 
   const gap = clause - player.marketValue;
   const valueToClauseRatio = player.marketValue / clause;
+  const effectiveShielded = isClauseShielded(player, now);
 
   let estimatedDays: number | null = null;
   let missingReason: MissingReason | undefined;
@@ -261,7 +278,7 @@ export function buildAlert(
     official: {
       marketValue: player.marketValue,
       buyoutClause: clause,
-      isShielded: player.isShielded ?? false,
+      isShielded: effectiveShielded,
       shieldedUntil: player.shieldedUntil ?? null,
       daysUntilUnshielded: daysUntil(player.shieldedUntil, now),
     },

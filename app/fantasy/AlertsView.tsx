@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { ArrowUpRight, Clock3, Search, ShieldCheck, ShieldOff, TriangleAlert } from "lucide-react";
 import { post } from "./api";
-import { days, millions, percent, shortDate, signedMillions, UNKNOWN } from "./format";
+import { days, millions, percent, shortDateTime, signedMillions, UNKNOWN } from "./format";
 import type { AlertsResponse, ClauseAlert, Player } from "./types";
 import { DataNotes, Empty } from "./ui";
 import { PlayerDetails } from "./PlayerDetails";
@@ -77,7 +77,7 @@ function AlertCard({ alert, mine, cash, busy, onSelect, onBuyout }: { alert: Cla
       es que a la app le faltan datos, y son cosas muy distintas.
     */}
     {motivoSinTendencia(alert) && <p className="mt-2 rounded-xl bg-white/[.03] px-3 py-2 text-[11px] leading-4 text-neutral-500">{motivoSinTendencia(alert)}</p>}
-    <div className="mt-3 flex items-center justify-between gap-3 text-xs"><span className={`flex items-center gap-1 ${alert.official.isShielded ? "text-rose-400" : "text-emerald-400"}`}>{alert.official.isShielded ? <ShieldCheck size={14}/> : <ShieldOff size={14}/>} {alert.official.isShielded ? blindaje(alert) : "Desbloqueada"}</span><span className="text-neutral-500">Faltan {millions(Math.max(0, alert.calculated.gap))}</span></div>
+    <div className="mt-3 flex flex-wrap items-start justify-between gap-x-3 gap-y-1 text-xs"><span className={`flex min-w-0 items-start gap-1 leading-4 ${alert.official.isShielded ? "text-rose-400" : "text-emerald-400"}`}>{alert.official.isShielded ? <ShieldCheck className="mt-px shrink-0" size={14}/> : <ShieldOff className="mt-px shrink-0" size={14}/>} {alert.official.isShielded ? blindaje(alert) : "Desbloqueada ahora"}</span><span className="shrink-0 text-neutral-500">Faltan {millions(Math.max(0, alert.calculated.gap))}</span></div>
     {!mine && <button type="button" disabled={disabled} onClick={() => onBuyout(alert)} className="mt-3 min-h-11 w-full rounded-2xl bg-[#7c3aed] px-4 text-sm font-bold text-white disabled:bg-white/5 disabled:text-neutral-600">{busy ? "Confirmando…" : alert.official.isShielded ? "Cláusula bloqueada" : cannotAfford ? "Caja insuficiente" : `Pagar ${millions(alert.official.buyoutClause)}`}</button>}
   </article>;
 }
@@ -91,8 +91,8 @@ function AlertCard({ alert, mine, cash, busy, onSelect, onBuyout }: { alert: Cla
 function blindaje(alert: ClauseAlert): string {
   const { daysUntilUnshielded: dias, shieldedUntil } = alert.official;
   if (dias === null || shieldedUntil === null) return "Bloqueada · LALIGA no publica hasta cuándo";
-  if (dias < 1) return `Bloqueada · se abre hoy (${shortDate(shieldedUntil)})`;
-  return `Bloqueada · ${days(dias)} (${shortDate(shieldedUntil)})`;
+  if (dias < 1) return `Bloqueada hasta ${shortDateTime(shieldedUntil)} · queda menos de 1 día`;
+  return `Bloqueada hasta ${shortDateTime(shieldedUntil)} · quedan ${days(dias)}`;
 }
 
 /**

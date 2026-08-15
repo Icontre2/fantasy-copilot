@@ -337,6 +337,22 @@ test("los dias de blindaje salen de la fecha que publica LALIGA", () => {
   assert.equal(alert?.official.shieldedUntil, "2026-08-17T12:00:00.000Z");
 });
 
+test("una fecha futura bloquea aunque isShielded venga falso", () => {
+  const alert = buildAlert(
+    { player: player({ isShielded: false, shieldedUntil: "2026-08-17T12:00:00.000Z" }), owner, history: [] },
+    NOW,
+  );
+  assert.equal(alert?.official.isShielded, true);
+});
+
+test("una fecha pasada desbloquea aunque isShielded venga desfasado", () => {
+  const alert = buildAlert(
+    { player: player({ isShielded: true, shieldedUntil: "2026-08-01T00:00:00.000Z" }), owner, history: [] },
+    NOW,
+  );
+  assert.equal(alert?.official.isShielded, false);
+});
+
 test("sin fecha publicada no se estima ningun plazo", () => {
   const alert = buildAlert({ player: player({ isShielded: true }), owner, history: [] }, NOW);
   assert.equal(alert?.official.shieldedUntil, null);

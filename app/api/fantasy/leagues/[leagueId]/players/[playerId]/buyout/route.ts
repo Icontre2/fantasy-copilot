@@ -2,6 +2,7 @@ import { errorJson, privateJson } from '@/src/server/http/responses';
 import { requireSession } from '@/src/server/http/session-guard';
 import { getLeagueSnapshot, getMyProfile } from '@/src/server/laliga/read';
 import { payBuyoutClause } from '@/src/server/laliga/writes';
+import { isClauseShielded } from '@/src/server/laliga/alerts/clause-alerts';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -41,7 +42,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ lea
         return privateJson({ error: 'La cláusula o el propietario han cambiado. Actualiza antes de continuar.' }, 409);
       }
       if (owner.manager.id === profile.id) return privateJson({ error: 'No puedes pagar la cláusula de un jugador propio.' }, 409);
-      if (player.isShielded) return privateJson({ error: 'La cláusula está bloqueada ahora mismo.' }, 409);
+      if (isClauseShielded(player)) {
+        const until = player.shieldedUntil
+          ? new Date(player.shieldedUntil).toLocaleString('es-ES', { timeZone: 'Europe/Madrid', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+          : null;
+        return privateJson({ error: until ? `La cláusula está bloqueada hasta el ${until}.` : 'La cláusula está bloqueada ahora mismo.' }, 409);
+      }
       if (mine?.teamMoney !== undefined && mine.teamMoney < expectedClause) {
         return privateJson({ error: 'No tienes caja suficiente para pagar esta cláusula.' }, 409);
       }

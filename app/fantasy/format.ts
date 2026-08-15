@@ -50,3 +50,16 @@ export function shortDate(iso: string | null | undefined): string {
   if (Number.isNaN(date.getTime())) return iso;
   return date.toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" });
 }
+
+/** Fecha y hora local: necesaria cuando el dato vence a una hora concreta. */
+export function shortDateTime(iso: string | null | undefined): string {
+  if (!iso) return UNKNOWN;
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+  return date.toLocaleString("es-ES", {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
