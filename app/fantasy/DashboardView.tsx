@@ -5,6 +5,8 @@ import { Banknote, Coins, Trophy, Users } from "lucide-react";
 import Image from "next/image";
 import type { DashboardResponse } from "./types";
 import { millions } from "./format";
+import { TrendChart } from "./TrendChart";
+import { ErrorBox } from "./ui";
 
 type Range = 7 | 30 | 90 | "MAX";
 type PortfolioPoint = {
@@ -24,15 +26,36 @@ const RANGE_OPTIONS: Array<{ value: Range; label: string }> = [
 const historyCache = new Map<string, { signature: string; points: PortfolioPoint[] }>();
 const subscribeHistory = () => () => undefined;
 
+/**
+ * Los rivales, siempre como lista.
+ *
+ * Si la respuesta llega sin `competitors` —endpoint caido, cuerpo raro— el
+ * `for...of` de mas abajo reventaba con "is not iterable" y se llevaba por
+ * delante la pantalla entera: ni tu valor, ni tu caja, ni nada. Tu resumen no
+ * depende de que se hayan podido leer los rivales, asi que no debe caerse con
+ * ellos. Es el mismo blindaje que ya llevaba la ficha de jugador.
+ */
+function rivalesDe(data: DashboardResponse) {
+  return Array.isArray(data.competitors) ? data.competitors : [];
+}
+
 export function DashboardView({ data }: { data: DashboardResponse }) {
   const [range, setRange] = useState<Range>(30);
+  const competitors = rivalesDe(data);
+  // Sin tu equipo no hay resumen que enseñar. Se dice; no se revienta con una
+  // pantalla en blanco y un `undefined` por consola.
+  const sinEquipo = !data?.me?.teamId;
   const history = usePortfolioHistory(data);
   const visibleHistory = useMemo(() => filterHistory(history, range), [history, range]);
   const myPoints = visibleHistory.flatMap((point) => {
-    const value = point.managers[data.me.teamId]?.teamValue;
+    const value = point.managers[data.me?.teamId ?? ""]?.teamValue;
     return value === undefined ? [] : [{ date: point.date, value }];
   });
   const delta = myPoints.length > 1 ? myPoints.at(-1)!.value - myPoints[0]!.value : null;
+
+  if (sinEquipo) {
+    return <ErrorBox message="LALIGA no ha devuelto tu equipo en esta liga. Vuelve a entrar en unos minutos." />;
+  }
 
   return (
     <div className="space-y-5">
@@ -75,11 +98,11 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
             <h2 className="text-xl font-bold tracking-tight text-white">Competidores</h2>
           </div>
           <span className="flex items-center gap-1 rounded-full border border-white/10 bg-white/[.06] px-3 py-1.5 text-xs font-semibold text-neutral-300">
-            <Users size={14} /> {data.competitors.length + 1}
+            <Users size={14} /> {competitors.length + 1}
           </span>
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
-          {data.competitors.map((competitor) => {
+          {competitors.map((competitor) => {
             const points = visibleHistory.flatMap((point) => {
               const value = point.managers[competitor.teamId]?.teamValue;
               return value === undefined ? [] : [{ date: point.date, value }];
@@ -120,12 +143,12 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
           de la estimacion. Mientras no la publique, se enseña la aproximacion
           con su metodo escrito aqui debajo, para que se pueda juzgar.
         */}
-        {data.competitors.every((competitor) => competitor.teamMoney !== undefined) ? (
+        {competitors.length > 0 && competitors.every((competitor) => competitor.teamMoney !== undefined) ? (
           <p className="mt-3 text-[11px] leading-4 text-neutral-500">
             Cajas oficiales de LALIGA. En <strong>Economía</strong> tienes el detalle de compras y
             ventas de cada uno.
           </p>
-        ) : data.competitors.some((competitor) => competitor.teamMoney !== undefined) ? (
+        ) : competitors.some((competitor) => competitor.teamMoney !== undefined) ? (
           <p className="mt-3 text-[11px] leading-4 text-neutral-500">
             Las cifras sin ≈ son cajas oficiales. Donde LALIGA no publica la caja ni equipo a equipo,
             se muestra 100 M + historial completo + puntos de ese manager, sin usar el valor del equipo
@@ -147,7 +170,7 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
 function usePortfolioHistory(data: DashboardResponse) {
   const current = useMemo(() => currentPoint(data), [data]);
   const serverHistory = useMemo(() => [current], [current]);
-  const key = `ligalab:portfolio:v1:${data.league.id}`;
+  const key = `ligalab:portfolio:v1:${data.league?.id ?? "sin-liga"}`;
   const signature = JSON.stringify(current);
   const getSnapshot = useCallback(() => {
     const cached = historyCache.get(key);
@@ -177,7 +200,9 @@ function usePortfolioHistory(data: DashboardResponse) {
 
 function currentPoint(data: DashboardResponse): PortfolioPoint {
   const current: PortfolioPoint = { date: localDate(), managers: {} };
-  for (const team of [data.me, ...data.competitors]) {
+  // `data.me` puede faltar si la respuesta viene incompleta: se filtra aqui en
+  // vez de dejar que un `undefined.teamId` tumbe el hook y con el la pantalla.
+  for (const team of [data.me, ...rivalesDe(data)].filter((team) => team?.teamId)) {
     current.managers[team.teamId] = {
       teamValue: team.teamValue ?? 0,
       teamMoney: team.teamMoney ?? null,
@@ -233,10 +258,15 @@ function ValueChart({ points, diasGuardados }: { points: { date: string; value: 
       </span>
     </div>;
   }
-  const coords = chartCoordinates(points, 92, 72);
   const sube = (points.at(-1)?.value ?? 0) >= (points[0]?.value ?? 0);
-  const color = sube ? "#34d399" : "#fb7185";
-  return <div className="mt-3 h-32"><svg viewBox="0 0 100 100" preserveAspectRatio="none" className="h-full w-full overflow-visible" role="img" aria-label="Histórico real del valor de plantilla"><defs><linearGradient id="valueArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor={color} stopOpacity=".3"/><stop offset="1" stopColor={color} stopOpacity="0"/></linearGradient></defs><polygon points={`0,100 ${coords} 100,100`} fill="url(#valueArea)"/><polyline points={coords} fill="none" stroke={color} strokeWidth="2.2" vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round"/></svg></div>;
+  return <TrendChart
+    className="mt-3"
+    points={points}
+    formatValue={millions}
+    formatDate={(iso) => new Date(iso).toLocaleDateString("es-ES", { day: "2-digit", month: "short" })}
+    color={sube ? "#34d399" : "#fb7185"}
+    label={`Histórico real del valor de tu plantilla, ${points.length} días guardados. Desliza para ver cada día.`}
+  />;
 }
 
 /*

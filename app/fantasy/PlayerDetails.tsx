@@ -6,6 +6,7 @@ import { get } from "./api";
 import { millions, UNKNOWN } from "./format";
 import type { MarketValuePoint, Player } from "./types";
 import { PlayerImage } from "./PlayerImage";
+import { TrendChart } from "./TrendChart";
 
 export function PlayerDetails({ player, onClose }: { player: Player; onClose: () => void }) {
   const [history, setHistory] = useState<MarketValuePoint[]>([]);
@@ -55,18 +56,19 @@ function Stat({ label, value }: { label: string; value: string }) { return <div 
  * No se corrige el numero ni se oculta la curva: se dice de cuando es cada cosa.
  */
 function HistoryChart({ points, marketValue }: { points: MarketValuePoint[]; marketValue: number }) {
-  const values = points.map((point) => point.marketValue); const min = Math.min(...values); const max = Math.max(...values); const span = Math.max(1, max - min);
-  const path = points.map((point, index) => `${index ? "L" : "M"}${(index / (points.length - 1)) * 100},${38 - ((point.marketValue - min) / span) * 36}`).join(" ");
   const ultimo = points.at(-1)!;
   // El reloj no se lee en el render: es impuro y el linter de React lo rechaza.
   const [ahora] = useState(() => Date.now());
   const vieja = (ahora - Date.parse(ultimo.date)) / 86_400_000 > MAX_DIAS_FRESCA;
   return <div className="mt-3 glass-soft rounded-2xl p-4">
-    <svg viewBox="0 0 100 40" className="h-44 w-full overflow-visible" preserveAspectRatio="none" aria-label="Evolución del valor de mercado"><path d={path} fill="none" stroke={vieja ? "#a1a1aa" : "#8b5cf6"} strokeWidth="2" vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round" /></svg>
-    <div className="flex justify-between gap-2 text-xs text-neutral-500">
-      <span>{fecha(points[0]!.date)}</span>
-      <span className="text-right"><span className="font-bold text-white">{millions(ultimo.marketValue)}</span> · {fecha(ultimo.date)}</span>
-    </div>
+    <TrendChart
+      points={points.map((point) => ({ date: point.date, value: point.marketValue }))}
+      formatValue={millions}
+      formatDate={fecha}
+      color={vieja ? "#a1a1aa" : "#8b5cf6"}
+      label={`Evolución del valor de mercado, ${points.length} días. Desliza para ver cada día.`}
+    />
+    <div className="mt-1 text-xs text-neutral-500">{fecha(points[0]!.date)}</div>
     {vieja && (
       <p className="mt-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-2.5 text-[11px] leading-4 text-amber-300">
         Esta curva es de la <strong>temporada pasada</strong>: LALIGA dejó de publicar cotización el{" "}
