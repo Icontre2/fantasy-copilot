@@ -23,6 +23,7 @@ type Enriquecible = {
   teamId?: string;
   image?: string;
   weekPoints?: { jornada: number; puntos: number }[];
+  lastSeasonPoints?: number;
 };
 
 /** Lo que el catalogo sabe de un jugador y puede prestar. */
@@ -31,6 +32,7 @@ export type DatosDeCatalogo = {
   teamId?: string;
   image?: string;
   weekPoints?: { jornada: number; puntos: number }[];
+  lastSeasonPoints?: number;
 };
 
 /** `—` es el marcador de "no lo sé" de esta app, no un nombre de equipo. */
@@ -40,7 +42,13 @@ export function construirIndice(catalogo: Enriquecible[]): Map<string, DatosDeCa
   return new Map(
     catalogo.map((player) => [
       player.id,
-      { team: player.team, teamId: player.teamId, image: player.image, weekPoints: player.weekPoints },
+      {
+        team: player.team,
+        teamId: player.teamId,
+        image: player.image,
+        weekPoints: player.weekPoints,
+        lastSeasonPoints: player.lastSeasonPoints,
+      },
     ]),
   );
 }
@@ -57,7 +65,8 @@ export function enriquecerJugador<T extends Enriquecible>(
   const faltaFoto = !player.image;
   // Los puntos por jornada NO vienen en la plantilla: son siempre del catalogo.
   const faltaRacha = player.weekPoints === undefined;
-  if (!faltaEquipo && !faltaFoto && !faltaRacha) return player;
+  const faltaAñoPasado = player.lastSeasonPoints === undefined;
+  if (!faltaEquipo && !faltaFoto && !faltaRacha && !faltaAñoPasado) return player;
 
   const delCatalogo = indice.get(player.id);
   if (!delCatalogo) return player;
@@ -74,6 +83,9 @@ export function enriquecerJugador<T extends Enriquecible>(
   }
   if (faltaRacha && delCatalogo.weekPoints !== undefined) {
     enriquecido.weekPoints = delCatalogo.weekPoints;
+  }
+  if (faltaAñoPasado && delCatalogo.lastSeasonPoints !== undefined) {
+    enriquecido.lastSeasonPoints = delCatalogo.lastSeasonPoints;
   }
   return enriquecido;
 }

@@ -3,7 +3,7 @@ import test from "node:test";
 import { construirIndice, enriquecerJugador } from "./catalog-enrich.ts";
 
 /** Forma minima de un jugador para estas pruebas. */
-type Jugador = { id: string; team: string; teamId?: string; image?: string; weekPoints?: { jornada: number; puntos: number }[] };
+type Jugador = { id: string; team: string; teamId?: string; image?: string; weekPoints?: { jornada: number; puntos: number }[]; lastSeasonPoints?: number };
 const jugador = (datos: Jugador): Jugador => datos;
 
 /*
@@ -53,6 +53,20 @@ test("un jugador que no esta en el catalogo se queda como esta", () => {
 });
 
 test("si no falta nada, devuelve el mismo objeto sin copiarlo", () => {
-  const original = jugador({ id: "68", team: "ATH", teamId: "3", image: "propia.png", weekPoints: [] });
+  const original = jugador({ id: "68", team: "ATH", teamId: "3", image: "propia.png", weekPoints: [], lastSeasonPoints: 0 });
   assert.equal(enriquecerJugador(original, catalogo), original);
+});
+
+test("los puntos del año pasado tambien salen del catalogo", () => {
+  // El mercado no los trae, y por eso la ficha enseñaba "Año pasado —" de un
+  // jugador cuyo dato si existe.
+  const indice = construirIndice([{ id: "68", team: "ATH", teamId: "3", lastSeasonPoints: 211 }]);
+  const salida = enriquecerJugador(jugador({ id: "68", team: "ATH", teamId: "3", image: "p.png" }), indice);
+  assert.equal(salida.lastSeasonPoints, 211);
+});
+
+test("no pisa los puntos del año pasado si ya vienen", () => {
+  const indice = construirIndice([{ id: "68", team: "ATH", teamId: "3", lastSeasonPoints: 211 }]);
+  const salida = enriquecerJugador(jugador({ id: "68", team: "ATH", teamId: "3", image: "p.png", lastSeasonPoints: 4 }), indice);
+  assert.equal(salida.lastSeasonPoints, 4);
 });

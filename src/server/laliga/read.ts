@@ -12,7 +12,7 @@ import { privateFetch, seasonFetch } from './client';
 import { COMPETITION_ID } from './config';
 import { apiActivitySchema } from './schemas';
 import { equiposSinCaja, mezclarCajas } from './team-money.ts';
-import { construirIndice, enriquecerJugadores } from './catalog-enrich.ts';
+import { construirIndice, enriquecerJugador, enriquecerJugadores } from './catalog-enrich.ts';
 import { mapCalendar, type Match } from './calendar.ts';
 import { leerJornadas } from './week-points.ts';
 import {
@@ -106,14 +106,31 @@ export async function getLeagueTeams(accessToken: string, leagueId: string): Pro
   return teams.map(mapLeagueTeam);
 }
 
-/** Jugadores a la venta ahora mismo en el mercado de la liga. */
+/**
+ * Jugadores a la venta ahora mismo en el mercado de la liga.
+ *
+ * Se enriquecen con el catalogo igual que las plantillas. No estaba, y por eso
+ * en el mercado un jugador salia con equipo "—", sin foto y con "Año pasado —"
+ * mientras el mismo jugador se veia entero en la pantalla de plantilla: la
+ * respuesta del mercado trae menos campos por jugador, y solo el snapshot
+ * pasaba por el relleno.
+ */
 export async function getLeagueMarket(accessToken: string, leagueId: string): Promise<MarketEntry[]> {
   const market = await privateFetch(
     `${CMP}/league/${encodeURIComponent(leagueId)}/market`,
     accessToken,
     apiMarketSchema,
   );
-  return market.map(mapMarketEntry).filter((entry): entry is MarketEntry => entry !== null);
+  const entries = market.map(mapMarketEntry).filter((entry): entry is MarketEntry => entry !== null);
+
+  try {
+    const indice = construirIndice(await getPlayerCatalog());
+    return entries.map((entry) => ({ ...entry, player: enriquecerJugador(entry.player, indice) }));
+  } catch {
+    // El catalogo es una mejora, no un requisito: sin el, el mercado se ve igual
+    // que antes en vez de no verse.
+    return entries;
+  }
 }
 
 /** Jornada en curso. */
