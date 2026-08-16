@@ -1,6 +1,7 @@
 import { errorJson, privateJson } from "@/src/server/http/responses";
 import { requireSession } from "@/src/server/http/session-guard";
 import { getCalendar, getCurrentWeekPublic } from "@/src/server/laliga/read";
+import { getCuotas, hayClaveDeCuotas } from "@/src/server/odds/client";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -30,7 +31,21 @@ export async function GET(request: Request) {
       ? Math.trunc(pedida)
       : actual.weekNumber;
 
-    const matches = await getCalendar(week);
+    const [matches, cuotas] = await Promise.all([getCalendar(week), getCuotas()]);
+
+    /*
+     * Las cuotas se pegan al partido por los dos equipos a la vez. Si la casa no
+     * tiene ese partido abierto —los de dentro de tres meses no lo están— se
+     * queda sin cuotas, y eso NO es lo mismo que no tenerlas configuradas: la
+     * pantalla dice una cosa u otra según `cuotasDisponibles`.
+     */
+    const conCuotas = matches.map((match) => ({
+      ...match,
+      odds:
+        cuotas?.find(
+          (entrada) => entrada.localId === match.local?.id && entrada.visitorId === match.visitor?.id,
+        ) ?? null,
+    }));
 
     return privateJson({
       week,
@@ -38,10 +53,17 @@ export async function GET(request: Request) {
       isLive: actual.isLive,
       firstWeek: PRIMERA,
       lastWeek: ULTIMA,
-      matches,
+      matches: conCuotas,
+      cuotasDisponibles: hayClaveDeCuotas(),
       dataNotes: [
         "Horarios y marcadores publicados por LALIGA. Un partido sin marcador es que todavía no se ha jugado.",
         "La hora se muestra en la del dispositivo, convertida desde la que publica LALIGA.",
+        ...(hayClaveDeCuotas()
+          ? [
+              "Las cuotas son el precio de una casa de apuestas, no un pronóstico de esta app. Se indica siempre cuál las publica.",
+              "El porcentaje SÍ es un cálculo nuestro: la probabilidad implícita de la cuota, repartiendo el margen de la casa entre los tres resultados.",
+            ]
+          : []),
       ],
     });
   } catch (error) {

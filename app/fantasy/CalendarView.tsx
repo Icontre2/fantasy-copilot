@@ -22,8 +22,18 @@ export type CalendarResponse = {
     visitor: Equipo;
     localScore: number | null;
     visitorScore: number | null;
+    odds: Cuotas | null;
   }>;
+  /** Si hay clave configurada. Distingue «no hay cuotas» de «no está montado». */
+  cuotasDisponibles: boolean;
   dataNotes: string[];
+};
+
+type Cuotas = {
+  cuotas: { local: number; empate: number; visitante: number };
+  probabilidades: { local: number; empate: number; visitante: number; margen: number };
+  casa: string;
+  actualizado: string | null;
 };
 
 /**
@@ -141,8 +151,69 @@ function SemanaCargada({
         ))
       )}
 
+      {/*
+        Sin clave no se enseña nada inventado, pero tampoco se calla: si no se
+        dijera, parecería que ningún partido tiene cuotas cuando lo que pasa es
+        que la fuente no está conectada.
+      */}
+      {!data.cuotasDisponibles && (
+        <p className="rounded-2xl border border-white/8 bg-white/[.03] px-4 py-3 text-xs leading-5 text-neutral-500">
+          Las cuotas de casa de apuestas no están configuradas. Cuando haya una clave, cada partido
+          mostrará el 1X2 para ver de un vistazo lo fácil o difícil que lo tiene cada equipo.
+        </p>
+      )}
+
       <DataNotes notes={data.dataNotes} />
     </div>
+  );
+}
+
+/**
+ * Qué de difícil lo tiene cada equipo, según la casa de apuestas.
+ *
+ * Se enseñan las tres cuotas tal cual las publica, y debajo el porcentaje ya sin
+ * su comisión — que es cálculo nuestro y por eso lleva el «≈». La palabra
+ * («Muy favorable», «Igualado»…) acompaña siempre al número: el color solo no
+ * explica nada.
+ *
+ * Esto NO dice quién va a ganar. Es el precio al que una casa paga cada
+ * resultado, que es una cosa distinta y bastante más honesta.
+ */
+function Dificultad({ odds }: { odds: Cuotas }) {
+  const { probabilidades: p, cuotas } = odds;
+  const favorito = p.local >= p.visitante ? "local" : "visitante";
+  return (
+    <div className="mt-2 rounded-xl bg-white/[.03] px-2.5 py-2">
+      <div className="grid grid-cols-3 gap-1 text-center text-[11px]">
+        <Cuota etiqueta="1" cuota={cuotas.local} probabilidad={p.local} destacado={favorito === "local"} />
+        <Cuota etiqueta="X" cuota={cuotas.empate} probabilidad={p.empate} destacado={false} />
+        <Cuota etiqueta="2" cuota={cuotas.visitante} probabilidad={p.visitante} destacado={favorito === "visitante"} />
+      </div>
+      <p className="mt-1.5 text-center text-[10px] leading-3 text-neutral-600">
+        Cuotas de {odds.casa}. El % es la probabilidad implícita sin su comisión
+        {odds.probabilidades.margen > 1 ? ` (${Math.round((odds.probabilidades.margen - 1) * 100)} %)` : ""}.
+      </p>
+    </div>
+  );
+}
+
+function Cuota({
+  etiqueta,
+  cuota,
+  probabilidad,
+  destacado,
+}: {
+  etiqueta: string;
+  cuota: number;
+  probabilidad: number;
+  destacado: boolean;
+}) {
+  return (
+    <span className={`rounded-lg px-1 py-1 ${destacado ? "bg-[#7c3aed]/20 ring-1 ring-[#7c3aed]/40" : "bg-white/[.04]"}`}>
+      <span className="block text-[9px] text-neutral-500">{etiqueta}</span>
+      <span className="block font-bold tabular-nums text-white">{cuota.toFixed(2).replace(".", ",")}</span>
+      <span className="block text-[10px] tabular-nums text-neutral-400">≈ {Math.round(probabilidad * 100)} %</span>
+    </span>
   );
 }
 
@@ -150,7 +221,8 @@ function SemanaCargada({
 function Partido({ partido }: { partido: CalendarResponse["matches"][number] }) {
   const jugado = partido.localScore !== null && partido.visitorScore !== null;
   return (
-    <li className="flex items-center gap-3 rounded-2xl bg-white/[.03] p-2.5">
+    <li className="rounded-2xl bg-white/[.03] p-2.5">
+    <div className="flex items-center gap-3">
       <span className="w-12 shrink-0 text-center">
         <span className="block text-sm font-bold tabular-nums text-white">{hora(partido.kickoff)}</span>
       </span>
@@ -164,6 +236,10 @@ function Partido({ partido }: { partido: CalendarResponse["matches"][number] }) 
         <span className="min-w-0 flex-1 truncate text-right text-sm text-neutral-200">{partido.visitor?.shortName ?? UNKNOWN}</span>
         <Escudo equipo={partido.visitor} />
       </span>
+    </div>
+    {/* Las cuotas solo si las hay para ESTE partido: los de dentro de meses
+        todavía no están abiertos en ninguna casa. */}
+    {partido.odds && <Dificultad odds={partido.odds} />}
     </li>
   );
 }
