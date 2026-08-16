@@ -8,9 +8,9 @@
  * capturas. Esa premisa venía de la documentación del proyecto de referencia
  * («LALIGA no publica historial de operaciones») y **es falsa**.
  *
- * `GET /leagues/{id}/activity` devuelve las operaciones con su importe exacto,
- * su fecha y los managers implicados. Los importes dejan de ser deducidos y
- * pasan a ser publicados.
+ * `GET /leagues/{id}/activity/{pagina}` devuelve las operaciones con su importe
+ * exacto, su fecha y los managers implicados. Hay que recorrer las paginas
+ * hasta la primera vacia: la ruta sin indice solo contiene el tramo reciente.
  *
  * ── Cómo se averiguó qué significa cada código ───────────────────────────────
  * `activityTypeId` es un número sin documentar. NO se ha adivinado: se cruzaron
@@ -22,6 +22,7 @@
  * | 31 | «El Fenómeno ha **comprado** al jugador Ugrinic de LALIGA por 3.864.809 €» | resta al comprador |
  * | 33 | «GonzaloLecanda ha **vendido** al jugador Oskarsson a LALIGA por 8.316.899 €» | suma al vendedor |
  * | 1  | Traspaso entre managers, confirmado por el usuario: pagó él, cobró el otro | resta a `user1`, suma a `user2` |
+ * | 32 | Pago de cláusula: el comprador paga y el propietario anterior cobra | resta a `user1`, suma a `user2` |
  * | 9  | Aparece sin `amount` | ninguno |
  *
  * Se comprobaron tres ejemplos de cada uno de los dos tipos frecuentes, y los
@@ -44,6 +45,8 @@ export const ACTIVITY_TYPE = {
   TRASPASO: 1,
   /** Compra al mercado de LALIGA. */
   COMPRA: 31,
+  /** Clausula entre managers: `user1` paga, `user2` cobra. */
+  CLAUSULA: 32,
   /** Venta al mercado de LALIGA. */
   VENTA: 33,
 } as const;
@@ -65,7 +68,7 @@ export type ActivityEntry = {
 export type LedgerEntry = {
   activityId: string;
   occurredAt: string;
-  kind: 'COMPRA' | 'VENTA' | 'TRASPASO_PAGADO' | 'TRASPASO_COBRADO';
+  kind: 'COMPRA' | 'VENTA' | 'TRASPASO_PAGADO' | 'TRASPASO_COBRADO' | 'CLAUSULA_PAGADA' | 'CLAUSULA_COBRADA';
   amount: number;
   playerId?: string;
   playerName?: string;
@@ -134,6 +137,18 @@ function toLedgerEntries(entry: ActivityEntry): { managerId: string; entry: Ledg
       {
         managerId: entry.user2Id,
         entry: { ...base, kind: 'TRASPASO_COBRADO', amount, counterpartyId: entry.user1Id },
+      },
+    ];
+  }
+  if (entry.activityTypeId === ACTIVITY_TYPE.CLAUSULA && entry.user1Id && entry.user2Id) {
+    return [
+      {
+        managerId: entry.user1Id,
+        entry: { ...base, kind: 'CLAUSULA_PAGADA', amount: -amount, counterpartyId: entry.user2Id },
+      },
+      {
+        managerId: entry.user2Id,
+        entry: { ...base, kind: 'CLAUSULA_COBRADA', amount, counterpartyId: entry.user1Id },
       },
     ];
   }

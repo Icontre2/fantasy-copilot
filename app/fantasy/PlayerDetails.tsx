@@ -9,7 +9,9 @@ import { PlayerImage } from "./PlayerImage";
 
 export function PlayerDetails({ player, onClose }: { player: Player; onClose: () => void }) {
   const [history, setHistory] = useState<MarketValuePoint[]>([]);
-  const [days, setDays] = useState<7 | 30 | 90 | "MAX">(30);
+  // La ficha abre con toda la temporada. Los filtros cortos son opcionales;
+  // nunca se presenta un tramo de 30 dias como si fuese el historial entero.
+  const [days, setDays] = useState<7 | 30 | 90 | "MAX">("MAX");
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     // Se comprueba que venga una lista antes de guardarla: una respuesta sin
@@ -46,12 +48,9 @@ function Stat({ label, value }: { label: string; value: string }) { return <div 
 /**
  * Evolucion del valor, con las DOS fechas y un aviso si la serie esta vieja.
  *
- * Antes solo se rotulaba la fecha inicial y el ultimo importe, y eso escondia el
- * problema de raiz: el historico lo publica el host PUBLICO de LALIGA, que ahora
- * mismo va por la temporada pasada — la serie termina el 30/06/2026 — mientras
- * que el valor de arriba viene de tu plantilla y es de hoy. Asi se leian juntos
- * "17,1 M€" y una curva que acababa en "1,67 M€" como si se contradijeran,
- * cuando son simplemente dos temporadas distintas.
+ * Se rotulan siempre la primera y la ultima fecha. La fuente normal es el host
+ * de la temporada en curso; el aviso sigue siendo una defensa por si LALIGA
+ * devuelve una serie congelada o vuelve a servir la campaña anterior.
  *
  * No se corrige el numero ni se oculta la curva: se dice de cuando es cada cosa.
  */

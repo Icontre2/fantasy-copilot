@@ -12,8 +12,8 @@ import { DataNotes, Empty } from "./ui";
  * operaciones que publica LALIGA. La cifra que manda sigue siendo la oficial
  * cuando existe; la reconstruida está para EXPLICARLA, no para sustituirla.
  *
- * La diferencia entre ambas se enseña siempre. Es la parte que la actividad
- * disponible no cubre, y esconderla convertiría un dato incompleto en uno falso.
+ * La diferencia entre ambas se enseña siempre. Es la parte que el historial
+ * no explica (por ejemplo premios diarios), y esconderla seria falso.
  */
 export function EconomyView({ data }: { data: EconomyResponse }) {
   const [abierto, setAbierto] = useState<string | null>(null);
@@ -31,7 +31,7 @@ export function EconomyView({ data }: { data: EconomyResponse }) {
         <p className="mt-2 text-sm leading-5 text-white/55">
           Todos empezaron con <strong>{millions(data.saldoInicial)}</strong>.{" "}
           {data.actividadDesde
-            ? `Actividad conocida desde el ${shortDate(data.actividadDesde)} (${data.operaciones} operaciones).`
+            ? `Historial completo desde el ${shortDate(data.actividadDesde)} (${data.operaciones} entradas).`
             : "LALIGA no ha devuelto operaciones de esta liga."}
         </p>
 
@@ -46,7 +46,7 @@ export function EconomyView({ data }: { data: EconomyResponse }) {
         <ul className="mt-4 space-y-2">
           {data.economies.map((economy) => {
             const abiertoAqui = abierto === economy.managerId;
-            const displayedCash = economy.cajaOficial ?? economy.cajaReconstruida + (data.estimationError ?? 0);
+            const displayedCash = economy.cajaOficial ?? economy.cajaReconstruida;
             return (
               <li key={economy.managerId}>
                 <button
@@ -62,7 +62,7 @@ export function EconomyView({ data }: { data: EconomyResponse }) {
                       <span className="block truncate font-bold text-white">{economy.managerName}</span>
                       {economy.cajaOficial === null && (
                         <span className="block truncate text-[10px] text-neutral-500">
-                          Estimación corregida · no usa valor de equipo
+                          Reconstrucción propia · no usa valor de equipo
                         </span>
                       )}
                     </span>
@@ -103,7 +103,7 @@ export function EconomyView({ data }: { data: EconomyResponse }) {
 
         <p className="mt-3 text-xs leading-4 text-white/45">
           Toca un manager para ver su libro. La caja aproximada puede ser negativa, no incluye el valor
-          del equipo y corrige el hueco del historial con el error medido en tu propia caja.
+          del equipo y nunca hereda el ajuste calculado para otro manager.
         </p>
       </section>
 
@@ -117,6 +117,8 @@ const KIND_LABEL: Record<ManagerEconomy["entries"][number]["kind"], string> = {
   VENTA: "Venta",
   TRASPASO_PAGADO: "Fichaje pagado",
   TRASPASO_COBRADO: "Traspaso cobrado",
+  CLAUSULA_PAGADA: "Cláusula pagada",
+  CLAUSULA_COBRADA: "Cláusula cobrada",
 };
 
 function LibroCard({ economy, saldoInicial }: { economy: ManagerEconomy; saldoInicial: number }) {
@@ -136,7 +138,7 @@ function LibroCard({ economy, saldoInicial }: { economy: ManagerEconomy; saldoIn
         />
         {/* Mismo nombre que en la fila de arriba: dos rotulos para la misma cifra confunden. */}
         <Linea label="Saldo de operaciones" value={signedMillions(economy.flujoConocido)} strong />
-        <Linea label="Saldo teórico si el historial fuese completo" value={millions(economy.cajaReconstruida)} />
+        <Linea label="Caja reconstruida" value={millions(economy.cajaReconstruida)} />
 
         {economy.cajaOficial !== null ? (
           <>
@@ -149,8 +151,8 @@ function LibroCard({ economy, saldoInicial }: { economy: ManagerEconomy; saldoIn
           </>
         ) : (
           <p className="pt-2 text-xs text-neutral-500">
-            LALIGA no publica la caja de otros managers. El saldo teórico no es su caja real si faltan
-            movimientos anteriores al primer registro disponible.
+            LALIGA no publica la caja de otros managers. La reconstrucción usa el historial completo,
+            pero puede diferir por recompensas diarias u otros movimientos no publicados.
           </p>
         )}
       </dl>
@@ -164,7 +166,7 @@ function LibroCard({ economy, saldoInicial }: { economy: ManagerEconomy; saldoIn
       )}
 
       {economy.entries.length === 0 ? (
-        <Empty>Sin operaciones en el periodo que publica LALIGA.</Empty>
+        <Empty>Sin operaciones publicadas para este manager.</Empty>
       ) : (
         <ul className="space-y-2">
           {economy.entries.map((entry) => (

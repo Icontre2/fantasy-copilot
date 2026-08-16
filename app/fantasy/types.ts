@@ -20,6 +20,8 @@ export type PlayerWithProbability = Player & {
   buyoutClause?: number;
   isShielded?: boolean;
   lineupProbability?: number;
+  /** FútbolFantasy lo incluye en su once, aunque todavía no publique porcentaje. */
+  lineupExpectedStarter?: boolean;
 };
 
 export type DashboardResponse = {
@@ -32,7 +34,7 @@ export type DashboardResponse = {
     netWorth: number | null;
     cashSource: "OFICIAL" | "NO_PUBLICADA";
     knownCashFlow: number;
-    /** `100 M€ + flujo conocido`. Estimación con el error medido en `estimationError`. */
+    /** `100 M€ + flujo conocido`. Respaldo si no existe caja oficial. */
     estimatedCash: number;
   };
   lineup: {
@@ -55,12 +57,6 @@ export type DashboardResponse = {
     estimatedCash: number;
   }>;
   failedTeamIds: string[];
-  /**
-   * Desviación medida de la estimación en el único caso comprobable: el propio
-   * usuario. Negativo = la estimación se queda alta porque faltan operaciones
-   * anteriores al inicio del histórico. `null` si LALIGA no publicó tu caja.
-   */
-  estimationError: number | null;
   activityFrom: string | null;
 };
 
@@ -86,8 +82,6 @@ export type EconomyResponse = {
   actividadDesde: string | null;
   actividadHasta: string | null;
   operaciones: number;
-  /** Ajuste medido entre la reconstruccion propia y la caja oficial. */
-  estimationError: number | null;
   economies: ManagerEconomy[];
   dataNotes: string[];
 };

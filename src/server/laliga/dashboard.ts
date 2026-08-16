@@ -4,7 +4,10 @@ import { matchExternalPlayer } from '@/src/server/futbolfantasy/match';
 import { buildEconomy, SALDO_INICIAL } from './economy/activity';
 import { getLeagueActivity, getLeagueSnapshot, getMyLeagues, getPlayerCatalog } from './read';
 
-type PlayerWithProbability = SquadPlayer & { lineupProbability?: number };
+type PlayerWithProbability = SquadPlayer & {
+  lineupProbability?: number;
+  lineupExpectedStarter?: boolean;
+};
 
 const FORMATIONS: Record<Position, number>[] = [
   { POR: 1, DEF: 3, MED: 4, DEL: 3 },
@@ -13,6 +16,11 @@ const FORMATIONS: Record<Position, number>[] = [
   { POR: 1, DEF: 5, MED: 3, DEL: 2 },
   { POR: 1, DEF: 5, MED: 4, DEL: 1 },
 ];
+
+/** Orden interno: un titular publicado sin porcentaje cuenta como señal fuerte, no como un porcentaje fingido. */
+function lineupRank(player: PlayerWithProbability): number {
+  return player.lineupProbability ?? (player.lineupExpectedStarter ? 100 : -1);
+}
 
 async function mapConcurrent<T, R>(items: T[], limit: number, worker: (item: T) => Promise<R>): Promise<R[]> {
   const output = new Array<R>(items.length);
@@ -32,15 +40,15 @@ function bestEleven(players: PlayerWithProbability[]): { formation: string; star
   for (const formation of FORMATIONS) {
     const starters = (Object.keys(formation) as Position[]).flatMap((position) =>
       players.filter((player) => player.position === position)
-        .sort((a, b) => (b.lineupProbability ?? -1) - (a.lineupProbability ?? -1) || b.averagePoints - a.averagePoints)
+        .sort((a, b) => lineupRank(b) - lineupRank(a) || b.averagePoints - a.averagePoints)
         .slice(0, formation[position]),
     );
     if (starters.length !== 11) continue;
-    const score = starters.reduce((sum, player) => sum + (player.lineupProbability ?? 0), 0);
+    const score = starters.reduce((sum, player) => sum + Math.max(lineupRank(player), 0), 0);
     const label = `1-${formation.DEF}-${formation.MED}-${formation.DEL}`;
     if (!best || score > best.score) best = { score, formation: label, starters };
   }
-  const starters = best?.starters ?? players.slice().sort((a, b) => (b.lineupProbability ?? -1) - (a.lineupProbability ?? -1)).slice(0, 11);
+  const starters = best?.starters ?? players.slice().sort((a, b) => lineupRank(b) - lineupRank(a)).slice(0, 11);
   const ids = new Set(starters.map((player) => player.id));
   return {
     formation: best?.formation ?? 'Once probable',
@@ -96,7 +104,11 @@ export async function buildDashboard(accessToken: string, leagueId: string) {
     const team = teamId ? probableByTeam.get(teamId) : undefined;
     const signal = team?.players.find((entry) => entry.playerId === player.id) ??
       (team ? matchExternalPlayer(team.players, player.name) : undefined);
-    return { ...player, lineupProbability: signal?.probability };
+    return {
+      ...player,
+      lineupProbability: signal?.probability,
+      lineupExpectedStarter: signal?.expectedStarter,
+    };
   });
   const standingByTeam = new Map(snapshot.standing.map((row) => [row.teamId, row]));
   const economyByManager = new Map(buildEconomy({
@@ -111,23 +123,10 @@ export async function buildDashboard(accessToken: string, leagueId: string) {
   const officialCashOf = (team: LeagueTeam) => team.teamMoney;
   const knownFlowOf = (team: LeagueTeam) => economyByManager.get(team.manager.id)?.flujoConocido ?? 0;
 
-  /*
-   * Caja estimada de un rival, y por que lleva un margen de error medido.
-   *
-   * `100 M + flujo conocido` daria la caja exacta SI la actividad cubriera toda
-   * la liga. No la cubre: LALIGA solo publica desde hace unos dias, y lo que se
-   * movio antes falta. Enseñar el flujo a secas (siempre negativo, porque en
-   * pretemporada todos gastan) no responde a "cuanto dinero tiene", y enseñar la
-   * estimacion a secas la haria pasar por exacta.
-   *
-   * La salida es medir el error con el unico caso comprobable: el propio
-   * usuario, de quien SI se conoce la caja oficial. Si a el la estimacion le
-   * falla en 31 M, a sus rivales le fallara en un orden parecido — y eso se
-   * puede decir en pantalla en vez de callarlo.
-   */
-  const myOfficialCash = officialCashOf(myTeam);
+  // Respaldo solo cuando tampoco el endpoint individual publica la caja. No se
+  // corrige con el error de otro manager: las recompensas no reclamadas y otros
+  // movimientos no publicados son individuales.
   const myEstimate = SALDO_INICIAL + knownFlowOf(myTeam);
-  const estimationError = myOfficialCash === undefined ? null : myOfficialCash - myEstimate;
 
   return {
     league: league ?? { id: leagueId, name: 'Mi liga' },
@@ -137,7 +136,7 @@ export async function buildDashboard(accessToken: string, leagueId: string) {
       position: standingByTeam.get(myTeam.teamId)?.position,
       points: standingByTeam.get(myTeam.teamId)?.points ?? myTeam.teamPoints,
       teamMoney: officialCashOf(myTeam),
-      cashSource: 'OFICIAL',
+      cashSource: myTeam.teamMoney === undefined ? 'NO_PUBLICADA' : 'OFICIAL',
       knownCashFlow: knownFlowOf(myTeam),
       estimatedCash: myEstimate,
       netWorth: null,
@@ -159,11 +158,6 @@ export async function buildDashboard(accessToken: string, leagueId: string) {
       }))
       .sort((a, b) => (a.position ?? 999) - (b.position ?? 999)),
     failedTeamIds: snapshot.failedTeamIds,
-    /**
-     * Cuanto se desvia la estimacion en el unico caso comprobable. Negativo =
-     * la estimacion se queda ALTA porque faltan compras antiguas.
-     */
-    estimationError,
     activityFrom: activity.map((entry) => entry.createdAt).sort()[0] ?? null,
   };
 }
