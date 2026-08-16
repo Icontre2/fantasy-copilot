@@ -26,6 +26,9 @@ export type PlayerWithProbability = Player & {
 
 export type DashboardResponse = {
   league: Pick<League, 'id' | 'name'>;
+  /** Jornada en curso; `null` si LALIGA no la publica en este momento. */
+  currentWeek: number | null;
+  weekIsLive: boolean;
   me: LeagueTeam & {
     players: PlayerWithProbability[];
     position?: number;

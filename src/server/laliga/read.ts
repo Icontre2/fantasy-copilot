@@ -14,6 +14,7 @@ import { apiActivitySchema } from './schemas';
 import { equiposSinCaja, mezclarCajas } from './team-money.ts';
 import { construirIndice, enriquecerJugadores } from './catalog-enrich.ts';
 import { mapCalendar, type Match } from './calendar.ts';
+import { leerJornadas } from './week-points.ts';
 import {
   mapLeague,
   mapLeagueTeam,
@@ -209,6 +210,7 @@ export async function getPlayerCatalog(): Promise<import('@/src/domain/fantasy')
       status: player.playerStatus,
       image: player.image,
       lastSeasonPoints: player.lastSeasonPoints,
+      weekPoints: leerJornadas(player.weekPoints),
     }];
   });
   catalogoEnMemoria = { at: Date.now(), players: catalogo };

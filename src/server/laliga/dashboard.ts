@@ -2,7 +2,7 @@ import type { LeagueTeam, Position, SquadPlayer } from '@/src/domain/fantasy';
 import { getProbableTeam } from '@/src/server/futbolfantasy/lineups';
 import { matchExternalPlayer } from '@/src/server/futbolfantasy/match';
 import { buildEconomy, SALDO_INICIAL } from './economy/activity';
-import { getLeagueActivity, getLeagueSnapshot, getMyLeagues, getPlayerCatalog } from './read';
+import { getCurrentWeekPublic, getLeagueActivity, getLeagueSnapshot, getMyLeagues, getPlayerCatalog } from './read';
 
 type PlayerWithProbability = SquadPlayer & {
   lineupProbability?: number;
@@ -58,11 +58,13 @@ function bestEleven(players: PlayerWithProbability[]): { formation: string; star
 }
 
 export async function buildDashboard(accessToken: string, leagueId: string) {
-  const [snapshot, leagues, catalog, activity] = await Promise.all([
+  const [snapshot, leagues, catalog, activity, semana] = await Promise.all([
     getLeagueSnapshot(accessToken, leagueId),
     getMyLeagues(accessToken),
     getPlayerCatalog(),
     getLeagueActivity(accessToken, leagueId),
+    // Para poder decir "puntos de ESTA jornada" hay que saber cual es.
+    getCurrentWeekPublic().catch(() => null),
   ]);
   const league = leagues.find((item) => item.id === leagueId);
   const myTeam = snapshot.teams.find((team) => team.teamId === league?.myTeamId);
@@ -123,6 +125,9 @@ export async function buildDashboard(accessToken: string, leagueId: string) {
 
   return {
     league: league ?? { id: leagueId, name: 'Mi liga' },
+    /** `null` si LALIGA no dice en que jornada vamos: entonces no se rotula. */
+    currentWeek: semana?.weekNumber ?? null,
+    weekIsLive: semana?.isLive ?? false,
     me: {
       ...myTeam,
       players,

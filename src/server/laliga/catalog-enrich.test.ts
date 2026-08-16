@@ -3,7 +3,7 @@ import test from "node:test";
 import { construirIndice, enriquecerJugador } from "./catalog-enrich.ts";
 
 /** Forma minima de un jugador para estas pruebas. */
-type Jugador = { id: string; team: string; teamId?: string; image?: string };
+type Jugador = { id: string; team: string; teamId?: string; image?: string; weekPoints?: { jornada: number; puntos: number }[] };
 const jugador = (datos: Jugador): Jugador => datos;
 
 /*
@@ -14,7 +14,7 @@ const jugador = (datos: Jugador): Jugador => datos;
  */
 
 const catalogo = construirIndice([
-  { id: "2443", team: "RSO", teamId: "16", image: "https://foto/2443.png" },
+  { id: "2443", team: "RSO", teamId: "16", image: "https://foto/2443.png", weekPoints: [{ jornada: 1, puntos: 7 }] },
   { id: "68", team: "ATH", teamId: "3", image: "https://foto/68.png" },
 ]);
 
@@ -40,6 +40,12 @@ test("no pisa una foto que ya trae la plantilla", () => {
   assert.equal(salida.image, "propia.png");
 });
 
+test("la racha de jornadas se toma siempre del catalogo", () => {
+  // No viene en la plantilla: si el jugador no la trae, se coge entera.
+  const salida = enriquecerJugador(jugador({ id: "2443", team: "RSO", teamId: "16", image: "p.png" }), catalogo);
+  assert.deepEqual(salida.weekPoints, [{ jornada: 1, puntos: 7 }]);
+});
+
 test("un jugador que no esta en el catalogo se queda como esta", () => {
   const salida = enriquecerJugador(jugador({ id: "9999", team: "—" }), catalogo);
   assert.equal(salida.team, "—");
@@ -47,6 +53,6 @@ test("un jugador que no esta en el catalogo se queda como esta", () => {
 });
 
 test("si no falta nada, devuelve el mismo objeto sin copiarlo", () => {
-  const original = jugador({ id: "68", team: "ATH", teamId: "3", image: "propia.png" });
+  const original = jugador({ id: "68", team: "ATH", teamId: "3", image: "propia.png", weekPoints: [] });
   assert.equal(enriquecerJugador(original, catalogo), original);
 });

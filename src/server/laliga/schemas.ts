@@ -26,6 +26,14 @@ export const apiPlayerSchema = z.object({
   image: z.string(),
   teamId: z.string(),
   lastSeasonPoints: numeric.optional(),
+  /*
+   * Puntos por jornada. Se acepta CUALQUIER lista porque hoy llega vacia en los
+   * 731 jugadores —no se ha cerrado ninguna jornada— y no se puede comprobar su
+   * forma real. Quien la interpreta es `week-points.ts`, que lee lo que
+   * reconoce y descarta lo que no. Declararla estricta aqui la tiraria entera el
+   * dia que LALIGA la rellene con un campo de mas.
+   */
+  weekPoints: z.array(z.unknown()).optional(),
 });
 
 export const apiPlayersSchema = z.array(apiPlayerSchema);

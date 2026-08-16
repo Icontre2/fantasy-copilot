@@ -52,6 +52,12 @@ export type Player = {
   status: PlayerStatus;
   image?: string;
   lastSeasonPoints?: number;
+  /**
+   * Puntos por jornada de esta temporada, de la mas antigua a la mas reciente.
+   * Vacio mientras no se haya cerrado ninguna jornada; nunca se rellena con
+   * ceros. Ver `week-points.ts`.
+   */
+  weekPoints?: { jornada: number; puntos: number }[];
 };
 
 /** Jugador dentro de la plantilla de un participante. */

@@ -37,6 +37,7 @@ export function PlayerDetails({ player, onClose }: { player: Player; onClose: ()
         <dl className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <Stat label="Valor" value={millions(player.marketValue)} /><Stat label="Puntos" value={String(player.points)} /><Stat label="Media" value={String(player.averagePoints)} /><Stat label="Año pasado" value={player.lastSeasonPoints === undefined ? UNKNOWN : String(player.lastSeasonPoints)} />
         </dl>
+        <Forma player={player} />
         <div className="mt-6"><p className="text-[10px] font-semibold uppercase tracking-[.14em] text-neutral-500">Mercado</p><h3 className="font-bold text-white">Evolución del valor</h3><div className="mt-3 grid grid-cols-4 gap-1 rounded-xl bg-white/[.04] p-1">{([7, 30, 90, "MAX"] as const).map((option) => <button key={String(option)} type="button" onClick={() => setDays(option)} aria-pressed={days === option} className={`min-h-11 rounded-lg px-2 text-xs font-bold ${days === option ? "bg-[#7c3aed] text-white" : "text-neutral-500"}`}>{option === "MAX" ? "Todo" : `${option}D`}</button>)}</div></div>
         {visible.length > 1 ? <HistoryChart points={visible} marketValue={player.marketValue} /> : <p className="mt-3 glass-soft rounded-2xl p-5 text-center text-sm leading-5 text-neutral-500">{error ?? "Cargando histórico…"}</p>}
       </section>
@@ -45,6 +46,60 @@ export function PlayerDetails({ player, onClose }: { player: Player; onClose: ()
 }
 
 function Stat({ label, value }: { label: string; value: string }) { return <div className="glass-soft rounded-2xl p-3"><dt className="text-xs text-neutral-500">{label}</dt><dd className="mt-1 font-semibold tabular-nums text-white">{value}</dd></div>; }
+
+/** Cuántas jornadas se enseñan en la racha. */
+const JORNADAS_DE_FORMA = 6;
+
+/**
+ * Estado de forma: lo que ha puntuado en las últimas jornadas.
+ *
+ * Son los puntos que publica LALIGA jornada a jornada, sin media móvil ni
+ * índice inventado. El color acompaña siempre al número, nunca lo sustituye.
+ *
+ * Mientras no se haya cerrado ninguna jornada, LALIGA devuelve la lista vacía y
+ * aquí se dice justo eso. No se rellena con ceros, que se leerían como "jugó y
+ * no puntuó" cuando lo cierto es que todavía no ha jugado.
+ */
+function Forma({ player }: { player: Player }) {
+  const jornadas = player.weekPoints ?? [];
+  const ultimas = jornadas.slice(-JORNADAS_DE_FORMA);
+
+  return (
+    <div className="mt-6">
+      <p className="text-[10px] font-semibold uppercase tracking-[.14em] text-neutral-500">Rendimiento</p>
+      <h3 className="font-bold text-white">Estado de forma</h3>
+      {ultimas.length === 0 ? (
+        <p className="mt-3 glass-soft rounded-2xl p-4 text-center text-sm leading-5 text-neutral-500">
+          Todavía no hay ninguna jornada cerrada esta temporada, así que LALIGA no publica puntos por
+          jornada de nadie. Aparecerá aquí en cuanto los haya.
+        </p>
+      ) : (
+        <>
+          <ul className="mt-3 flex gap-1.5">
+            {ultimas.map((entrada) => (
+              <li key={entrada.jornada} className={`flex-1 rounded-xl px-1 py-2 text-center ${tonoDePuntos(entrada.puntos)}`}>
+                <span className="block text-[9px] opacity-70">J{entrada.jornada}</span>
+                <span className="block text-sm font-black tabular-nums">{entrada.puntos}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 text-[11px] leading-4 text-neutral-500">
+            Puntos por jornada publicados por LALIGA. {ultimas.length} de {jornadas.length} jornadas
+            jugadas; la media de esta temporada es {player.averagePoints}.
+          </p>
+        </>
+      )}
+    </div>
+  );
+}
+
+/** Verde, ámbar o rojo según el rango habitual de puntos de una jornada. */
+function tonoDePuntos(puntos: number): string {
+  if (puntos >= 8) return "bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/30";
+  if (puntos >= 4) return "bg-amber-500/15 text-amber-300 ring-1 ring-amber-500/30";
+  if (puntos >= 0) return "bg-white/[.06] text-neutral-300";
+  return "bg-rose-500/15 text-rose-300 ring-1 ring-rose-500/30";
+}
 
 /**
  * Evolucion del valor, con las DOS fechas y un aviso si la serie esta vieja.
