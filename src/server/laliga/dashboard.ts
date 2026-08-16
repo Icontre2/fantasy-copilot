@@ -1,61 +1,8 @@
-import type { LeagueTeam, Position, SquadPlayer } from '@/src/domain/fantasy';
-import { getProbableTeam } from '@/src/server/futbolfantasy/lineups';
-import { matchExternalPlayer } from '@/src/server/futbolfantasy/match';
+import type { LeagueTeam } from '@/src/domain/fantasy';
 import { buildEconomy, SALDO_INICIAL } from './economy/activity';
+import { bestEleven } from './lineup.ts';
+import { conProbabilidades, type PlayerWithProbability } from './probable-lineup';
 import { getCurrentWeekPublic, getLeagueActivity, getLeagueSnapshot, getMyLeagues, getPlayerCatalog } from './read';
-
-type PlayerWithProbability = SquadPlayer & {
-  lineupProbability?: number;
-  lineupExpectedStarter?: boolean;
-};
-
-const FORMATIONS: Record<Position, number>[] = [
-  { POR: 1, DEF: 3, MED: 4, DEL: 3 },
-  { POR: 1, DEF: 4, MED: 3, DEL: 3 },
-  { POR: 1, DEF: 4, MED: 4, DEL: 2 },
-  { POR: 1, DEF: 5, MED: 3, DEL: 2 },
-  { POR: 1, DEF: 5, MED: 4, DEL: 1 },
-];
-
-/** Orden interno: un titular publicado sin porcentaje cuenta como señal fuerte, no como un porcentaje fingido. */
-function lineupRank(player: PlayerWithProbability): number {
-  return player.lineupProbability ?? (player.lineupExpectedStarter ? 100 : -1);
-}
-
-async function mapConcurrent<T, R>(items: T[], limit: number, worker: (item: T) => Promise<R>): Promise<R[]> {
-  const output = new Array<R>(items.length);
-  let cursor = 0;
-  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, async () => {
-    while (cursor < items.length) {
-      const index = cursor++;
-      const item = items[index];
-      if (item !== undefined) output[index] = await worker(item);
-    }
-  }));
-  return output;
-}
-
-function bestEleven(players: PlayerWithProbability[]): { formation: string; starters: PlayerWithProbability[]; bench: PlayerWithProbability[] } {
-  let best: { score: number; formation: string; starters: PlayerWithProbability[] } | null = null;
-  for (const formation of FORMATIONS) {
-    const starters = (Object.keys(formation) as Position[]).flatMap((position) =>
-      players.filter((player) => player.position === position)
-        .sort((a, b) => lineupRank(b) - lineupRank(a) || b.averagePoints - a.averagePoints)
-        .slice(0, formation[position]),
-    );
-    if (starters.length !== 11) continue;
-    const score = starters.reduce((sum, player) => sum + Math.max(lineupRank(player), 0), 0);
-    const label = `1-${formation.DEF}-${formation.MED}-${formation.DEL}`;
-    if (!best || score > best.score) best = { score, formation: label, starters };
-  }
-  const starters = best?.starters ?? players.slice().sort((a, b) => lineupRank(b) - lineupRank(a)).slice(0, 11);
-  const ids = new Set(starters.map((player) => player.id));
-  return {
-    formation: best?.formation ?? 'Once probable',
-    starters,
-    bench: players.filter((player) => !ids.has(player.id)),
-  };
-}
 
 export async function buildDashboard(accessToken: string, leagueId: string) {
   const [snapshot, leagues, catalog, activity, semana] = await Promise.all([
@@ -71,40 +18,12 @@ export async function buildDashboard(accessToken: string, leagueId: string) {
   if (!myTeam) throw new Error('LALIGA no indicó cuál es tu equipo dentro de esta liga.');
 
   /*
-   * De que equipo real es cada jugador de mi plantilla.
-   *
-   * La probabilidad de titularidad se busca POR EQUIPO: primero se descarga la
-   * alineacion probable de cada club y luego se cruza. Si un jugador se queda
-   * sin `teamId`, no hay equipo que mirar y pierde el porcentaje — y como el
-   * fallo es el mismo para los veinticuatro, la pantalla entera se queda sin
-   * porcentajes, que es justo lo que se estaba viendo.
-   *
-   * El catalogo si trae el equipo de cada jugador, asi que sirve de respaldo
-   * cuando la plantilla no lo trae. No es un dato inventado: es el mismo dato,
-   * leido de la otra fuente de LALIGA.
-   *
-   * Aqui hubo una advertencia de que ese catalogo iba una temporada por detras.
-   * Ya no aplica: se lee del host de la temporada en curso. Ver `read.ts`.
+   * Probabilidad de titularidad de cada jugador de MI plantilla. El mismo
+   * calculo que usa la pantalla de un rival: vive en `probable-lineup.ts` para
+   * que las dos enseñen exactamente lo mismo y no se separen con el tiempo.
    */
-  const teamIdFromCatalog = new Map(catalog.flatMap((player) => player.teamId ? [[player.id, player.teamId] as const] : []));
-  const teamIdOf = (player: { id: string; teamId?: string }) => player.teamId ?? teamIdFromCatalog.get(player.id);
+  const players: PlayerWithProbability[] = await conProbabilidades(myTeam.players, catalog);
 
-  const teamIds = [...new Set(myTeam.players.flatMap((player) => { const id = teamIdOf(player); return id ? [id] : []; }))];
-  const probable = await mapConcurrent(teamIds, 5, async (teamId) => {
-    try { return await getProbableTeam(teamId, catalog); } catch { return null; }
-  });
-  const probableByTeam = new Map(probable.flatMap((team) => team ? [[team.teamId, team] as const] : []));
-  const players: PlayerWithProbability[] = myTeam.players.map((player) => {
-    const teamId = teamIdOf(player);
-    const team = teamId ? probableByTeam.get(teamId) : undefined;
-    const signal = team?.players.find((entry) => entry.playerId === player.id) ??
-      (team ? matchExternalPlayer(team.players, player.name) : undefined);
-    return {
-      ...player,
-      lineupProbability: signal?.probability,
-      lineupExpectedStarter: signal?.expectedStarter,
-    };
-  });
   const standingByTeam = new Map(snapshot.standing.map((row) => [row.teamId, row]));
   const economyByManager = new Map(buildEconomy({
     managers: snapshot.teams.map((team) => ({

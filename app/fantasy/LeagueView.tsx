@@ -1,10 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { millions, UNKNOWN } from "./format";
 import type { TeamsResponse } from "./types";
-import { Card, Empty, SectionTitle } from "./ui";
+import { Card, Empty, SectionTitle, Spinner } from "./ui";
+import { Pitch } from "./Pitch";
+import { get } from "./api";
+import type { PlayerWithProbability } from "./types";
 import { PlayerDetails } from "./PlayerDetails";
 import { PlayerImage } from "./PlayerImage";
 import type { Player } from "./types";
@@ -20,8 +23,15 @@ import type { Player } from "./types";
  * descubre: "Valor planti…" cortado a mitad de palabra. Ahora es una fila por
  * manager con las cifras debajo, que es lo que pide docs/DIRECCION_VISUAL.md.
  */
-export function LeagueView({ data }: { data: TeamsResponse }) {
+/** Lo que devuelve la ruta del once de un rival. */
+type RivalLineup = {
+  teamId: string;
+  lineup: { formation: string; starters: PlayerWithProbability[]; bench: PlayerWithProbability[] };
+};
+
+export function LeagueView({ data, leagueId }: { data: TeamsResponse; leagueId: string }) {
   const [openTeamId, setOpenTeamId] = useState<string | null>(null);
+  const [verPlantilla, setVerPlantilla] = useState<Record<string, boolean>>({});
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
 
   if (data.teams.length === 0) {
@@ -75,18 +85,83 @@ export function LeagueView({ data }: { data: TeamsResponse }) {
                   </div>
                 </button>
 
-                {isOpen && team && <Plantilla team={team} onPlayer={setSelectedPlayer} />}
+                {isOpen && team && (
+                  <>
+                    <OnceDelRival leagueId={leagueId} team={team} onPlayer={setSelectedPlayer} />
+                    <button
+                      type="button"
+                      onClick={() => setVerPlantilla((abiertas) => ({ ...abiertas, [row.teamId]: !abiertas[row.teamId] }))}
+                      aria-expanded={Boolean(verPlantilla[row.teamId])}
+                      className="mt-3 min-h-11 w-full rounded-2xl border border-white/10 bg-white/[.04] text-sm font-semibold text-neutral-300"
+                    >
+                      {verPlantilla[row.teamId] ? "Ocultar la plantilla entera" : `Ver la plantilla entera (${team.players.length})`}
+                    </button>
+                    {verPlantilla[row.teamId] && <Plantilla team={team} onPlayer={setSelectedPlayer} />}
+                  </>
+                )}
               </li>
             );
           })}
         </ul>
         <p className="mt-3 text-xs leading-4 text-neutral-500">
-          Toca un manager para ver su plantilla. Todos estos datos los publica LALIGA. La caja solo
-          es visible en tu propio equipo.
+          Toca un manager para ver su once más probable, y desde ahí su plantilla entera. Valor y
+          jugadores los publica LALIGA; la caja, solo la de tu propio equipo.
         </p>
       </Card>
 
       {selectedPlayer && <PlayerDetails player={selectedPlayer} onClose={() => setSelectedPlayer(null)} />}
+    </div>
+  );
+}
+
+/**
+ * Once probable de un rival.
+ *
+ * Se pide al abrirlo y no con el resto de la pantalla: calcularlo exige leer la
+ * alineación probable de los doce clubes de ESE manager, y hacerlo para los ocho
+ * a la vez sería descargar veinte páginas antes de enseñar nada.
+ */
+function OnceDelRival({
+  leagueId,
+  team,
+  onPlayer,
+}: {
+  leagueId: string;
+  team: TeamsResponse["teams"][number];
+  onPlayer: (player: Player) => void;
+}) {
+  const [data, setData] = useState<RivalLineup | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [cargando, setCargando] = useState(true);
+
+  useEffect(() => {
+    let cancelado = false;
+    get<RivalLineup>(`/api/fantasy/leagues/${encodeURIComponent(leagueId)}/teams/${encodeURIComponent(team.teamId)}/lineup`)
+      .then((respuesta) => { if (!cancelado) setData(respuesta); })
+      .catch((caught: unknown) => {
+        if (!cancelado) setError(caught instanceof Error ? caught.message : "No se pudo calcular su once.");
+      })
+      .finally(() => { if (!cancelado) setCargando(false); });
+    return () => { cancelado = true; };
+  }, [leagueId, team.teamId]);
+
+  if (cargando) return <Spinner label={`Montando el once de ${team.manager.name}…`} />;
+  // Que falle el once no debe esconder la plantilla, que ya la tenemos.
+  if (error || !data) return <p className="mt-2 rounded-2xl bg-white/[.03] p-3 text-xs leading-4 text-neutral-500">{error ?? "Sin once probable."}</p>;
+
+  return (
+    <div className="mt-2">
+      <div className="mb-2 flex items-baseline justify-between gap-2">
+        <p className="text-xs font-semibold uppercase tracking-[.12em] text-neutral-400">Once probable</p>
+        <p className="text-sm font-bold text-white">{data.lineup.formation}</p>
+      </div>
+      {/* `jornada` va a `null`: los puntos por jornada se enseñan en tu propia
+          pantalla, donde consta cuál es la jornada en curso. */}
+      <Pitch starters={data.lineup.starters} jornada={null} onSelect={onPlayer} />
+      <p className="mt-2 text-[11px] leading-4 text-neutral-500">
+        Calculado con los porcentajes de FútbolFantasy. <strong>No es su alineación real</strong>:
+        LALIGA no publica las alineaciones ajenas.
+      </p>
     </div>
   );
 }

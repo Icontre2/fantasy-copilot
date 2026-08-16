@@ -251,7 +251,7 @@ function SectionData({
     case "plantilla":
       return <MySquadView data={data as DashboardResponse} />;
     case "liga":
-      return <LeagueView data={data as TeamsResponse} />;
+      return <LeagueView data={data as TeamsResponse} leagueId={leagueId} />;
     case "alertas":
       return <AlertsView data={data as AlertsResponse} onChanged={onSynced} />;
     case "economia":
