@@ -311,3 +311,49 @@ Buscar si algún otro endpoint publica el saldo de los rivales antes de dar la
 contabilidad completa por imposible. Si no aparece, Economía debe presentarse
 como «movimiento neto conocido» y no como saldo, tal y como ya contemplaba el
 encargo original en su punto 4.
+
+---
+
+## Hallazgo: hay dos hosts y uno va una temporada por detrás
+
+Descubierto el 14/08/2026 a partir de una captura del usuario: la app oficial
+mostraba el «valor histórico» de un jugador con datos de esta temporada,
+mientras la nuestra dibujaba una curva que moría el 30 de junio.
+
+| Host | Qué sirve | Estado |
+| --- | --- | --- |
+| `api-fantasy.llt-services.com` | `/api/v3/player/{id}/market-value`, `/api/v5/players` | **Temporada pasada** |
+| `fantasy-api.llt-services.com` | `/api/v1/competition/{c}/player/{id}/market-value`, `/api/v1/competition/{c}/players` | Temporada en curso |
+
+Medido sobre el jugador `2443`:
+
+```
+api-fantasy   359 puntos   07/07/2025 → 30/06/2026   acaba en  1.666.723 €
+fantasy-api    47 puntos   29/06/2026 → 14/08/2026   acaba en 17.132.446 €
+```
+
+Los 17.132.446 € coinciden exactamente con el valor que LALIGA da para ese
+jugador dentro de la plantilla. El catálogo nuevo trae 731 jugadores con valor,
+puntos y `teamId` de esta temporada.
+
+**Las dos rutas de `fantasy-api` responden 200 sin `Authorization`.** Se
+comprobó por código de respuesta: `/api/v4/user/me` devuelve 401 y estas
+devuelven 200. Se piden sin token a propósito, para no gastar la sesión de nadie.
+
+### Qué estaba rompiendo
+
+1. **Las alertas de cláusula no tenían tendencia.** El último dato de la serie
+   tenía 45 días, superaba `MAX_HISTORY_AGE_DAYS` y la app se negaba —bien— a
+   calcular una subida diaria con eso. Sin tendencia no hay días estimados, que
+   es el corazón de esa pantalla.
+2. **La ficha contradecía a la plantilla:** 17,1 M€ arriba y una curva acabando
+   en 1,67 M€.
+3. **El catálogo mezclaba temporadas** con la plantilla al cruzar fotos, equipos
+   y nombres con FútbolFantasy.
+
+### Lección
+
+Se dio por cerrada una limitación de LALIGA habiendo probado **un solo**
+endpoint. El método que funcionó, y que conviene repetir: barrer rutas
+candidatas y leer el código de respuesta — `401` significa «existe y pide
+credenciales», `404` significa «no existe».

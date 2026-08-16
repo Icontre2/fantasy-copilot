@@ -11,6 +11,7 @@ import { privateFetch, seasonFetch } from './client';
 import { COMPETITION_ID } from './config';
 import { apiActivitySchema } from './schemas';
 import { equiposSinCaja, mezclarCajas } from './team-money.ts';
+import { construirIndice, enriquecerJugadores } from './catalog-enrich.ts';
 import {
   mapLeague,
   mapLeagueTeam,
@@ -145,13 +146,24 @@ export async function getMarketValueHistory(playerId: string): Promise<MarketVal
 }
 
 /**
- * Catalogo completo de la temporada en curso, para fotos y cruces con fuentes
- * externas. Mismo cambio de host y por el mismo motivo que el historico: el
- * catalogo de `api-fantasy` daba el valor y los puntos del año pasado.
+ * Catalogo completo de la temporada en curso: fotos, equipo de cada jugador y
+ * cruce con fuentes externas. Mismo cambio de host y por el mismo motivo que el
+ * historico: el de `api-fantasy` daba el valor y los puntos del año pasado.
+ *
+ * Se guarda unos minutos en memoria del proceso porque es el mismo para todo el
+ * mundo y son ~730 jugadores: pedirlo tres veces en la misma peticion
+ * (plantillas, alertas, economia) es tirar tiempo. No es cache de usuario, aqui
+ * no hay datos de nadie.
  */
+let catalogoEnMemoria: { at: number; players: import('@/src/domain/fantasy').Player[] } | null = null;
+const CATALOGO_TTL_MS = 5 * 60_000;
+
 export async function getPlayerCatalog(): Promise<import('@/src/domain/fantasy').Player[]> {
+  if (catalogoEnMemoria && Date.now() - catalogoEnMemoria.at < CATALOGO_TTL_MS) {
+    return catalogoEnMemoria.players;
+  }
   const players = await seasonFetch(`${CMP}/players`, apiPlayersSchema);
-  return players.flatMap((player) => {
+  const catalogo = players.flatMap((player) => {
     const position = toPosition(player.positionId);
     if (!position) return [];
     return [{
@@ -168,6 +180,8 @@ export async function getPlayerCatalog(): Promise<import('@/src/domain/fantasy')
       lastSeasonPoints: player.lastSeasonPoints,
     }];
   });
+  catalogoEnMemoria = { at: Date.now(), players: catalogo };
+  return catalogo;
 }
 
 export type LeagueSnapshot = {
@@ -193,6 +207,21 @@ export type LeagueSnapshot = {
  * Nunca falla hacia fuera: si una consulta se cae, ese equipo simplemente sigue
  * sin caja conocida, que es como estaba.
  */
+/**
+ * Rellena con el catalogo los datos de jugador que la liga no trae (equipo,
+ * foto). Ver `catalog-enrich.ts`. Si el catalogo falla, se sigue sin el: es una
+ * mejora, no un requisito.
+ */
+async function completarJugadores(teams: LeagueTeam[]): Promise<LeagueTeam[]> {
+  let indice;
+  try {
+    indice = construirIndice(await getPlayerCatalog());
+  } catch {
+    return teams;
+  }
+  return teams.map((team) => ({ ...team, players: enriquecerJugadores(team.players, indice) }));
+}
+
 async function completarCajas(
   accessToken: string,
   leagueId: string,
@@ -217,7 +246,8 @@ export async function getLeagueSnapshot(accessToken: string, leagueId: string): 
   const standingPromise = getLeagueStanding(accessToken, leagueId);
   try {
     const [standing, teams] = await Promise.all([standingPromise, getLeagueTeams(accessToken, leagueId)]);
-    return { standing, teams: await completarCajas(accessToken, leagueId, teams), failedTeamIds: [] };
+    const completos = await completarJugadores(await completarCajas(accessToken, leagueId, teams));
+    return { standing, teams: completos, failedTeamIds: [] };
   } catch {
     // Compatibilidad: si LALIGA retira la ruta plural, seguimos pudiendo leer
     // la liga equipo a equipo e informar exactamente de los que fallen.
@@ -236,7 +266,7 @@ export async function getLeagueSnapshot(accessToken: string, leagueId: string): 
     else failedTeamIds.push(row.teamId);
   });
 
-  return { standing, teams, failedTeamIds };
+  return { standing, teams: await completarJugadores(teams), failedTeamIds };
 }
 
 /**
