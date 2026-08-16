@@ -190,6 +190,27 @@ export const apiWeekSchema = z.object({
   closingWeekDate: z.string().optional(),
 });
 
+/**
+ * GET /api/v1/competition/{c}/calendar?weekNumber=N — los diez partidos de una
+ * jornada, con su hora de inicio.
+ *
+ * `matchState` no esta documentado y por eso NO se traduce a un estado con
+ * nombre: se decide "jugado" o "por jugar" mirando si hay marcador, que es un
+ * hecho, en vez de inventarle un significado a un numero.
+ */
+export const apiMatchSchema = z.object({
+  id: z.union([z.string(), z.number()]).transform(String),
+  matchDate: z.string(),
+  localId: z.union([z.string(), z.number()]).transform(String),
+  visitorId: z.union([z.string(), z.number()]).transform(String),
+  localScore: numeric.nullable().optional(),
+  visitorScore: numeric.nullable().optional(),
+});
+
+export const apiCalendarSchema = z.array(apiMatchSchema);
+
+export type ApiMatch = z.infer<typeof apiMatchSchema>;
+
 export type ApiManagerLike = z.infer<typeof apiManagerSchema>;
 export type ApiPlayer = z.infer<typeof apiPlayerSchema>;
 export type ApiUser = z.infer<typeof apiUserSchema>;

@@ -13,6 +13,7 @@ import { COMPETITION_ID } from './config';
 import { apiActivitySchema } from './schemas';
 import { equiposSinCaja, mezclarCajas } from './team-money.ts';
 import { construirIndice, enriquecerJugadores } from './catalog-enrich.ts';
+import { mapCalendar, type Match } from './calendar.ts';
 import {
   mapLeague,
   mapLeagueTeam,
@@ -31,6 +32,7 @@ import {
   apiUserSchema,
   apiWeekSchema,
   apiPlayersSchema,
+  apiCalendarSchema,
 } from './schemas';
 import { toPosition } from './mappers';
 import { FALLBACK_TEAMS } from './teams';
@@ -117,6 +119,27 @@ export async function getLeagueMarket(accessToken: string, leagueId: string): Pr
 export async function getCurrentWeek(accessToken: string): Promise<{ weekNumber: number; isLive: boolean }> {
   const week = await privateFetch(`${CMP}/week/current`, accessToken, apiWeekSchema);
   return { weekNumber: week.weekNumber, isLive: week.isLive };
+}
+
+/** Jornada en curso, sin sesion: este endpoint tampoco pide token. */
+export async function getCurrentWeekPublic(): Promise<{ weekNumber: number; isLive: boolean }> {
+  const week = await seasonFetch(`${CMP}/week/current`, apiWeekSchema);
+  return { weekNumber: week.weekNumber, isLive: week.isLive };
+}
+
+/**
+ * Los diez partidos de una jornada con su horario.
+ *
+ * Sin token. `weekNumber` va de 1 a 38; fuera de ese rango LALIGA responde 500,
+ * asi que la ruta que llama a esto acota antes de preguntar.
+ *
+ * Los equipos se resuelven contra el mapa local: la respuesta solo trae ids.
+ * Si un id no estuviera en el mapa se devuelve `null` y la pantalla lo dice,
+ * en vez de pintar un partido contra un equipo sin nombre.
+ */
+export async function getCalendar(weekNumber: number): Promise<Match[]> {
+  const matches = await seasonFetch(`${CMP}/calendar?weekNumber=${weekNumber}`, apiCalendarSchema);
+  return mapCalendar(matches, FALLBACK_TEAMS);
 }
 
 /**

@@ -6,6 +6,7 @@ import { get, post } from "./api";
 import { AlertsView } from "./AlertsView";
 import { EconomyView } from "./EconomyView";
 import { ExportView } from "./ExportView";
+import { CalendarView } from "./CalendarView";
 import { LeagueView } from "./LeagueView";
 import { LoginView } from "./LoginView";
 import { MarketView } from "./MarketView";
@@ -169,6 +170,8 @@ function SectionContent({ section, leagueId, onNavigate }: { section: Section; l
   const reload = useCallback(() => setReloadToken((value) => value + 1), []);
 
   if (section === "exportar") return <ExportView leagueId={leagueId} />;
+  // El calendario no depende de la liga y se paginan jornadas dentro: carga solo.
+  if (section === "jornadas") return <CalendarView />;
   if (section === "mas") return <MoreView onSelect={onNavigate} />;
 
   return (
@@ -181,7 +184,7 @@ function SectionContent({ section, leagueId, onNavigate }: { section: Section; l
   );
 }
 
-type DataSection = Exclude<Section, "exportar" | "mas">;
+type DataSection = Exclude<Section, "exportar" | "mas" | "jornadas">;
 
 const ENDPOINT: Record<DataSection, (leagueId: string) => string> = {
   inicio: (id) => `/api/fantasy/leagues/${id}/dashboard`,

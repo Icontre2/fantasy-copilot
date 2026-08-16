@@ -1,11 +1,12 @@
 "use client";
 
-import { Download, Scale, TableProperties, Users, WalletCards } from "lucide-react";
+import { CalendarDays, Download, Scale, TableProperties, Users, WalletCards } from "lucide-react";
 import type { Section } from "./types";
 
 const ITEMS: Array<{ id: Section; label: string; description: string; icon: React.ReactNode }> = [
   { id: "economia", label: "Economía", description: "Caja y movimientos", icon: <WalletCards/> },
   { id: "onces", label: "Onces probables", description: "Fotos y porcentajes", icon: <Users/> },
+  { id: "jornadas", label: "Jornadas", description: "Horarios y resultados", icon: <CalendarDays/> },
   { id: "comparar", label: "Comparar", description: "Jugador contra jugador", icon: <Scale/> },
   { id: "liga", label: "Liga completa", description: "Clasificación y plantillas", icon: <TableProperties/> },
   { id: "exportar", label: "Exportar", description: "Plantillas y mercado CSV", icon: <Download/> },
