@@ -9,8 +9,8 @@ import { Pitch } from "./Pitch";
 import { get } from "./api";
 import type { PlayerWithProbability } from "./types";
 import { PlayerDetails } from "./PlayerDetails";
-import { PlayerImage } from "./PlayerImage";
 import type { Player } from "./types";
+import { SquadValueHistory } from "./SquadValueHistory";
 
 /**
  * Liga: todos los managers y sus plantillas. Solo lectura.
@@ -31,7 +31,6 @@ type RivalLineup = {
 
 export function LeagueView({ data, leagueId }: { data: TeamsResponse; leagueId: string }) {
   const [openTeamId, setOpenTeamId] = useState<string | null>(null);
-  const [verPlantilla, setVerPlantilla] = useState<Record<string, boolean>>({});
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
 
   if (data.teams.length === 0) {
@@ -88,15 +87,15 @@ export function LeagueView({ data, leagueId }: { data: TeamsResponse; leagueId: 
                 {isOpen && team && (
                   <>
                     <OnceDelRival leagueId={leagueId} team={team} onPlayer={setSelectedPlayer} />
-                    <button
-                      type="button"
-                      onClick={() => setVerPlantilla((abiertas) => ({ ...abiertas, [row.teamId]: !abiertas[row.teamId] }))}
-                      aria-expanded={Boolean(verPlantilla[row.teamId])}
-                      className="mt-3 min-h-11 w-full rounded-2xl border border-white/10 bg-white/[.04] text-sm font-semibold text-neutral-300"
-                    >
-                      {verPlantilla[row.teamId] ? "Ocultar la plantilla entera" : `Ver la plantilla entera (${team.players.length})`}
-                    </button>
-                    {verPlantilla[row.teamId] && <Plantilla team={team} onPlayer={setSelectedPlayer} />}
+                    <div className="mt-3">
+                      <SquadValueHistory
+                        leagueId={leagueId}
+                        teamId={team.teamId}
+                        players={team.players}
+                        title={`Plantilla de ${team.manager.name}`}
+                        onPlayer={setSelectedPlayer}
+                      />
+                    </div>
                   </>
                 )}
               </li>
@@ -163,54 +162,6 @@ function OnceDelRival({
         LALIGA no publica las alineaciones ajenas.
       </p>
     </div>
-  );
-}
-
-/** Plantilla del manager abierto, justo debajo de su fila. */
-function Plantilla({
-  team,
-  onPlayer,
-}: {
-  team: TeamsResponse["teams"][number];
-  onPlayer: (player: Player) => void;
-}) {
-  return (
-    <ul className="mt-2 space-y-1.5 border-l border-[#7c3aed]/30 pl-2">
-      {team.players.map((player) => (
-        <li key={player.id}>
-          <button
-            type="button"
-            onClick={() => onPlayer(player)}
-            className="flex w-full items-center gap-2.5 rounded-2xl bg-white/[.03] p-2 text-left active:scale-[.99]"
-            aria-label={`Ver histórico de ${player.name}`}
-          >
-            <PlayerImage player={player} size={38} />
-            <span className="min-w-0 flex-1">
-              <span className="flex items-center gap-1">
-                <span className="truncate text-sm font-semibold text-white">{player.name}</span>
-                {player.isShielded && (
-                  <span className="shrink-0 text-[10px] text-neutral-500" title="Blindado">
-                    🛡
-                  </span>
-                )}
-              </span>
-              <span className="block truncate text-[11px] text-neutral-500">
-                {player.position} · {player.team} · {player.points} pts
-              </span>
-            </span>
-            <span className="shrink-0 text-right">
-              <span className="block text-sm font-bold tabular-nums text-white">
-                {millions(player.marketValue)}
-              </span>
-              {/* Sin clausula publicada se pinta el guion, no un cero. */}
-              <span className="block text-[10px] tabular-nums text-neutral-500">
-                Cláusula {millions(player.buyoutClause)}
-              </span>
-            </span>
-          </button>
-        </li>
-      ))}
-    </ul>
   );
 }
 
