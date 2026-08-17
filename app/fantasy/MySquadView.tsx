@@ -1,16 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, Info } from "lucide-react";
-import type { DashboardResponse, PlayerWithProbability } from "./types";
-import { PlayerImage } from "./PlayerImage";
+import { Info } from "lucide-react";
+import type { DashboardResponse, Player, PlayerWithProbability } from "./types";
 import { Pitch, puntosEnJornada } from "./Pitch";
 import { PlayerDetails } from "./PlayerDetails";
+import { SquadValueHistory } from "./SquadValueHistory";
 import { millions, UNKNOWN } from "./format";
 
 export function MySquadView({ data }: { data: DashboardResponse }) {
-  const [showBench, setShowBench] = useState(true);
-  const [selected, setSelected] = useState<PlayerWithProbability | null>(null);
+  const [selected, setSelected] = useState<Player | null>(null);
   return (
     <div className="space-y-4">
       <section className="glass-strong rounded-[28px] p-4 text-white">
@@ -28,13 +27,13 @@ export function MySquadView({ data }: { data: DashboardResponse }) {
         <p className="mt-3 flex gap-2 text-[11px] leading-4 text-white/45"><Info size={14} className="shrink-0" />Once calculado con porcentajes y titulares publicados por FútbolFantasy, dentro de una formación válida. No cambia tu alineación oficial.</p>
       </section>
 
-      <section className="rounded-[26px] glass p-4">
-        <button type="button" onClick={() => setShowBench((value) => !value)} className="flex w-full items-center justify-between text-left">
-          <div><p className="text-xs font-semibold uppercase tracking-[.12em] text-neutral-500">Resto de plantilla</p><h3 className="text-lg font-bold text-white">Banquillo · {data.lineup.bench.length}</h3></div>
-          <ChevronDown className={`transition ${showBench ? "rotate-180" : ""}`} />
-        </button>
-        {showBench && <div className="mt-3 space-y-2">{data.lineup.bench.map((player) => <BenchPlayer key={player.id} player={player} onSelect={setSelected} />)}</div>}
-      </section>
+      <SquadValueHistory
+        leagueId={data.league.id}
+        teamId={data.me.teamId}
+        players={data.me.players}
+        title="Toda tu plantilla"
+        onPlayer={setSelected}
+      />
       {selected ? <PlayerDetails player={selected} onClose={() => setSelected(null)} /> : null}
     </div>
   );
@@ -70,10 +69,4 @@ function ResumenJornada({ players, jornada, enJuego }: { players: PlayerWithProb
       </span>
     </div>
   );
-}
-
-
-function BenchPlayer({ player, onSelect }: { player: PlayerWithProbability; onSelect: (player: PlayerWithProbability) => void }) {
-  const signal = player.lineupProbability !== undefined ? `${player.lineupProbability}%` : player.lineupExpectedStarter ? "Probable" : "—";
-  return <button type="button" onClick={() => onSelect(player)} className="flex w-full items-center gap-3 rounded-2xl bg-white/[.04] p-2.5 text-left active:scale-[.99]" aria-label={`Ver histórico de ${player.name}`}><PlayerImage player={player} size={42}/><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-white">{player.name}</p><p className="text-xs text-neutral-500">{player.position} · {player.team} · {millions(player.marketValue)}</p></div><span className="rounded-full bg-[#7c3aed]/15 px-2.5 py-1 text-xs font-bold text-[#c4b5fd]">{signal}</span></button>;
 }
