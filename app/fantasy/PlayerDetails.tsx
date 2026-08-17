@@ -8,6 +8,7 @@ import type { MarketValuePoint, Player } from "./types";
 import { PlayerImage } from "./PlayerImage";
 import { TrendChart } from "./TrendChart";
 import { Dificultad } from "./Odds";
+import { BottomSheet } from "./BottomSheet";
 import { tonoDeDificultad, useDificultad, type DificultadDeEquipo } from "./difficulty";
 
 export function PlayerDetails({ player, onClose }: { player: Player; onClose: () => void }) {
@@ -30,21 +31,9 @@ export function PlayerDetails({ player, onClose }: { player: Player; onClose: ()
   }, [player.id]);
   const visible = useMemo(() => days === "MAX" ? history : history.slice(-days), [days, history]);
   const dificultad = useDificultad();
-
-  /*
-   * Escape cierra la ficha. Es un `role="dialog"` con `aria-modal`, y sin esto
-   * la única salida era tocar la X o el fondo: con teclado te quedabas dentro.
-   */
-  useEffect(() => {
-    const alPulsar = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", alPulsar);
-    return () => window.removeEventListener("keydown", alPulsar);
-  }, [onClose]);
   return (
-    <div className="fixed inset-0 z-50 grid place-items-end bg-black/55 p-0 sm:place-items-center sm:p-4" role="dialog" aria-modal="true" aria-label={`Ficha de ${player.name}`} onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
-      <section className="max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-t-[30px] glass-sheet p-5 text-white sm:rounded-[30px]">
+    <BottomSheet onClose={onClose} label={`Ficha de ${player.name}`}>
+      <div className="pt-2">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3"><PlayerImage player={player} size={72} /><div><p className="text-[10px] font-semibold uppercase tracking-[.14em] text-neutral-500">Ficha de jugador</p><h2 className="text-xl font-bold text-white">{player.name}</h2><p className="text-sm text-neutral-500">{player.position} · {player.team}</p></div></div>
           <button type="button" onClick={onClose} className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/8 text-white" aria-label="Cerrar"><X size={18}/></button>
@@ -56,8 +45,8 @@ export function PlayerDetails({ player, onClose }: { player: Player; onClose: ()
         <Forma player={player} />
         <div className="mt-6"><p className="text-[10px] font-semibold uppercase tracking-[.14em] text-neutral-500">Mercado</p><h3 className="font-bold text-white">Evolución del valor</h3><div className="mt-3 grid grid-cols-4 gap-1 rounded-xl bg-white/[.04] p-1">{([7, 30, 90, "MAX"] as const).map((option) => <button key={String(option)} type="button" onClick={() => setDays(option)} aria-pressed={days === option} className={`min-h-11 rounded-lg px-2 text-xs font-bold ${days === option ? "bg-[#7c3aed] text-white" : "text-neutral-500"}`}>{option === "MAX" ? "Todo" : `${option}D`}</button>)}</div></div>
         {visible.length > 1 ? <HistoryChart points={visible} marketValue={player.marketValue} /> : <p className="mt-3 glass-soft rounded-2xl p-5 text-center text-sm leading-5 text-neutral-500">{error ?? "Cargando histórico…"}</p>}
-      </section>
-    </div>
+      </div>
+    </BottomSheet>
   );
 }
 

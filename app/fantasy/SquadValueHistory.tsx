@@ -116,7 +116,13 @@ export function SquadValueHistory({
         </p>
       )}
 
-      {data?.failedPlayerIds.length ? (
+      {/*
+        `data?.` protegía la respuesta que falta entera, pero no una respuesta
+        que llega SIN este campo: ahí `undefined.length` reventaba y se llevaba
+        por delante la pantalla de Plantilla completa. Se comprueba que sea una
+        lista, que es lo único de lo que depende esta frase.
+      */}
+      {Array.isArray(data?.failedPlayerIds) && data.failedPlayerIds.length > 0 ? (
         <p className="mt-2 text-[10px] leading-4 text-amber-300">
           LALIGA no devolvió el histórico de {data.failedPlayerIds.length} jugador(es); no se rellenan con cero.
         </p>
