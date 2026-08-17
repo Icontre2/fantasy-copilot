@@ -1,0 +1,14 @@
+{
+  "appId": "com.inigo.ligalab",
+  "appName": "LigaLab",
+  "webDir": "mobile-shell",
+  "backgroundColor": "#050506",
+  "server": {
+    "url": "https://fantasy-copilot-sigma.vercel.app",
+    "errorPath": "offline.html"
+  },
+  "ios": {
+    "preferredContentMode": "mobile",
+    "allowsLinkPreview": false
+  }
+}
