@@ -325,9 +325,24 @@ está dentro de «Atletico Madrid», y el derbi se vuelve ambiguo. Lo cazó un t
 - **The Odds API**: funciona pero exige registro y clave, innecesario habiendo un
   CSV abierto.
 
-**Sí responden** (200, agosto 2026): `analiticafantasy.com`,
-`jornadaperfecta.com`. **Nunca promedies fuentes**: un 7,2 de una y un 6,8 de
-otra no dan un «7,0» — ese número no existe en ningún sitio.
+- **Analítica Fantasy**: la portada responde 200, pero **eso no vale de nada**.
+  La ficha de jugador se pinta en el navegador (el HTML llega con las etiquetas
+  de las columnas y sin un solo dato) y un navegador automatizado recibe
+  `ERR_CONNECTION_RESET`, así que no se puede ni encontrar su API ni comprobar
+  que siga funcionando. Además sus identificadores son de API-Football, no de
+  LALIGA, así que habría que emparejar por nombre — la parte peligrosa. Y
+  publican una columna de «puntos esperados», que es justo el número inventado
+  que prohíbe la §2.
+- **Jornada Perfecta**: también se pinta en el navegador, está detrás de una
+  confirmación de edad, y sus estadísticas de jugador son **de Biwenger**, que es
+  otro juego distinto.
+
+Lección: **que una portada responda 200 no significa que el dato se pueda leer.**
+Comprueba siempre la ficha concreta, no el dominio.
+
+**Y nunca promedies fuentes**: un 7,2 de una y un 6,8 de otra no dan un «7,0» —
+ese número no existe en ningún sitio. Cada nota lleva el nombre de quien la
+publica, y si una fuente falla se dice cuál falta.
 
 ## 9.5 Autenticación: son dos accesos distintos
 
