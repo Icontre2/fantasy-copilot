@@ -24,16 +24,18 @@ export type CalendarResponse = {
     visitorScore: number | null;
     odds: Cuotas | null;
   }>;
-  /** Si hay clave configurada. Distingue «no hay cuotas» de «no está montado». */
+  /** `false` = la fuente de cuotas no respondió. */
   cuotasDisponibles: boolean;
+  /** Si alguno de los partidos de ESTA jornada trae cuotas. */
+  cuotasEnEstaJornada: boolean;
   dataNotes: string[];
 };
 
 type Cuotas = {
   cuotas: { local: number; empate: number; visitante: number };
   probabilidades: { local: number; empate: number; visitante: number; margen: number };
+  /** Quién publica la cuota: una casa concreta o «media del mercado». */
   casa: string;
-  actualizado: string | null;
 };
 
 /**
@@ -152,16 +154,21 @@ function SemanaCargada({
       )}
 
       {/*
-        Sin clave no se enseña nada inventado, pero tampoco se calla: si no se
-        dijera, parecería que ningún partido tiene cuotas cuando lo que pasa es
-        que la fuente no está conectada.
+        Tres situaciones distintas y se dicen distinto: la fuente no responde,
+        responde pero esta jornada aún no está abierta en las casas, o hay
+        cuotas y no hace falta decir nada.
       */}
-      {!data.cuotasDisponibles && (
+      {!data.cuotasDisponibles ? (
         <p className="rounded-2xl border border-white/8 bg-white/[.03] px-4 py-3 text-xs leading-5 text-neutral-500">
-          Las cuotas de casa de apuestas no están configuradas. Cuando haya una clave, cada partido
-          mostrará el 1X2 para ver de un vistazo lo fácil o difícil que lo tiene cada equipo.
+          Las cuotas no están disponibles ahora mismo: la fuente no ha respondido. Los horarios y
+          resultados de arriba no dependen de ella.
         </p>
-      )}
+      ) : !data.cuotasEnEstaJornada ? (
+        <p className="rounded-2xl border border-white/8 bg-white/[.03] px-4 py-3 text-xs leading-5 text-neutral-500">
+          Todavía no hay cuotas de esta jornada. Las casas abren sus mercados unos días antes, así
+          que aparecen solas cuando se acerca.
+        </p>
+      ) : null}
 
       <DataNotes notes={data.dataNotes} />
     </div>
@@ -178,8 +185,13 @@ function SemanaCargada({
  *
  * Esto NO dice quién va a ganar. Es el precio al que una casa paga cada
  * resultado, que es una cosa distinta y bastante más honesta.
+ *
+ * Si el partido ya se jugó lo dice («cuotas previas»). La fuente tarda un par de
+ * días en soltar los partidos disputados, así que aparecen cuotas junto a un
+ * marcador ya cerrado — y sin avisar parecería que la app no se ha enterado del
+ * resultado.
  */
-function Dificultad({ odds }: { odds: Cuotas }) {
+function Dificultad({ odds, jugado }: { odds: Cuotas; jugado: boolean }) {
   const { probabilidades: p, cuotas } = odds;
   const favorito = p.local >= p.visitante ? "local" : "visitante";
   return (
@@ -190,7 +202,7 @@ function Dificultad({ odds }: { odds: Cuotas }) {
         <Cuota etiqueta="2" cuota={cuotas.visitante} probabilidad={p.visitante} destacado={favorito === "visitante"} />
       </div>
       <p className="mt-1.5 text-center text-[10px] leading-3 text-neutral-600">
-        Cuotas de {odds.casa}. El % es la probabilidad implícita sin su comisión
+        Cuotas {jugado ? "previas al partido, de" : "de"} {odds.casa}. El % es la probabilidad implícita sin su comisión
         {odds.probabilidades.margen > 1 ? ` (${Math.round((odds.probabilidades.margen - 1) * 100)} %)` : ""}.
       </p>
     </div>
@@ -239,7 +251,7 @@ function Partido({ partido }: { partido: CalendarResponse["matches"][number] }) 
     </div>
     {/* Las cuotas solo si las hay para ESTE partido: los de dentro de meses
         todavía no están abiertos en ninguna casa. */}
-    {partido.odds && <Dificultad odds={partido.odds} />}
+    {partido.odds && <Dificultad odds={partido.odds} jugado={jugado} />}
     </li>
   );
 }

@@ -94,7 +94,6 @@ Variables necesarias (ver `.env.example` para el detalle de cada una):
 | --- | --- | --- |
 | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | sesión persistente e histórico | Sí |
 | `SESSION_ENCRYPTION_KEY` | cifrado AES-256-GCM de los tokens (mín. 32 chars) | Sí |
-| `ODDS_API_KEY` | cuotas 1X2 en la pestaña Jornadas (the-odds-api.com, gratis) | No |
 | `CRON_SECRET` | autoriza la tarea programada | Solo para auto-sync |
 
 Migraciones a aplicar en Supabase, en orden:

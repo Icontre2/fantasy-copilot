@@ -1,7 +1,8 @@
 import { errorJson, privateJson } from "@/src/server/http/responses";
 import { requireSession } from "@/src/server/http/session-guard";
 import { getCalendar, getCurrentWeekPublic } from "@/src/server/laliga/read";
-import { getCuotas, hayClaveDeCuotas } from "@/src/server/odds/client";
+import { getCuotas } from "@/src/server/odds/football-data";
+import { FALLBACK_TEAMS } from "@/src/server/laliga/teams";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -31,7 +32,10 @@ export async function GET(request: Request) {
       ? Math.trunc(pedida)
       : actual.weekNumber;
 
-    const [matches, cuotas] = await Promise.all([getCalendar(week), getCuotas()]);
+    const [matches, cuotas] = await Promise.all([
+      getCalendar(week),
+      getCuotas(Object.values(FALLBACK_TEAMS)),
+    ]);
 
     /*
      * Las cuotas se pegan al partido por los dos equipos a la vez. Si la casa no
@@ -46,6 +50,7 @@ export async function GET(request: Request) {
           (entrada) => entrada.localId === match.local?.id && entrada.visitorId === match.visitor?.id,
         ) ?? null,
     }));
+    const alguna = conCuotas.some((match) => match.odds !== null);
 
     return privateJson({
       week,
@@ -54,14 +59,17 @@ export async function GET(request: Request) {
       firstWeek: PRIMERA,
       lastWeek: ULTIMA,
       matches: conCuotas,
-      cuotasDisponibles: hayClaveDeCuotas(),
+      /** `false` = la fuente no respondio. Distinto de "aun no hay cuotas". */
+      cuotasDisponibles: cuotas !== null,
+      cuotasEnEstaJornada: alguna,
       dataNotes: [
         "Horarios y marcadores publicados por LALIGA. Un partido sin marcador es que todavía no se ha jugado.",
         "La hora se muestra en la del dispositivo, convertida desde la que publica LALIGA.",
-        ...(hayClaveDeCuotas()
+        ...(cuotas !== null
           ? [
               "Las cuotas son el precio de una casa de apuestas, no un pronóstico de esta app. Se indica siempre cuál las publica.",
               "El porcentaje SÍ es un cálculo nuestro: la probabilidad implícita de la cuota, repartiendo el margen de la casa entre los tres resultados.",
+              "Solo hay cuotas de los partidos que las casas ya tienen abiertos, es decir los de los próximos días.",
             ]
           : []),
       ],
