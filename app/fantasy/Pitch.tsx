@@ -2,6 +2,7 @@
 
 import type { PlayerWithProbability } from "./types";
 import { PlayerImage } from "./PlayerImage";
+import { colorDeDificultad, useDificultad, type DificultadDeEquipo } from "./difficulty";
 
 /**
  * El campo con un once encima.
@@ -21,19 +22,41 @@ export function Pitch({
   onSelect: (player: PlayerWithProbability) => void;
 }) {
   const groups = groupByPosition(starters);
+  const dificultad = useDificultad();
+  const delJugador = (player: PlayerWithProbability) =>
+    player.teamId === undefined ? undefined : dificultad?.byTeam[player.teamId];
+  // Solo se explica la etiqueta si alguien la lleva: un pie de foto sobre algo
+  // que no se ve en pantalla es ruido.
+  const algunaDificultad = starters.some((player) => delJugador(player) !== undefined);
+
   return (
-    <div className="relative overflow-hidden rounded-[24px] border border-white/20 bg-[linear-gradient(180deg,#32845f,#1f6548)] px-2 py-5 shadow-inner">
-      <PitchLines />
-      <div className="relative z-10 flex min-h-[520px] flex-col justify-between">
-        {(["DEL", "MED", "DEF", "POR"] as const).map((position) => (
-          <div key={position} className="flex justify-evenly gap-1">
-            {(groups[position] ?? []).map((player) => (
-              <PitchPlayer key={player.id} player={player} onSelect={onSelect} jornada={jornada} />
-            ))}
-          </div>
-        ))}
+    <>
+      <div className="relative overflow-hidden rounded-[24px] border border-white/20 bg-[linear-gradient(180deg,#32845f,#1f6548)] px-2 py-5 shadow-inner">
+        <PitchLines />
+        <div className="relative z-10 flex min-h-[560px] flex-col justify-between">
+          {(["DEL", "MED", "DEF", "POR"] as const).map((position) => (
+            <div key={position} className="flex justify-evenly gap-1">
+              {(groups[position] ?? []).map((player) => (
+                <PitchPlayer
+                  key={player.id}
+                  player={player}
+                  onSelect={onSelect}
+                  jornada={jornada}
+                  dificultad={delJugador(player)}
+                />
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
+      {algunaDificultad && (
+        <p className="mt-2 text-[11px] leading-4 text-white/45">
+          Debajo de cada nombre, contra quién juega su equipo y lo difícil que lo tiene según las
+          cuotas de una casa de apuestas. Es su precio, no un pronóstico nuestro, y habla del equipo:
+          no dice cuántos puntos hará el jugador. Toca a cualquiera para ver las cuotas.
+        </p>
+      )}
+    </>
   );
 }
 
@@ -56,10 +79,13 @@ function PitchPlayer({
   player,
   onSelect,
   jornada,
+  dificultad,
 }: {
   player: PlayerWithProbability;
   onSelect: (player: PlayerWithProbability) => void;
   jornada: number | null;
+  /** Su partido de esta jornada. Ausente = sin cuotas, y entonces no se rotula. */
+  dificultad?: DificultadDeEquipo;
 }) {
   const puntos = jornada === null ? null : puntosEnJornada(player, jornada);
   return (
@@ -67,7 +93,11 @@ function PitchPlayer({
       type="button"
       onClick={() => onSelect(player)}
       className="flex w-[72px] flex-col items-center text-center active:scale-95"
-      aria-label={`Ver histórico de ${player.name}`}
+      aria-label={
+        dificultad
+          ? `Ver histórico de ${player.name}. Su equipo juega ${dificultad.enCasa ? "en casa" : "fuera"} contra ${dificultad.rivalName}: ${dificultad.etiqueta}.`
+          : `Ver histórico de ${player.name}`
+      }
     >
       <div className="relative">
         <PlayerImage player={player} size={52} />
@@ -83,6 +113,20 @@ function PitchPlayer({
       <p className="mt-1.5 w-full truncate rounded-lg bg-black/70 px-1.5 py-1 text-[10px] font-semibold shadow">
         {player.name}
       </p>
+      {/*
+        Rival y dificultad, en palabras. El color acompaña, no sustituye: quien
+        no distinga el verde del rojo lee «Muy difícil» igual.
+      */}
+      {dificultad && (
+        <span
+          className={`mt-1 w-full rounded-lg bg-black/70 px-1 py-0.5 text-[8px] font-bold leading-tight shadow ${colorDeDificultad(dificultad.probabilidadGanar)}`}
+        >
+          <span className="block truncate text-white/70">
+            {dificultad.enCasa ? "vs" : "en"} {dificultad.rivalShortName}
+          </span>
+          <span className="block truncate">{dificultad.etiqueta}</span>
+        </span>
+      )}
     </button>
   );
 }

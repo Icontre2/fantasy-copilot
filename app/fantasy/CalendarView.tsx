@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import { get } from "./api";
 import { DataNotes, Empty, ErrorBox, Spinner } from "./ui";
+import { Dificultad, type Cuotas } from "./Odds";
 import { UNKNOWN } from "./format";
 
 type Equipo = { id: string; name: string; shortName: string; badge: string } | null;
@@ -29,13 +30,6 @@ export type CalendarResponse = {
   /** Si alguno de los partidos de ESTA jornada trae cuotas. */
   cuotasEnEstaJornada: boolean;
   dataNotes: string[];
-};
-
-type Cuotas = {
-  cuotas: { local: number; empate: number; visitante: number };
-  probabilidades: { local: number; empate: number; visitante: number; margen: number };
-  /** Quién publica la cuota: una casa concreta o «media del mercado». */
-  casa: string;
 };
 
 /**
@@ -172,60 +166,6 @@ function SemanaCargada({
 
       <DataNotes notes={data.dataNotes} />
     </div>
-  );
-}
-
-/**
- * Qué de difícil lo tiene cada equipo, según la casa de apuestas.
- *
- * Se enseñan las tres cuotas tal cual las publica, y debajo el porcentaje ya sin
- * su comisión — que es cálculo nuestro y por eso lleva el «≈». La palabra
- * («Muy favorable», «Igualado»…) acompaña siempre al número: el color solo no
- * explica nada.
- *
- * Esto NO dice quién va a ganar. Es el precio al que una casa paga cada
- * resultado, que es una cosa distinta y bastante más honesta.
- *
- * Si el partido ya se jugó lo dice («cuotas previas»). La fuente tarda un par de
- * días en soltar los partidos disputados, así que aparecen cuotas junto a un
- * marcador ya cerrado — y sin avisar parecería que la app no se ha enterado del
- * resultado.
- */
-function Dificultad({ odds, jugado }: { odds: Cuotas; jugado: boolean }) {
-  const { probabilidades: p, cuotas } = odds;
-  const favorito = p.local >= p.visitante ? "local" : "visitante";
-  return (
-    <div className="mt-2 rounded-xl bg-white/[.03] px-2.5 py-2">
-      <div className="grid grid-cols-3 gap-1 text-center text-[11px]">
-        <Cuota etiqueta="1" cuota={cuotas.local} probabilidad={p.local} destacado={favorito === "local"} />
-        <Cuota etiqueta="X" cuota={cuotas.empate} probabilidad={p.empate} destacado={false} />
-        <Cuota etiqueta="2" cuota={cuotas.visitante} probabilidad={p.visitante} destacado={favorito === "visitante"} />
-      </div>
-      <p className="mt-1.5 text-center text-[10px] leading-3 text-neutral-600">
-        Cuotas {jugado ? "previas al partido, de" : "de"} {odds.casa}. El % es la probabilidad implícita sin su comisión
-        {odds.probabilidades.margen > 1 ? ` (${Math.round((odds.probabilidades.margen - 1) * 100)} %)` : ""}.
-      </p>
-    </div>
-  );
-}
-
-function Cuota({
-  etiqueta,
-  cuota,
-  probabilidad,
-  destacado,
-}: {
-  etiqueta: string;
-  cuota: number;
-  probabilidad: number;
-  destacado: boolean;
-}) {
-  return (
-    <span className={`rounded-lg px-1 py-1 ${destacado ? "bg-[#7c3aed]/20 ring-1 ring-[#7c3aed]/40" : "bg-white/[.04]"}`}>
-      <span className="block text-[9px] text-neutral-500">{etiqueta}</span>
-      <span className="block font-bold tabular-nums text-white">{cuota.toFixed(2).replace(".", ",")}</span>
-      <span className="block text-[10px] tabular-nums text-neutral-400">≈ {Math.round(probabilidad * 100)} %</span>
-    </span>
   );
 }
 

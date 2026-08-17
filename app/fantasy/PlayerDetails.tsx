@@ -7,6 +7,8 @@ import { millions, UNKNOWN } from "./format";
 import type { MarketValuePoint, Player } from "./types";
 import { PlayerImage } from "./PlayerImage";
 import { TrendChart } from "./TrendChart";
+import { Dificultad } from "./Odds";
+import { tonoDeDificultad, useDificultad, type DificultadDeEquipo } from "./difficulty";
 
 export function PlayerDetails({ player, onClose }: { player: Player; onClose: () => void }) {
   const [history, setHistory] = useState<MarketValuePoint[]>([]);
@@ -27,6 +29,19 @@ export function PlayerDetails({ player, onClose }: { player: Player; onClose: ()
       .catch((caught: unknown) => setError(caught instanceof Error ? caught.message : "No se pudo cargar el histórico."));
   }, [player.id]);
   const visible = useMemo(() => days === "MAX" ? history : history.slice(-days), [days, history]);
+  const dificultad = useDificultad();
+
+  /*
+   * Escape cierra la ficha. Es un `role="dialog"` con `aria-modal`, y sin esto
+   * la única salida era tocar la X o el fondo: con teclado te quedabas dentro.
+   */
+  useEffect(() => {
+    const alPulsar = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", alPulsar);
+    return () => window.removeEventListener("keydown", alPulsar);
+  }, [onClose]);
   return (
     <div className="fixed inset-0 z-50 grid place-items-end bg-black/55 p-0 sm:place-items-center sm:p-4" role="dialog" aria-modal="true" aria-label={`Ficha de ${player.name}`} onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       <section className="max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-t-[30px] glass-sheet p-5 text-white sm:rounded-[30px]">
@@ -37,6 +52,7 @@ export function PlayerDetails({ player, onClose }: { player: Player; onClose: ()
         <dl className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <Stat label="Valor" value={millions(player.marketValue)} /><Stat label="Puntos" value={String(player.points)} /><Stat label="Media" value={String(player.averagePoints)} /><Stat label="Año pasado" value={player.lastSeasonPoints === undefined ? UNKNOWN : String(player.lastSeasonPoints)} />
         </dl>
+        <ProximoPartido player={player} dificultad={dificultad} />
         <Forma player={player} />
         <div className="mt-6"><p className="text-[10px] font-semibold uppercase tracking-[.14em] text-neutral-500">Mercado</p><h3 className="font-bold text-white">Evolución del valor</h3><div className="mt-3 grid grid-cols-4 gap-1 rounded-xl bg-white/[.04] p-1">{([7, 30, 90, "MAX"] as const).map((option) => <button key={String(option)} type="button" onClick={() => setDays(option)} aria-pressed={days === option} className={`min-h-11 rounded-lg px-2 text-xs font-bold ${days === option ? "bg-[#7c3aed] text-white" : "text-neutral-500"}`}>{option === "MAX" ? "Todo" : `${option}D`}</button>)}</div></div>
         {visible.length > 1 ? <HistoryChart points={visible} marketValue={player.marketValue} /> : <p className="mt-3 glass-soft rounded-2xl p-5 text-center text-sm leading-5 text-neutral-500">{error ?? "Cargando histórico…"}</p>}
@@ -46,6 +62,88 @@ export function PlayerDetails({ player, onClose }: { player: Player; onClose: ()
 }
 
 function Stat({ label, value }: { label: string; value: string }) { return <div className="glass-soft rounded-2xl p-3"><dt className="text-xs text-neutral-500">{label}</dt><dd className="mt-1 font-semibold tabular-nums text-white">{value}</dd></div>; }
+
+/**
+ * Contra quién juega su equipo esta jornada y a qué precio le ponen el ganar.
+ *
+ * Sirve para lo que dice y para nada más: saber si el rival es un hueso. NO es
+ * una previsión de puntos ni un consejo de alineación — un jugador de un equipo
+ * favorito puede quedarse en el banquillo y hacer cero, y eso la cuota no lo
+ * sabe.
+ *
+ * Cuatro situaciones y cada una se dice distinta: no se sabe de qué equipo es,
+ * la fuente de cuotas no responde, su partido todavía no está abierto en las
+ * casas, o hay cuotas.
+ */
+function ProximoPartido({
+  player,
+  dificultad,
+}: {
+  player: Player;
+  dificultad: ReturnType<typeof useDificultad>;
+}) {
+  // Mientras carga no se dice nada: un hueco que aparece solo es mejor que un
+  // «no se sabe» que se desdice a los dos segundos.
+  if (!dificultad) return null;
+
+  const suya: DificultadDeEquipo | undefined =
+    player.teamId === undefined ? undefined : dificultad.byTeam[player.teamId];
+
+  return (
+    <div className="mt-6">
+      <p className="text-[10px] font-semibold uppercase tracking-[.14em] text-neutral-500">Jornada {dificultad.week}</p>
+      <h3 className="font-bold text-white">Su partido</h3>
+
+      {!suya ? (
+        <p className="mt-3 glass-soft rounded-2xl p-4 text-center text-sm leading-5 text-neutral-500">
+          {player.teamId === undefined
+            ? "LALIGA no dice de qué equipo es este jugador, así que no se puede saber contra quién juega."
+            : !dificultad.cuotasDisponibles
+              ? "Las cuotas no están disponibles ahora mismo: la fuente no ha respondido."
+              : "Su partido de esta jornada todavía no está abierto en las casas de apuestas. Aparecerá solo cuando se acerque."}
+        </p>
+      ) : (
+        <div className="mt-3 glass-soft rounded-2xl p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-sm text-neutral-400">
+                {suya.enCasa ? "En casa contra" : "Fuera, contra"}
+              </p>
+              <p className="truncate text-base font-bold text-white">{suya.rivalName}</p>
+              <p className="mt-0.5 text-xs text-neutral-500">{cuando(suya.kickoff)}</p>
+            </div>
+            <span
+              className={`shrink-0 rounded-xl px-2.5 py-1.5 text-center text-xs font-bold ${tonoDeDificultad(suya.probabilidadGanar)}`}
+            >
+              {suya.etiqueta}
+              <span className="mt-0.5 block text-[10px] font-semibold tabular-nums opacity-80">
+                ≈ {Math.round(suya.probabilidadGanar * 100)} % gana
+              </span>
+            </span>
+          </div>
+
+          {/* Su equipo resaltado, aunque sea el que menos papeletas tiene. */}
+          <Dificultad odds={suya} jugado={suya.jugado} resalta={suya.enCasa ? "local" : "visitante"} />
+
+          <p className="mt-2 text-[11px] leading-4 text-neutral-500">
+            Es el precio de una casa de apuestas, no un pronóstico de esta app, y dice lo difícil que
+            tiene su equipo el partido — <strong>no</strong> cuántos puntos va a hacer él.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** «sáb 22, 21:00». Día y hora, en la zona del dispositivo. */
+function cuando(iso: string) {
+  return new Date(iso).toLocaleString("es-ES", {
+    weekday: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
 
 /** Cuántas jornadas se enseñan en la racha. */
 const JORNADAS_DE_FORMA = 6;
