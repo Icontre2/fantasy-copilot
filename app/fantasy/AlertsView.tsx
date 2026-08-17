@@ -8,6 +8,7 @@ import type { AlertsResponse, ClauseAlert, Player } from "./types";
 import { DataNotes, Empty } from "./ui";
 import { PlayerDetails } from "./PlayerDetails";
 import { PlayerImage } from "./PlayerImage";
+import { PushToggle } from "./PushToggle";
 
 type Filter = "TODAS" | "CRITICAS" | "DESBLOQUEADAS" | "BLOQUEADAS" | "ALCANZABLES";
 const FILTERS: Array<{ id: Filter; label: string }> = [
@@ -53,6 +54,7 @@ export function AlertsView({ data, onChanged }: { data: AlertsResponse; onChange
     <section className="glass-strong overflow-hidden rounded-[28px] p-5 text-white">
       <div className="flex items-start justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-[.14em] text-[#a78bfa]">Vigila las cláusulas</p><h2 className="mt-1 text-2xl font-bold tracking-tight">Alertas</h2><p className="mt-2 text-sm leading-5 text-white/55">Datos oficiales, tendencia real y acción directa.</p></div><span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[#7c3aed] text-white"><TriangleAlert size={22}/></span></div>
       <div className="mt-4 grid grid-cols-2 gap-2"><Summary label="Alertas activas" value={String(data.alerts.length)}/><Summary label="Con cláusula" value={String(data.playersWithClause)}/></div>
+      <div className="mt-3"><PushToggle leagueId={data.leagueId} /></div>
     </section>
     <label className="flex min-h-12 items-center gap-2 rounded-2xl glass px-4 text-neutral-500"><Search size={18}/><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar jugador, equipo o manager…" className="w-full bg-transparent text-sm text-white outline-none placeholder:text-neutral-600"/></label>
     {/* En rejilla y no en scroll lateral: asi no queda ningun filtro cortado por el borde. */}
