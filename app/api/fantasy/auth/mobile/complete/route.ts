@@ -2,6 +2,7 @@ import { errorJson, privateJson, privateJsonWithCookies } from "@/src/server/htt
 import { exchangeAuthorizationCode } from "@/src/server/laliga/auth";
 import { getMyProfile } from "@/src/server/laliga/read";
 import { buildSessionCookies, createSession } from "@/src/server/laliga/session";
+import { leerCookie } from "@/src/server/auth/cookies";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -15,16 +16,7 @@ type OAuthState = {
   issuedAt: number;
 };
 
-function readCookie(request: Request, name: string): string | null {
-  const raw = request.headers.get("cookie") ?? "";
-  for (const part of raw.split(";")) {
-    const [key, ...value] = part.trim().split("=");
-    if (key === name) return value.join("=") || null;
-  }
-  return null;
-}
-
-function decodeState(raw: string | null): OAuthState | null {
+function decodeState(raw: string | null | undefined): OAuthState | null {
   if (!raw) return null;
   try {
     const parsed = JSON.parse(Buffer.from(raw, "base64url").toString("utf8")) as Partial<OAuthState>;
@@ -43,9 +35,10 @@ function decodeState(raw: string | null): OAuthState | null {
 }
 
 function clearOAuthCookie(response: Response): Response {
+  const secure = process.env.NODE_ENV === "production" ? " Secure;" : "";
   response.headers.append(
     "Set-Cookie",
-    `${OAUTH_COOKIE}=; Path=/api/fantasy/auth/mobile; Max-Age=0; HttpOnly; Secure; SameSite=Lax`,
+    `${OAUTH_COOKIE}=; Path=/api/fantasy/auth/mobile; Max-Age=0; HttpOnly;${secure} SameSite=Lax`,
   );
   return response;
 }
@@ -73,7 +66,7 @@ export async function POST(request: Request) {
     return privateJson({ error: "El callback no pertenece al login oficial de LALIGA Fantasy." }, 400);
   }
 
-  const oauth = decodeState(readCookie(request, OAUTH_COOKIE));
+  const oauth = decodeState(leerCookie(request, OAUTH_COOKIE));
   if (!oauth) {
     return clearOAuthCookie(
       privateJson({ error: "El intento de acceso ha caducado. Vuelve a iniciar sesión." }, 400),

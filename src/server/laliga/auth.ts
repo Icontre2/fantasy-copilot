@@ -109,7 +109,11 @@ export async function refreshTokens(refreshToken: string): Promise<TokenSet> {
   const payload = await postToken(AUTH_CONFIG.refreshPolicy, {
     grant_type: 'refresh_token',
     client_id: AUTH_CONFIG.clientId,
-    scope: 'openid offline_access',
+    // Debe pedir el mismo scope que passwordLogin(): sin el resource scope
+    // del clientId, el token renovado pierde audiencia sobre la API privada
+    // y cada refresh deja la sesión colgada (ver aef9b8b, que lo quitó por
+    // error al añadir el login social).
+    scope: `openid ${AUTH_CONFIG.clientId} offline_access`,
     refresh_token: refreshToken,
   });
   if (!payload.refresh_token) payload.refresh_token = refreshToken;

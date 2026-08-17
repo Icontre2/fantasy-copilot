@@ -2,7 +2,7 @@ import { errorJson, privateJson, privateJsonWithCookies } from "@/src/server/htt
 import { passwordLogin } from "@/src/server/laliga/auth";
 import { getMyProfile } from "@/src/server/laliga/read";
 import { buildSessionCookies, createSession } from "@/src/server/laliga/session";
-import { guardarEnlace, hayAlmacenDeEnlaces } from "@/src/server/auth/links";
+import { guardarEnlace, hayAlmacenDeEnlaces, leerEnlace } from "@/src/server/auth/links";
 import { identidadDePeticion } from "@/src/server/auth/identity";
 
 export const dynamic = "force-dynamic";
@@ -43,7 +43,17 @@ export async function POST(request: Request) {
      */
     const identidad = identidadDePeticion(request);
     if (identidad && hayAlmacenDeEnlaces()) {
-      await guardarEnlace(identidad, tokens, email).catch(() => undefined);
+      /*
+       * Solo se conecta si esa identidad no tenia ya OTRA cuenta de LALIGA
+       * enlazada. La cookie de identidad dura 30 dias y sobrevive a que otra
+       * persona use el mismo telefono/navegador despues: sin este chequeo,
+       * cualquiera que escriba una contrasena de LALIGA en ese dispositivo
+       * reemplazaria en silencio el enlace de quien entro con Google.
+       */
+      const existente = await leerEnlace(identidad).catch(() => null);
+      if (!existente || existente.email === email) {
+        await guardarEnlace(identidad, tokens, email).catch(() => undefined);
+      }
     }
 
     return privateJsonWithCookies({ manager }, buildSessionCookies(sessionId));

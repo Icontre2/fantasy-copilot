@@ -37,7 +37,7 @@ function keyFromSecret(secret: string): Buffer {
  * Cuelga de globalThis para que el hot-reload de `next dev` no la regenere y
  * deje ilegibles las sesiones ya abiertas.
  */
-function ephemeralDevSecret(): string {
+export function ephemeralDevSecret(): string {
   const holder = globalThis as { __llfDevSecret?: string };
   return (holder.__llfDevSecret ??= randomBytes(48).toString('base64'));
 }

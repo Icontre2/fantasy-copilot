@@ -35,9 +35,13 @@ export async function POST() {
 
   const transient = base64url(JSON.stringify({ verifier, state, issuedAt: Date.now() }));
   const response = privateJson({ authorizeUrl: authorizeUrl.toString() });
+  // `Secure` solo en producción: igual que `atributos()` en cookies.ts — con
+  // Secure fijo, esta cookie se descartaría en silencio en local/preview sin
+  // HTTPS y el flujo PKCE parecería caducado en /complete.
+  const secure = process.env.NODE_ENV === "production" ? " Secure;" : "";
   response.headers.append(
     "Set-Cookie",
-    `${OAUTH_COOKIE}=${transient}; Path=/api/fantasy/auth/mobile; Max-Age=${OAUTH_TTL_SECONDS}; HttpOnly; Secure; SameSite=Lax`,
+    `${OAUTH_COOKIE}=${transient}; Path=/api/fantasy/auth/mobile; Max-Age=${OAUTH_TTL_SECONDS}; HttpOnly;${secure} SameSite=Lax`,
   );
   return response;
 }

@@ -1,7 +1,36 @@
-import { refreshTokens } from '@/src/server/laliga/auth';
+import { refreshTokens, type TokenSet } from '@/src/server/laliga/auth';
 import { getValidAccessToken, readSessionId } from '@/src/server/laliga/session';
-import { actualizarTokens, hayAlmacenDeEnlaces, leerEnlace } from './links.ts';
+import { actualizarTokensSiCoincide, hayAlmacenDeEnlaces, leerEnlace } from './links.ts';
 import { identidadDePeticion } from './identity.ts';
+
+/**
+ * Refrescos de enlace en vuelo, para no lanzar dos a la vez sobre la misma
+ * identidad (mismo patron que `inflight` en `laliga/session.ts`).
+ */
+const inflight = ((globalThis as { __llfLinkRefreshes?: Map<string, Promise<string | null>> })
+  .__llfLinkRefreshes ??= new Map<string, Promise<string | null>>());
+
+function refreshEnlace(identidad: string, previousEncrypted: string, tokens: TokenSet): Promise<string | null> {
+  const active = inflight.get(identidad);
+  if (active) return active;
+
+  const task = (async () => {
+    try {
+      const frescos = await refreshTokens(tokens.refreshToken);
+      if (await actualizarTokensSiCoincide(identidad, previousEncrypted, frescos)) {
+        return frescos.accessToken;
+      }
+      // Otra peticion concurrente ya escribio su propio refresh: se usa ese.
+      const actual = await leerEnlace(identidad);
+      return actual?.tokens.accessToken ?? null;
+    } catch {
+      return null;
+    }
+  })().finally(() => inflight.delete(identidad));
+
+  inflight.set(identidad, task);
+  return task;
+}
 
 /**
  * El access token de LALIGA de esta peticion, venga de donde venga.
@@ -35,13 +64,7 @@ export async function accessTokenDe(request: Request): Promise<string | null> {
    * enlace entero es otra, y el usuario prefiere que le digan "reconecta" a que
    * la app finja que nunca conecto nada.
    */
-  try {
-    const frescos = await refreshTokens(enlace.tokens.refreshToken);
-    await actualizarTokens(identidad, frescos);
-    return frescos.accessToken;
-  } catch {
-    return null;
-  }
+  return refreshEnlace(identidad, enlace.encryptedTokens, enlace.tokens);
 }
 
 /** Si esta persona ya conectó LALIGA, con qué correo. `null` si no. */

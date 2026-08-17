@@ -18,7 +18,7 @@ import type { TokenSet } from '@/src/server/laliga/auth';
  * ofrece: seria un boton que te identifica y luego te pide la contraseña igual.
  */
 
-export type Enlace = { tokens: TokenSet; email: string | null };
+export type Enlace = { tokens: TokenSet; email: string | null; encryptedTokens: string };
 
 export function hayAlmacenDeEnlaces(): boolean {
   return hasSupabaseAdmin();
@@ -34,7 +34,11 @@ export async function leerEnlace(identidad: string): Promise<Enlace | null> {
   if (!data) return null;
 
   try {
-    return { tokens: decryptTokenSet(data.encrypted_tokens), email: data.laliga_email };
+    return {
+      tokens: decryptTokenSet(data.encrypted_tokens),
+      email: data.laliga_email,
+      encryptedTokens: data.encrypted_tokens,
+    };
   } catch {
     /*
      * Clave de cifrado rotada: la fila ya no es legible. Se borra en vez de
@@ -61,12 +65,27 @@ export async function guardarEnlace(identidad: string, tokens: TokenSet, email: 
   if (error) throw new Error(`No se pudo guardar el enlace con LALIGA: ${error.message}`);
 }
 
-/** Renueva los tokens de un enlace ya existente, sin tocar el resto de la fila. */
-export async function actualizarTokens(identidad: string, tokens: TokenSet): Promise<void> {
-  await supabaseAdmin()
+/**
+ * Igual que `actualizarTokens`, pero como comparacion optimista: solo escribe
+ * si la fila seguia teniendo `previousEncrypted`. Devuelve si escribio.
+ *
+ * Sirve para no pisar el resultado de un refresh concurrente sobre el mismo
+ * enlace (dos peticiones a la vez con el access token ya caducado): si LALIGA
+ * rota el refresh token en cada uso, la segunda escritura con el token viejo
+ * dejaria guardado un refresh token ya invalidado.
+ */
+export async function actualizarTokensSiCoincide(
+  identidad: string,
+  previousEncrypted: string,
+  tokens: TokenSet,
+): Promise<boolean> {
+  const { data } = await supabaseAdmin()
     .from('fantasy_links')
     .update({ encrypted_tokens: encryptTokenSet(tokens), updated_at: new Date().toISOString() })
-    .eq('id', identidad);
+    .eq('id', identidad)
+    .eq('encrypted_tokens', previousEncrypted)
+    .select('id');
+  return Boolean(data && data.length > 0);
 }
 
 export async function borrarEnlace(identidad: string): Promise<void> {

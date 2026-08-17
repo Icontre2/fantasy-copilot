@@ -20,20 +20,6 @@ export const dynamic = "force-dynamic";
  */
 export async function GET(request: Request) {
   const session = diagnosticoDeSesion();
-  /*
-   * Qué proveedores puede enseñar la pantalla, y si ya te has identificado con
-   * alguno. `proveedores` sale de preguntarle a Supabase cuáles tiene
-   * encendidos: así activar uno en su panel hace que aparezca su botón sin
-   * tocar código, y nunca se enseña uno que no funcionaría.
-   *
-   * `identificado` significa «sé quién eres, pero aún no me has dicho cuál es
-   * tu cuenta de LALIGA», que es el paso intermedio del flujo.
-   */
-  const config = configAuth();
-  const social = {
-    proveedores: config && hayAlmacenDeEnlaces() ? await proveedoresActivos(config) : [],
-    identificado: identidadDePeticion(request) !== null,
-  };
 
   /*
    * Si el acceso con Google acaba de fallar, el motivo viene en una cookie de un
@@ -50,8 +36,29 @@ export async function GET(request: Request) {
 
   try {
     const token = await accessTokenDe(request);
-    if (!token) return responder({ authenticated: false, session, social, authError });
-    return responder({ authenticated: true, manager: await getMyProfile(token), session, social, authError });
+    if (token) {
+      const manager = await getMyProfile(token);
+      return responder({ authenticated: true, manager, session, authError });
+    }
+
+    /*
+     * Qué proveedores puede enseñar la pantalla, y si ya te has identificado con
+     * alguno. `proveedores` sale de preguntarle a Supabase cuáles tiene
+     * encendidos: así activar uno en su panel hace que aparezca su botón sin
+     * tocar código, y nunca se enseña uno que no funcionaría.
+     *
+     * Solo hace falta cuando SÍ se va a enseñar el login: si ya hay sesión,
+     * la pantalla ni la usa, así que no vale la pena preguntarle a Supabase.
+     *
+     * `identificado` significa «sé quién eres, pero aún no me has dicho cuál es
+     * tu cuenta de LALIGA», que es el paso intermedio del flujo.
+     */
+    const config = configAuth();
+    const social = {
+      proveedores: config && hayAlmacenDeEnlaces() ? await proveedoresActivos(config) : [],
+      identificado: identidadDePeticion(request) !== null,
+    };
+    return responder({ authenticated: false, session, social, authError });
   } catch (error) {
     return errorJson(error);
   }
