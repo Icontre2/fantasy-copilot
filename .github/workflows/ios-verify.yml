@@ -1,0 +1,87 @@
+name: iOS verify
+
+on:
+  pull_request:
+    paths:
+      - "mobile/**"
+      - "mobile-shell/**"
+      - "capacitor.config.json"
+      - ".github/workflows/ios-verify.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  simulator-build:
+    runs-on: macos-15
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install web dependencies
+        run: npm ci
+
+      - name: Install Capacitor for verification
+        run: npm install --no-save --package-lock=false @capacitor/core@8.5.0 @capacitor/ios@8.5.0 @capacitor/cli@8.5.0
+
+      - name: Generate iOS project
+        run: npx cap add ios
+
+      - name: Add native LALIGA OAuth plugin to target
+        run: |
+          cp mobile/ios/LaligaOAuthPlugin.swift ios/App/App/LaligaOAuthPlugin.swift
+          sudo gem install xcodeproj --no-document
+          ruby <<'RUBY'
+          require 'xcodeproj'
+          project = Xcodeproj::Project.open('ios/App/App.xcodeproj')
+          target = project.targets.find { |t| t.name == 'App' } or abort 'No App target'
+          app_group = project.main_group.groups.find { |g| g.display_name == 'App' } or abort 'No App group'
+          ref = app_group.files.find { |f| f.path == 'LaligaOAuthPlugin.swift' } || app_group.new_file('LaligaOAuthPlugin.swift')
+          unless target.source_build_phase.files_references.include?(ref)
+            target.source_build_phase.add_file_reference(ref)
+          end
+          project.save
+          RUBY
+
+      - name: Build for iPhone simulator
+        shell: bash
+        run: |
+          set +e
+          set -o pipefail
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -sdk iphonesimulator \
+            -configuration Debug \
+            -derivedDataPath .ios-derived \
+            CODE_SIGNING_ALLOWED=NO \
+            build 2>&1 | tee xcodebuild.log
+          status=${PIPESTATUS[0]}
+
+          if [ "$status" -ne 0 ]; then
+            {
+              echo '## xcodebuild failure'
+              echo
+              echo '```text'
+              grep -E '(^|[[:space:]])(error:|fatal error:)|LaligaOAuthPlugin.swift' xcodebuild.log | tail -n 120
+              echo '```'
+              echo
+              echo '<details><summary>Last 180 lines</summary>'
+              echo
+              echo '```text'
+              tail -n 180 xcodebuild.log
+              echo '```'
+              echo '</details>'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          exit "$status"
