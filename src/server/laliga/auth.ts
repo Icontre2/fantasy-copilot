@@ -3,39 +3,12 @@ import { mensajeDeLogin } from './auth-errors.ts';
 import { LaligaError } from './errors';
 
 /**
- * Login contra el Azure AD B2C de LALIGA (flujo Resource Owner Password
- * Credentials), el mismo que usa la app oficial para el login por email.
+ * Login contra el Azure AD B2C de LALIGA.
  *
- * ── Lo que hay que saber antes de tocar esto ─────────────────────────────────
- * La contrasena del usuario atraviesa este servidor para intercambiarla por
- * tokens. **No se guarda en ningun sitio**: se usa una vez en `passwordLogin` y
- * se descarta con el ambito de la funcion. Lo que se conserva es el juego de
- * tokens, cifrado (`token-crypto.ts`) y solo en servidor.
- *
- * Limitaciones reales del flujo, no negociables:
- *  - No funciona con cuentas de Google, Apple ni Facebook. Esas cuentas no
- *    tienen contrasena en B2C y el login fallara con 401.
- *  - La API espera el `access_token`, no el `id_token`.
- *
- * ── Por que NO se puede añadir login social (comprobado 2026-08-17) ──────────
- * La tentacion evidente es implementar el flujo de codigo de autorizacion, que
- * es el que si soporta Facebook. No se puede, y el motivo es del proveedor:
- *
- *   1. La politica de signin acepta `response_type=code` y su pantalla ofrece
- *      Google, Apple y Facebook. Hasta ahi, bien.
- *   2. Pero el `redirect_uri` tiene que estar registrado en la app de B2C, y las
- *      registradas son de LALIGA. Con el nuestro contesta
- *      `AADB2C90006: The redirect URI ... is not registered`.
- *   3. El unico que funciona es `authredirect://com.lfp.laligafantasy`, un
- *      esquema de la app movil oficial. Una web no puede recibir ese redirect:
- *      abriria la app de LALIGA, no la nuestra.
- *
- * O sea que no es cuestion de escribir mas codigo: haria falta que LALIGA
- * registrara un redirect propio. Quien vuelva por aqui con esta idea, ya esta
- * probada.
- *
- * Uso personal. Las condiciones de LALIGA Fantasy limitan el juego al ambito
- * personal y privado; ver `docs/AUDITORIA_FASE_1.md`.
+ * Email + contraseña usa Resource Owner Password Credentials. Las cuentas
+ * sociales (Google, Apple y Facebook) usan Authorization Code + PKCE desde el
+ * contenedor iOS: el teléfono recibe únicamente el callback con `code`; el
+ * intercambio por tokens se hace aquí, en servidor.
  */
 
 export type TokenSet = {
@@ -47,20 +20,25 @@ export type TokenSet = {
 
 type B2CTokenResponse = {
   access_token?: string;
+  id_token?: string;
   refresh_token?: string;
   expires_in?: number;
+  id_token_expires_in?: number;
   error?: string;
   error_description?: string;
 };
 
 function toTokenSet(payload: B2CTokenResponse): TokenSet {
-  if (!payload.access_token || !payload.refresh_token) {
+  // El flujo interactivo de B2C puede entregar id_token sin access_token para
+  // el scope openid. La API actual acepta el token emitido por esa política;
+  // de todos modos cada login se valida contra /api/v3/user antes de crear sesión.
+  const accessToken = payload.access_token ?? payload.id_token;
+  if (!accessToken || !payload.refresh_token) {
     throw new LaligaError('invalid_response', 'La respuesta de login no trae tokens.', 'auth');
   }
-  // Se renueva 60s antes del vencimiento real para evitar carreras.
-  const ttl = (payload.expires_in ?? 3600) - 60;
+  const ttl = (payload.expires_in ?? payload.id_token_expires_in ?? 3600) - 60;
   return {
-    accessToken: payload.access_token,
+    accessToken,
     refreshToken: payload.refresh_token,
     expiresAt: Date.now() + Math.max(ttl, 30) * 1000,
   };
@@ -87,13 +65,6 @@ async function postToken(policy: string, body: Record<string, string>): Promise<
   const payload = (await response.json().catch(() => ({}))) as B2CTokenResponse;
 
   if (!response.ok || payload.error) {
-    /*
-     * B2C detalla el motivo (credenciales, cuenta social...) en
-     * `error_description`. Se corta en la primera linea porque el resto son ids
-     * de correlacion internos, y se traduce: el texto crudo llegaba a la
-     * pantalla en ingles y con un codigo `AADB2Cnnnnn` que no le dice nada a
-     * quien intenta entrar.
-     */
     const detail = payload.error_description?.split('\n')[0] ?? payload.error ?? `HTTP ${response.status}`;
     throw new LaligaError('unauthorized', mensajeDeLogin(detail), 'auth', 401);
   }
@@ -101,7 +72,7 @@ async function postToken(policy: string, body: Record<string, string>): Promise<
   return payload;
 }
 
-/** Intercambia email + contrasena por un juego de tokens. La contrasena no se guarda. */
+/** Intercambia email + contraseña por un juego de tokens. La contraseña no se guarda. */
 export async function passwordLogin(email: string, password: string): Promise<TokenSet> {
   return toTokenSet(
     await postToken(AUTH_CONFIG.passwordPolicy, {
@@ -116,15 +87,31 @@ export async function passwordLogin(email: string, password: string): Promise<To
   );
 }
 
+/**
+ * Completa el flujo social iniciado en iOS. El `codeVerifier` nunca se entrega
+ * al plugin nativo: permanece en una cookie HttpOnly temporal del servidor.
+ */
+export async function exchangeAuthorizationCode(code: string, codeVerifier: string): Promise<TokenSet> {
+  return toTokenSet(
+    await postToken(AUTH_CONFIG.refreshPolicy, {
+      grant_type: 'authorization_code',
+      client_id: AUTH_CONFIG.clientId,
+      code,
+      redirect_uri: AUTH_CONFIG.redirectUri,
+      code_verifier: codeVerifier,
+      scope: 'openid offline_access',
+    }),
+  );
+}
+
 /** Renueva el access token a partir del refresh token. */
 export async function refreshTokens(refreshToken: string): Promise<TokenSet> {
   const payload = await postToken(AUTH_CONFIG.refreshPolicy, {
     grant_type: 'refresh_token',
     client_id: AUTH_CONFIG.clientId,
-    scope: `openid ${AUTH_CONFIG.clientId} offline_access`,
+    scope: 'openid offline_access',
     refresh_token: refreshToken,
   });
-  // Algunos flujos no rotan el refresh token: se conserva el anterior si falta.
   if (!payload.refresh_token) payload.refresh_token = refreshToken;
   return toTokenSet(payload);
 }
