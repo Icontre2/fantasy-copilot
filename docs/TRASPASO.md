@@ -96,14 +96,22 @@ Variables necesarias (ver `.env.example` para el detalle de cada una):
 | `SESSION_ENCRYPTION_KEY` | cifrado AES-256-GCM de los tokens (mín. 32 chars) | Sí |
 | `CRON_SECRET` | autoriza la tarea programada | Solo para auto-sync |
 
-Migraciones a aplicar en Supabase, en orden:
+Migración a aplicar en Supabase:
 
 1. `supabase/migrations/20260813_fantasy_economy.sql`
-2. `supabase/migrations/20260813b_fantasy_sync_schedule.sql`
 
-Las cuatro tablas llevan RLS activado y **cero políticas** a propósito: solo las
-escribe el servidor con `service_role`, que salta RLS por definición. Es
-deny-by-default para `anon` y `authenticated`, no un descuido.
+Crea una sola tabla, `fantasy_sessions`. Aquí se listaban dos migraciones y
+«cuatro tablas»; las otras tres guardaban capturas de la liga para deducir la
+contabilidad comparándolas, y dejaron de hacer falta cuando se vio que LALIGA
+publica el libro de operaciones con importes exactos (ver `economy/activity.ts`).
+
+Lleva RLS activado y **cero políticas** a propósito: solo la escribe el servidor
+con `service_role`, que salta RLS por definición. Es deny-by-default para `anon`
+y `authenticated`, no un descuido.
+
+> Ojo con el plan gratuito: Supabase **pausa** un proyecto tras unos días sin
+> actividad. Pausado no responde, y la app cae al modo de sesión de 24 h aunque
+> las variables estén puestas. La pantalla de acceso lo dice cuando pasa.
 
 ---
 

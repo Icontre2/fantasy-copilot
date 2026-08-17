@@ -3,10 +3,10 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 /**
  * Cliente de Supabase con `service_role`, **solo de servidor**.
  *
- * Las tablas de este producto (`fantasy_sessions`, `fantasy_transactions`,
- * `fantasy_point_income`, `fantasy_league_snapshots`) las escribe el proceso de
- * sincronizacion, no el navegador: llevan RLS con deny-all para el rol anonimo
- * y solo se tocan desde aqui.
+ * La tabla de este producto (`fantasy_sessions`) la escribe el servidor, no el
+ * navegador: lleva RLS con deny-all para el rol anonimo y solo se toca desde
+ * aqui. Antes eran cuatro; las otras tres guardaban capturas para deducir la
+ * contabilidad y sobran desde que se lee el libro de operaciones de LALIGA.
  *
  * La clave `service_role` NUNCA puede llegar al cliente. Este fichero solo debe
  * importarse desde route handlers o modulos de servidor; si alguna vez acaba en
