@@ -4,6 +4,7 @@ import { buildSessionCookies, createSession } from "@/src/server/laliga/session"
 import type { TokenSet } from "@/src/server/laliga/auth";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 type TokenPayload = {
   access_token?: unknown;
