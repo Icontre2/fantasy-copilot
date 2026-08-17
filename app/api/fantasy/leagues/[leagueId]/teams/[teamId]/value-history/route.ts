@@ -20,13 +20,14 @@ export async function GET(
     const snapshot = await getLeagueSnapshot(auth.token, leagueId);
     const team = snapshot.teams.find((candidate) => candidate.teamId === teamId);
     if (!team) return privateJson({ error: "Ese equipo no pertenece a esta liga." }, 404);
+    const players = team.players;
 
     const histories: Record<string, Array<{ date: string; marketValue: number }>> = {};
     const failedPlayerIds: string[] = [];
     let next = 0;
     async function worker() {
-      while (next < team.players.length) {
-        const player = team.players[next++];
+      while (next < players.length) {
+        const player = players[next++];
         if (!player) return;
         try {
           histories[player.id] = (await getMarketValueHistory(player.id))
@@ -36,12 +37,12 @@ export async function GET(
         }
       }
     }
-    await Promise.all(Array.from({ length: Math.min(6, team.players.length) }, worker));
+    await Promise.all(Array.from({ length: Math.min(6, players.length) }, worker));
 
     console.info("[laliga/team-value-history] complete", {
       leagueId,
       teamId,
-      players: team.players.length,
+      players: players.length,
       histories: Object.keys(histories).length,
       failures: failedPlayerIds.length,
       from: START,
