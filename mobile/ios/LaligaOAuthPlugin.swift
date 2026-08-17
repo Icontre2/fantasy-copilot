@@ -41,9 +41,13 @@ public class LaligaOAuthPlugin: CAPPlugin, CAPBridgedPlugin, ASWebAuthentication
                 return
             }
 
+            // Usamos el inicializador compatible desde iOS 12 para que el
+            // contenedor pueda mantener deployment target iOS 15. Apple lo ha
+            // deprecado en SDKs nuevos a favor de Callback.customScheme, pero
+            // sigue siendo la API correcta para este rango de versiones.
             let session = ASWebAuthenticationSession(
                 url: url,
-                callback: .customScheme("authredirect")
+                callbackURLScheme: "authredirect"
             ) { [weak self] callbackURL, error in
                 defer { self?.authSession = nil }
 
@@ -69,8 +73,6 @@ public class LaligaOAuthPlugin: CAPPlugin, CAPBridgedPlugin, ASWebAuthentication
             }
 
             session.presentationContextProvider = self
-            // Conserva la sesión del proveedor para que Google/Apple/Facebook
-            // puedan reutilizar el login que ya tenga el usuario en iOS.
             session.prefersEphemeralWebBrowserSession = false
             self.authSession = session
 
