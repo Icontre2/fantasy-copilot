@@ -34,7 +34,8 @@ const MENSAJES: Record<string, string> = {
     'El email o la contraseña no son correctos. ' +
     'Ojo con esto: si esa cuenta de LALIGA Fantasy se creó con Google, Apple o Facebook, ' +
     'no tiene contraseña propia y este acceso no puede funcionar — LALIGA solo permite ' +
-    'entrar así a las cuentas de email y contraseña.',
+    'entrar así a las cuentas de email y contraseña. ' +
+    'Si es tu caso, mira en la app oficial de LALIGA Fantasy si puedes añadir una contraseña a tu cuenta.',
 
   /* Demasiados intentos seguidos. Lo bloquea LALIGA, no esta app. */
   AADB2C90157:

@@ -29,6 +29,11 @@ test("y se mencionan las DOS causas, porque el codigo no las distingue", () => {
   assert.match(mensaje, /Facebook/);
 });
 
+test("y no deja al usuario en un callejon: dice que puede mirar", () => {
+  // Sin prometer que se pueda: "mira si puedes", no "puedes".
+  assert.match(mensajeDeLogin("AADB2C90225: invalid."), /mira en la app oficial/);
+});
+
 test("el bloqueo por intentos dice que lo bloquea LALIGA, no la app", () => {
   const mensaje = mensajeDeLogin("AADB2C90157: The user has exceeded the maximum request rate.");
   assert.match(mensaje, /bloqueado temporalmente/);

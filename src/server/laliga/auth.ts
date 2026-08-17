@@ -17,6 +17,23 @@ import { LaligaError } from './errors';
  *    tienen contrasena en B2C y el login fallara con 401.
  *  - La API espera el `access_token`, no el `id_token`.
  *
+ * ── Por que NO se puede añadir login social (comprobado 2026-08-17) ──────────
+ * La tentacion evidente es implementar el flujo de codigo de autorizacion, que
+ * es el que si soporta Facebook. No se puede, y el motivo es del proveedor:
+ *
+ *   1. La politica de signin acepta `response_type=code` y su pantalla ofrece
+ *      Google, Apple y Facebook. Hasta ahi, bien.
+ *   2. Pero el `redirect_uri` tiene que estar registrado en la app de B2C, y las
+ *      registradas son de LALIGA. Con el nuestro contesta
+ *      `AADB2C90006: The redirect URI ... is not registered`.
+ *   3. El unico que funciona es `authredirect://com.lfp.laligafantasy`, un
+ *      esquema de la app movil oficial. Una web no puede recibir ese redirect:
+ *      abriria la app de LALIGA, no la nuestra.
+ *
+ * O sea que no es cuestion de escribir mas codigo: haria falta que LALIGA
+ * registrara un redirect propio. Quien vuelva por aqui con esta idea, ya esta
+ * probada.
+ *
  * Uso personal. Las condiciones de LALIGA Fantasy limitan el juego al ambito
  * personal y privado; ver `docs/AUDITORIA_FASE_1.md`.
  */
