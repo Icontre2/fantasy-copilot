@@ -1,890 +1,1016 @@
 {
   "app/api/fantasy/auth/login/route.ts": {
-    "mtime": 1786996390.260238,
-    "seen": 1786996682.2080941,
-    "ast_hash": "156bd890b6d09a515e7853297ae0e911",
-    "semantic_hash": "156bd890b6d09a515e7853297ae0e911"
+    "mtime": 1787005385.380507,
+    "seen": 1787005636.171353,
+    "ast_hash": "41b4e81e73b1dcd1650be3d126eed9e2",
+    "semantic_hash": ""
   },
   "app/api/fantasy/auth/logout/route.ts": {
     "mtime": 1786996390.260238,
-    "seen": 1786996682.2080991,
+    "seen": 1787005636.1713588,
     "ast_hash": "1ef10eb07a949cc13048afb165ea65e3",
     "semantic_hash": "1ef10eb07a949cc13048afb165ea65e3"
   },
   "app/api/fantasy/auth/mobile/complete/route.ts": {
-    "mtime": 1786996390.2625647,
-    "seen": 1786996682.2081006,
-    "ast_hash": "c37fe86ce734a4c8110433ef54159ba7",
-    "semantic_hash": "c37fe86ce734a4c8110433ef54159ba7"
+    "mtime": 1787005528.376508,
+    "seen": 1787005636.171361,
+    "ast_hash": "44a24f469155fcf04e974401b85cb6cc",
+    "semantic_hash": ""
   },
   "app/api/fantasy/auth/mobile/start/route.ts": {
-    "mtime": 1786996390.2625647,
-    "seen": 1786996682.2081022,
-    "ast_hash": "3a012469132f55a4425c58c0647ab0cc",
-    "semantic_hash": "3a012469132f55a4425c58c0647ab0cc"
+    "mtime": 1787005524.732508,
+    "seen": 1787005636.1713629,
+    "ast_hash": "73845b099d032f602766ecdcc3e4829e",
+    "semantic_hash": ""
   },
   "app/api/fantasy/auth/session/route.ts": {
-    "mtime": 1786996390.2635996,
-    "seen": 1786996682.2081032,
-    "ast_hash": "0897178eb5f907e46dc4a77909a14a83",
-    "semantic_hash": "0897178eb5f907e46dc4a77909a14a83"
+    "mtime": 1787005547.6805081,
+    "seen": 1787005636.1713643,
+    "ast_hash": "0a1a8179b1e56aee55cfbfef951fadf7",
+    "semantic_hash": ""
   },
   "app/api/fantasy/auth/social/callback/route.ts": {
     "mtime": 1786996390.2655692,
-    "seen": 1786996682.2081046,
+    "seen": 1787005636.1713662,
     "ast_hash": "21210986bb2ce3d3424dbf4e1d214706",
     "semantic_hash": "21210986bb2ce3d3424dbf4e1d214706"
   },
   "app/api/fantasy/auth/social/start/route.ts": {
     "mtime": 1786996390.2655692,
-    "seen": 1786996682.2081063,
+    "seen": 1787005636.1713674,
     "ast_hash": "a58bc979b343c69fa27f37d99ca596bc",
     "semantic_hash": "a58bc979b343c69fa27f37d99ca596bc"
   },
   "app/api/fantasy/auth/token/route.ts": {
     "mtime": 1786996390.2655692,
-    "seen": 1786996682.2081227,
+    "seen": 1787005636.1713693,
     "ast_hash": "ab420faf00f28e1ee7e3012a6e60807f",
     "semantic_hash": "ab420faf00f28e1ee7e3012a6e60807f"
   },
   "app/api/fantasy/calendar/route.ts": {
     "mtime": 1786996390.2655692,
-    "seen": 1786996682.2081249,
+    "seen": 1787005636.1713707,
     "ast_hash": "23631ee1321290bc7c26f3854219b6d1",
     "semantic_hash": "23631ee1321290bc7c26f3854219b6d1"
   },
   "app/api/fantasy/difficulty/route.ts": {
     "mtime": 1786996390.2675996,
-    "seen": 1786996682.2081265,
+    "seen": 1787005636.1713731,
     "ast_hash": "646a1ebc007b1ef2dc6e3bd673329426",
     "semantic_hash": "646a1ebc007b1ef2dc6e3bd673329426"
   },
   "app/api/fantasy/leagues/[leagueId]/alerts/route.ts": {
     "mtime": 1786996390.2693582,
-    "seen": 1786996682.2081275,
+    "seen": 1787005636.1713748,
     "ast_hash": "a7c188104638ef3b772f9b79e3c4cb2e",
     "semantic_hash": "a7c188104638ef3b772f9b79e3c4cb2e"
   },
   "app/api/fantasy/leagues/[leagueId]/dashboard/route.ts": {
     "mtime": 1786996390.2693582,
-    "seen": 1786996682.208129,
+    "seen": 1787005636.1713767,
     "ast_hash": "511ccb486e544ff8cd85360b84c64615",
     "semantic_hash": "511ccb486e544ff8cd85360b84c64615"
   },
   "app/api/fantasy/leagues/[leagueId]/economy/route.ts": {
     "mtime": 1786996390.2693582,
-    "seen": 1786996682.2081304,
+    "seen": 1787005636.1713781,
     "ast_hash": "32f5a24de459c5ffdd9f254bb2c292e3",
     "semantic_hash": "32f5a24de459c5ffdd9f254bb2c292e3"
   },
   "app/api/fantasy/leagues/[leagueId]/export/market/route.ts": {
     "mtime": 1786996390.2715998,
-    "seen": 1786996682.208131,
+    "seen": 1787005636.1713798,
     "ast_hash": "f9eb42f3b55ac07ec394f25cdf7fcd9f",
     "semantic_hash": "f9eb42f3b55ac07ec394f25cdf7fcd9f"
   },
   "app/api/fantasy/leagues/[leagueId]/export/teams/route.ts": {
     "mtime": 1786996390.2715998,
-    "seen": 1786996682.2081323,
+    "seen": 1787005636.1713812,
     "ast_hash": "5675edcb834ceec1704db95f3728ea2c",
     "semantic_hash": "5675edcb834ceec1704db95f3728ea2c"
   },
   "app/api/fantasy/leagues/[leagueId]/market/[marketId]/bid/route.ts": {
     "mtime": 1786996390.2747924,
-    "seen": 1786996682.2081335,
+    "seen": 1787005636.1713824,
     "ast_hash": "f1b8af4000f4b67697f1f1a4aafbd510",
     "semantic_hash": "f1b8af4000f4b67697f1f1a4aafbd510"
   },
   "app/api/fantasy/leagues/[leagueId]/market/route.ts": {
     "mtime": 1786996390.2747924,
-    "seen": 1786996682.2081344,
+    "seen": 1787005636.1713843,
     "ast_hash": "1e1834153ffada2a1976ab250cd8ca98",
     "semantic_hash": "1e1834153ffada2a1976ab250cd8ca98"
   },
   "app/api/fantasy/leagues/[leagueId]/players/[playerId]/buyout/route.ts": {
     "mtime": 1786996390.2765098,
-    "seen": 1786996682.2081356,
+    "seen": 1787005636.171386,
     "ast_hash": "257fd955cc255613e320e565be6ba321",
     "semantic_hash": "257fd955cc255613e320e565be6ba321"
   },
   "app/api/fantasy/leagues/[leagueId]/players/[playerId]/ownership/route.ts": {
     "mtime": 1786996390.2765098,
-    "seen": 1786996682.2081368,
+    "seen": 1787005636.1713877,
     "ast_hash": "4b450ba50ccdf866fdbd390a124915ef",
     "semantic_hash": "4b450ba50ccdf866fdbd390a124915ef"
   },
   "app/api/fantasy/leagues/[leagueId]/teams/[teamId]/lineup/route.ts": {
     "mtime": 1786996390.2789905,
-    "seen": 1786996682.2081378,
+    "seen": 1787005636.1713893,
     "ast_hash": "9130aadc9ae563e955b51241a0a5347c",
     "semantic_hash": "9130aadc9ae563e955b51241a0a5347c"
   },
   "app/api/fantasy/leagues/[leagueId]/teams/[teamId]/value-history/route.ts": {
     "mtime": 1786996390.2795997,
-    "seen": 1786996682.2081387,
+    "seen": 1787005636.1713912,
     "ast_hash": "f4987c8fdfe3ebb0fff238bf3ef9fea8",
     "semantic_hash": "f4987c8fdfe3ebb0fff238bf3ef9fea8"
   },
   "app/api/fantasy/leagues/[leagueId]/teams/route.ts": {
     "mtime": 1786996390.2795997,
-    "seen": 1786996682.2081401,
+    "seen": 1787005636.1713927,
     "ast_hash": "eeb372a42b65a094a7cf6311ae3e1763",
     "semantic_hash": "eeb372a42b65a094a7cf6311ae3e1763"
   },
   "app/api/fantasy/leagues/route.ts": {
     "mtime": 1786996390.2795997,
-    "seen": 1786996682.2081413,
+    "seen": 1787005636.1713943,
     "ast_hash": "09b7fc3a31a12a8610868a84b2a5c99b",
     "semantic_hash": "09b7fc3a31a12a8610868a84b2a5c99b"
   },
   "app/api/fantasy/lineups/route.ts": {
     "mtime": 1786996390.2795997,
-    "seen": 1786996682.2081425,
+    "seen": 1787005636.1713958,
     "ast_hash": "f078659e6dfc2f55591306758bb41955",
     "semantic_hash": "f078659e6dfc2f55591306758bb41955"
   },
   "app/api/fantasy/players/[playerId]/history/route.ts": {
     "mtime": 1786996390.2838314,
-    "seen": 1786996682.2081435,
+    "seen": 1787005636.1713977,
     "ast_hash": "ea63000689815b2127f7ce9344e6764f",
     "semantic_hash": "ea63000689815b2127f7ce9344e6764f"
   },
   "app/api/fantasy/players/route.ts": {
     "mtime": 1786996390.2838314,
-    "seen": 1786996682.208145,
+    "seen": 1787005636.171399,
     "ast_hash": "0a0c4045bff3ec8dcab6c26c14cecd97",
     "semantic_hash": "0a0c4045bff3ec8dcab6c26c14cecd97"
   },
   "app/csv-import.test.ts": {
     "mtime": 1786624344.6867764,
-    "seen": 1786996682.2081459,
+    "seen": 1787005636.1714008,
     "ast_hash": "ae332e1b09966bdf47bd0f49548329ff",
     "semantic_hash": "ae332e1b09966bdf47bd0f49548329ff"
   },
   "app/csv-import.ts": {
     "mtime": 1786624344.6888149,
-    "seen": 1786996682.2081473,
+    "seen": 1787005636.1714022,
     "ast_hash": "f69bd1ec8b8de1a70c56688b438d8db5",
     "semantic_hash": "f69bd1ec8b8de1a70c56688b438d8db5"
   },
   "app/database.types.ts": {
     "mtime": 1786624344.6888149,
-    "seen": 1786996682.208149,
+    "seen": 1787005636.171404,
     "ast_hash": "a301bea8bbf3ca01dee31cfa043618a3",
     "semantic_hash": "a301bea8bbf3ca01dee31cfa043618a3"
   },
   "app/fantasy-app.tsx": {
     "mtime": 1786996390.2838314,
-    "seen": 1786996682.2081506,
+    "seen": 1787005636.171405,
     "ast_hash": "66dac6f9867379ed19345f760716dac3",
     "semantic_hash": "66dac6f9867379ed19345f760716dac3"
   },
   "app/fantasy/AlertsView.tsx": {
     "mtime": 1786996390.2838314,
-    "seen": 1786996682.2081513,
+    "seen": 1787005636.1714065,
     "ast_hash": "cb44ce5ca536e2c3dea19f94b73e4736",
     "semantic_hash": "cb44ce5ca536e2c3dea19f94b73e4736"
   },
   "app/fantasy/BottomSheet.tsx": {
     "mtime": 1786996390.2875998,
-    "seen": 1786996682.2081525,
+    "seen": 1787005636.1714082,
     "ast_hash": "9a80d8ec0fe91dd236cde586d4d3fa25",
     "semantic_hash": "9a80d8ec0fe91dd236cde586d4d3fa25"
   },
   "app/fantasy/CalendarView.tsx": {
     "mtime": 1786996390.2875998,
-    "seen": 1786996682.2081535,
+    "seen": 1787005636.1714096,
     "ast_hash": "eff61257e449e74cbec9a00f7cc63de0",
     "semantic_hash": "eff61257e449e74cbec9a00f7cc63de0"
   },
   "app/fantasy/CompareView.tsx": {
     "mtime": 1786996390.2875998,
-    "seen": 1786996682.2081544,
+    "seen": 1787005636.1714113,
     "ast_hash": "dce959ade480cd18fb3a105120934e53",
     "semantic_hash": "dce959ade480cd18fb3a105120934e53"
   },
   "app/fantasy/DashboardView.tsx": {
     "mtime": 1786996390.2875998,
-    "seen": 1786996682.2081556,
+    "seen": 1787005636.1714127,
     "ast_hash": "d304b557bff22cd78f53a47ec308ff1b",
     "semantic_hash": "d304b557bff22cd78f53a47ec308ff1b"
   },
   "app/fantasy/EconomyView.tsx": {
     "mtime": 1786996390.2875998,
-    "seen": 1786996682.2081573,
+    "seen": 1787005636.171414,
     "ast_hash": "71e026d023e0e33f0734ef9aaac8b88a",
     "semantic_hash": "71e026d023e0e33f0734ef9aaac8b88a"
   },
   "app/fantasy/ExportView.tsx": {
     "mtime": 1786996390.2875998,
-    "seen": 1786996682.2081587,
+    "seen": 1787005636.1714158,
     "ast_hash": "ebf0ce42e68be53120e8a063223fa8f9",
     "semantic_hash": "ebf0ce42e68be53120e8a063223fa8f9"
   },
   "app/fantasy/FantasyApp.tsx": {
     "mtime": 1786996390.2875998,
-    "seen": 1786996682.2081597,
+    "seen": 1787005636.1714172,
     "ast_hash": "9f50d6f2b0146e0d3434b46b20617b1d",
     "semantic_hash": "9f50d6f2b0146e0d3434b46b20617b1d"
   },
   "app/fantasy/LeagueView.tsx": {
     "mtime": 1786996390.2875998,
-    "seen": 1786996682.2081609,
+    "seen": 1787005636.1714187,
     "ast_hash": "713eea7799c2f9fa3f816cdd4545b6d4",
     "semantic_hash": "713eea7799c2f9fa3f816cdd4545b6d4"
   },
   "app/fantasy/LineupsView.tsx": {
     "mtime": 1786996390.2875998,
-    "seen": 1786996682.2081618,
+    "seen": 1787005636.1714199,
     "ast_hash": "56832f9bb134c90b9c3486f72058a890",
     "semantic_hash": "56832f9bb134c90b9c3486f72058a890"
   },
   "app/fantasy/LoginView.tsx": {
     "mtime": 1786996390.2915998,
-    "seen": 1786996682.2081628,
+    "seen": 1787005636.1714213,
     "ast_hash": "98781b597d4c4db4ff6ae7e47f1fc2db",
     "semantic_hash": "98781b597d4c4db4ff6ae7e47f1fc2db"
   },
   "app/fantasy/MarketView.tsx": {
     "mtime": 1786996390.2915998,
-    "seen": 1786996682.2081637,
+    "seen": 1787005636.1714222,
     "ast_hash": "e69bf5973c1cdb71d9618e001eb888fc",
     "semantic_hash": "e69bf5973c1cdb71d9618e001eb888fc"
   },
   "app/fantasy/MoreView.tsx": {
     "mtime": 1786996390.2915998,
-    "seen": 1786996682.2081652,
+    "seen": 1787005636.1714237,
     "ast_hash": "ad6b0f175597068c73f1113c5a1d072f",
     "semantic_hash": "ad6b0f175597068c73f1113c5a1d072f"
   },
   "app/fantasy/MySquadView.tsx": {
     "mtime": 1786996390.2915998,
-    "seen": 1786996682.2081695,
+    "seen": 1787005636.171425,
     "ast_hash": "2b03ba455a4f3611f35f7aa441af69a1",
     "semantic_hash": "2b03ba455a4f3611f35f7aa441af69a1"
   },
   "app/fantasy/NativeMobileLogin.tsx": {
     "mtime": 1786996390.2915998,
-    "seen": 1786996682.2081707,
+    "seen": 1787005636.1714263,
     "ast_hash": "d603b323ddbcf5413c08c5e0b960c4ff",
     "semantic_hash": "d603b323ddbcf5413c08c5e0b960c4ff"
   },
   "app/fantasy/Odds.tsx": {
     "mtime": 1786996390.2915998,
-    "seen": 1786996682.208172,
+    "seen": 1787005636.1714282,
     "ast_hash": "da7b8a9856c907185b3450e03dbc12ad",
     "semantic_hash": "da7b8a9856c907185b3450e03dbc12ad"
   },
   "app/fantasy/Pitch.tsx": {
     "mtime": 1786996390.2915998,
-    "seen": 1786996682.208173,
+    "seen": 1787005636.1714296,
     "ast_hash": "d498d8aef9b992d38e4dd23566dcf960",
     "semantic_hash": "d498d8aef9b992d38e4dd23566dcf960"
   },
   "app/fantasy/PlayerDetails.tsx": {
     "mtime": 1786996390.2915998,
-    "seen": 1786996682.208174,
+    "seen": 1787005636.171431,
     "ast_hash": "5f4880ccc239adaf5b7dcaf6fe044a1d",
     "semantic_hash": "5f4880ccc239adaf5b7dcaf6fe044a1d"
   },
   "app/fantasy/PlayerImage.tsx": {
     "mtime": 1786996390.2915998,
-    "seen": 1786996682.2081752,
+    "seen": 1787005636.1714323,
     "ast_hash": "08807320f30ffafb302522de1b89aa94",
     "semantic_hash": "08807320f30ffafb302522de1b89aa94"
   },
   "app/fantasy/SquadValueHistory.tsx": {
     "mtime": 1786996390.2915998,
-    "seen": 1786996682.208176,
+    "seen": 1787005636.1714337,
     "ast_hash": "3033f30c095e37bfd4293606119ab14d",
     "semantic_hash": "3033f30c095e37bfd4293606119ab14d"
   },
   "app/fantasy/TrendChart.tsx": {
     "mtime": 1786996390.2955997,
-    "seen": 1786996682.2081769,
+    "seen": 1787005636.1714354,
     "ast_hash": "1ac3619f6beb5217927b1d81636939a2",
     "semantic_hash": "1ac3619f6beb5217927b1d81636939a2"
   },
   "app/fantasy/api.ts": {
     "mtime": 1786996390.2955997,
-    "seen": 1786996682.2081778,
+    "seen": 1787005636.1714365,
     "ast_hash": "a34df69abdf004f813e51ac51ccf1f51",
     "semantic_hash": "a34df69abdf004f813e51ac51ccf1f51"
   },
   "app/fantasy/compare-players.test.ts": {
     "mtime": 1786996390.2955997,
-    "seen": 1786996682.208179,
+    "seen": 1787005636.171438,
     "ast_hash": "e0a5bce9bec8da8527bad79f1def7deb",
     "semantic_hash": "e0a5bce9bec8da8527bad79f1def7deb"
   },
   "app/fantasy/compare-players.ts": {
     "mtime": 1786996390.2955997,
-    "seen": 1786996682.2081802,
+    "seen": 1787005636.1714392,
     "ast_hash": "921ae7d60a4e1db0ea4f493ac397e3c2",
     "semantic_hash": "921ae7d60a4e1db0ea4f493ac397e3c2"
   },
   "app/fantasy/difficulty.ts": {
     "mtime": 1786996390.2955997,
-    "seen": 1786996682.2081811,
+    "seen": 1787005636.171441,
     "ast_hash": "9899e070f868a77b7fb8ba7d6a72120e",
     "semantic_hash": "9899e070f868a77b7fb8ba7d6a72120e"
   },
   "app/fantasy/format.ts": {
     "mtime": 1786996390.2955997,
-    "seen": 1786996682.2081823,
+    "seen": 1787005636.1714425,
     "ast_hash": "2e358190917b1b56b0ab1e8764f9022f",
     "semantic_hash": "2e358190917b1b56b0ab1e8764f9022f"
   },
   "app/fantasy/league-context.tsx": {
     "mtime": 1786996390.2955997,
-    "seen": 1786996682.2081833,
+    "seen": 1787005636.1714437,
     "ast_hash": "1edef77b534ca6c8012de76db10bb042",
     "semantic_hash": "1edef77b534ca6c8012de76db10bb042"
   },
   "app/fantasy/mobile-auth.ts": {
     "mtime": 1786996390.2955997,
-    "seen": 1786996682.2081842,
+    "seen": 1787005636.171445,
     "ast_hash": "2f80a565c69d5afd42b75be9c1e8b5bd",
     "semantic_hash": "2f80a565c69d5afd42b75be9c1e8b5bd"
   },
   "app/fantasy/sheet-gesture.test.ts": {
     "mtime": 1786996390.2955997,
-    "seen": 1786996682.2081857,
+    "seen": 1787005636.1714466,
     "ast_hash": "0acf4b90d782592bb936acd2126990b2",
     "semantic_hash": "0acf4b90d782592bb936acd2126990b2"
   },
   "app/fantasy/sheet-gesture.ts": {
     "mtime": 1786996390.2955997,
-    "seen": 1786996682.2081866,
+    "seen": 1787005636.1714478,
     "ast_hash": "72255e9f0722b61f3528cd09dcb93be5",
     "semantic_hash": "72255e9f0722b61f3528cd09dcb93be5"
   },
   "app/fantasy/squad-history.test.ts": {
     "mtime": 1786996390.2955997,
-    "seen": 1786996682.2081878,
+    "seen": 1787005636.1714494,
     "ast_hash": "0c90999340421b9eba5c50820c653d3f",
     "semantic_hash": "0c90999340421b9eba5c50820c653d3f"
   },
   "app/fantasy/squad-history.ts": {
     "mtime": 1786996390.2955997,
-    "seen": 1786996682.208189,
+    "seen": 1787005636.1714504,
     "ast_hash": "601f2c306776bc7e344f6cfd793d9c92",
     "semantic_hash": "601f2c306776bc7e344f6cfd793d9c92"
   },
   "app/fantasy/types.ts": {
     "mtime": 1786996390.2995996,
-    "seen": 1786996682.20819,
+    "seen": 1787005636.1714516,
     "ast_hash": "1c23ac117709b3c2b6633cf19602bdce",
     "semantic_hash": "1c23ac117709b3c2b6633cf19602bdce"
   },
   "app/fantasy/ui.tsx": {
     "mtime": 1786996390.2995996,
-    "seen": 1786996682.208191,
+    "seen": 1787005636.1714528,
     "ast_hash": "274497b40e3f06a26ff5ed4bb2a22b1d",
     "semantic_hash": "274497b40e3f06a26ff5ed4bb2a22b1d"
   },
   "app/laliga-provider.ts": {
     "mtime": 1786624344.6894445,
-    "seen": 1786996682.208192,
+    "seen": 1787005636.1714537,
     "ast_hash": "116199afd11214e1afb69639b5479241",
     "semantic_hash": "116199afd11214e1afb69639b5479241"
   },
   "app/layout.tsx": {
     "mtime": 1786996390.2995996,
-    "seen": 1786996682.208193,
+    "seen": 1787005636.1714547,
     "ast_hash": "18f5b3ab9af12582c2131294bf9e6456",
     "semantic_hash": "18f5b3ab9af12582c2131294bf9e6456"
   },
   "app/manifest.ts": {
     "mtime": 1786996390.2995996,
-    "seen": 1786996682.208194,
+    "seen": 1787005636.171456,
     "ast_hash": "2dce8aac23429ad5c5bd9ec005a51ab7",
     "semantic_hash": "2dce8aac23429ad5c5bd9ec005a51ab7"
   },
   "app/page.tsx": {
     "mtime": 1786996390.2995996,
-    "seen": 1786996682.2081957,
+    "seen": 1787005636.1714568,
     "ast_hash": "3e89f69f3c5a5f0e06683985d23ff3c2",
     "semantic_hash": "3e89f69f3c5a5f0e06683985d23ff3c2"
   },
   "app/supabase.ts": {
     "mtime": 1786624344.6894445,
-    "seen": 1786996682.2081966,
+    "seen": 1787005636.1714578,
     "ast_hash": "f405544d5aed18a53ae0aa04e1a42979",
     "semantic_hash": "f405544d5aed18a53ae0aa04e1a42979"
   },
   "eslint.config.mjs": {
     "mtime": 1786624344.6941063,
-    "seen": 1786996682.2081978,
+    "seen": 1787005636.1714587,
     "ast_hash": "dfa1f5f6a7037bf39dc510f30b180002",
     "semantic_hash": "dfa1f5f6a7037bf39dc510f30b180002"
   },
   "mobile/ios/LaligaOAuthPlugin.swift": {
     "mtime": 1786996390.3075194,
-    "seen": 1786996682.208199,
+    "seen": 1787005636.1714597,
     "ast_hash": "472dcddc3a7fd7ce24fe36df95fe22e4",
     "semantic_hash": "472dcddc3a7fd7ce24fe36df95fe22e4"
   },
   "next.config.ts": {
     "mtime": 1786996390.3075194,
-    "seen": 1786996682.2081997,
+    "seen": 1787005636.1714606,
     "ast_hash": "3258cf150c4f40525881e5a262aac5d4",
     "semantic_hash": "3258cf150c4f40525881e5a262aac5d4"
   },
   "package.json": {
     "mtime": 1786996390.3155997,
-    "seen": 1786996682.2082007,
+    "seen": 1787005636.1714616,
     "ast_hash": "8820a5a3f2a85ed9b0cc786fd58b20e1",
     "semantic_hash": "8820a5a3f2a85ed9b0cc786fd58b20e1"
   },
   "postcss.config.mjs": {
     "mtime": 1786624344.6974444,
-    "seen": 1786996682.2082016,
+    "seen": 1787005636.1714633,
     "ast_hash": "239f3ebf717465dc636818a1a619398d",
     "semantic_hash": "239f3ebf717465dc636818a1a619398d"
   },
   "src/domain/fantasy.ts": {
     "mtime": 1786996390.3218439,
-    "seen": 1786996682.2082028,
+    "seen": 1787005636.1714642,
     "ast_hash": "10e19655e0ca4f8d9f97d0522717d7aa",
     "semantic_hash": "10e19655e0ca4f8d9f97d0522717d7aa"
   },
   "src/server/auth/access.ts": {
-    "mtime": 1786996390.3229153,
-    "seen": 1786996682.208204,
-    "ast_hash": "ae09784f19fe942ddc03804dfab8f25f",
-    "semantic_hash": "ae09784f19fe942ddc03804dfab8f25f"
+    "mtime": 1787005436.8805075,
+    "seen": 1787005636.1714652,
+    "ast_hash": "19e64456bbffbff50442d6d512785dda",
+    "semantic_hash": ""
   },
   "src/server/auth/cookies.ts": {
     "mtime": 1786996390.323486,
-    "seen": 1786996682.208205,
+    "seen": 1787005636.171467,
     "ast_hash": "cc1643e1cb6efb8c67f2ac513a569db8",
     "semantic_hash": "cc1643e1cb6efb8c67f2ac513a569db8"
   },
   "src/server/auth/identity-cookie.test.ts": {
     "mtime": 1786996390.323486,
-    "seen": 1786996682.2082062,
+    "seen": 1787005636.171468,
     "ast_hash": "dedf330387d69af700a3bf7fdd3ecc4b",
     "semantic_hash": "dedf330387d69af700a3bf7fdd3ecc4b"
   },
   "src/server/auth/identity-cookie.ts": {
     "mtime": 1786996390.323486,
-    "seen": 1786996682.208207,
+    "seen": 1787005636.171469,
     "ast_hash": "1b8627fb9a6431301a0234495d7ccf21",
     "semantic_hash": "1b8627fb9a6431301a0234495d7ccf21"
   },
   "src/server/auth/identity.ts": {
-    "mtime": 1786996390.323486,
-    "seen": 1786996682.2082078,
-    "ast_hash": "6c4cc7e96699e1966cdb0ec7f85839c8",
-    "semantic_hash": "6c4cc7e96699e1966cdb0ec7f85839c8"
+    "mtime": 1787005509.528508,
+    "seen": 1787005636.1714702,
+    "ast_hash": "03cebeb3a37f7107da21f07e1e943152",
+    "semantic_hash": ""
   },
   "src/server/auth/links.ts": {
-    "mtime": 1786996390.323486,
-    "seen": 1786996682.2082088,
-    "ast_hash": "ffea67ad3c87cc81659eb2e40c9996c2",
-    "semantic_hash": "ffea67ad3c87cc81659eb2e40c9996c2"
+    "mtime": 1787005448.3325076,
+    "seen": 1787005636.171471,
+    "ast_hash": "6dca0afca26096917a2b9b3a64b6a83a",
+    "semantic_hash": ""
   },
   "src/server/auth/pkce.test.ts": {
     "mtime": 1786996390.323486,
-    "seen": 1786996682.20821,
+    "seen": 1787005636.1714723,
     "ast_hash": "7917dd404c840b288ff54b38a42fb3a9",
     "semantic_hash": "7917dd404c840b288ff54b38a42fb3a9"
   },
   "src/server/auth/pkce.ts": {
     "mtime": 1786996390.3235996,
-    "seen": 1786996682.2082107,
+    "seen": 1787005636.1714735,
     "ast_hash": "efd314e1f3a21c56ac1f0c0645616867",
     "semantic_hash": "efd314e1f3a21c56ac1f0c0645616867"
   },
   "src/server/auth/providers.test.ts": {
     "mtime": 1786996390.3235996,
-    "seen": 1786996682.2082117,
+    "seen": 1787005636.1714747,
     "ast_hash": "e4bf6985ab801b72971ee1174884710a",
     "semantic_hash": "e4bf6985ab801b72971ee1174884710a"
   },
   "src/server/auth/providers.ts": {
     "mtime": 1786996390.3235996,
-    "seen": 1786996682.2082129,
+    "seen": 1787005636.1714756,
     "ast_hash": "7c747a102201a25673e0d3eae34e1efc",
     "semantic_hash": "7c747a102201a25673e0d3eae34e1efc"
   },
   "src/server/auth/supabase-oauth.ts": {
     "mtime": 1786996390.3235996,
-    "seen": 1786996682.2082136,
+    "seen": 1787005636.1714764,
     "ast_hash": "d9a1f8354f5d765be20e8aea67ec97e8",
     "semantic_hash": "d9a1f8354f5d765be20e8aea67ec97e8"
   },
   "src/server/futbolfantasy/lineups.test.ts": {
     "mtime": 1786996390.3235996,
-    "seen": 1786996682.2082155,
+    "seen": 1787005636.1714778,
     "ast_hash": "1a30b7f7c2266208ce8e7c58518b4170",
     "semantic_hash": "1a30b7f7c2266208ce8e7c58518b4170"
   },
   "src/server/futbolfantasy/lineups.ts": {
     "mtime": 1786996390.326309,
-    "seen": 1786996682.2082164,
+    "seen": 1787005636.1714787,
     "ast_hash": "4b13ae6e2aae4376a9440dabb4595cae",
     "semantic_hash": "4b13ae6e2aae4376a9440dabb4595cae"
   },
   "src/server/futbolfantasy/match.ts": {
     "mtime": 1786996390.326309,
-    "seen": 1786996682.2082171,
+    "seen": 1787005636.1714797,
     "ast_hash": "380796a631e6c8be74d7fc26a41829e0",
     "semantic_hash": "380796a631e6c8be74d7fc26a41829e0"
   },
   "src/server/futbolfantasy/parser.ts": {
     "mtime": 1786996390.326309,
-    "seen": 1786996682.208218,
+    "seen": 1787005636.1714811,
     "ast_hash": "c80a1d363fa30bd7ea8f1bb24722850d",
     "semantic_hash": "c80a1d363fa30bd7ea8f1bb24722850d"
   },
   "src/server/futbolfantasy/teams.ts": {
     "mtime": 1786996390.326309,
-    "seen": 1786996682.2082188,
+    "seen": 1787005636.171482,
     "ast_hash": "42967797a31a97203260ee99bc52b0f5",
     "semantic_hash": "42967797a31a97203260ee99bc52b0f5"
   },
   "src/server/http/responses.ts": {
     "mtime": 1786996390.326309,
-    "seen": 1786996682.2082198,
+    "seen": 1787005636.1714828,
     "ast_hash": "b0e0d9fac686be1a123bd6d397a892e8",
     "semantic_hash": "b0e0d9fac686be1a123bd6d397a892e8"
   },
   "src/server/http/session-guard.ts": {
     "mtime": 1786996390.3281062,
-    "seen": 1786996682.2082207,
+    "seen": 1787005636.1714842,
     "ast_hash": "67e37d6191fd6d0a372f43ea4c524780",
     "semantic_hash": "67e37d6191fd6d0a372f43ea4c524780"
   },
   "src/server/laliga/activity-pages.ts": {
     "mtime": 1786996390.3281062,
-    "seen": 1786996682.2082214,
+    "seen": 1787005636.1714852,
     "ast_hash": "b6fa35eacf4cdfb3b0bdaefacb6c9e27",
     "semantic_hash": "b6fa35eacf4cdfb3b0bdaefacb6c9e27"
   },
   "src/server/laliga/alerts/build.ts": {
     "mtime": 1786996390.3291283,
-    "seen": 1786996682.2082224,
+    "seen": 1787005636.171486,
     "ast_hash": "eb226d9a453fd4136e771069197a9644",
     "semantic_hash": "eb226d9a453fd4136e771069197a9644"
   },
   "src/server/laliga/alerts/clause-alerts.test.ts": {
     "mtime": 1786996390.329821,
-    "seen": 1786996682.2082233,
+    "seen": 1787005636.171487,
     "ast_hash": "489329274198ed6b66fab9f8a18e212d",
     "semantic_hash": "489329274198ed6b66fab9f8a18e212d"
   },
   "src/server/laliga/alerts/clause-alerts.ts": {
     "mtime": 1786996390.329821,
-    "seen": 1786996682.2082243,
+    "seen": 1787005636.1714885,
     "ast_hash": "2b27e7a00f69a10579be23e6b801cba6",
     "semantic_hash": "2b27e7a00f69a10579be23e6b801cba6"
   },
   "src/server/laliga/auth-errors.test.ts": {
     "mtime": 1786996390.329821,
-    "seen": 1786996682.2082253,
+    "seen": 1787005636.1714895,
     "ast_hash": "d7d987662d5b6e142e16edbf101977a3",
     "semantic_hash": "d7d987662d5b6e142e16edbf101977a3"
   },
   "src/server/laliga/auth-errors.ts": {
     "mtime": 1786996390.329821,
-    "seen": 1786996682.208226,
+    "seen": 1787005636.1714907,
     "ast_hash": "4f6e20f3bbeb024c03db6b7707fa58bb",
     "semantic_hash": "4f6e20f3bbeb024c03db6b7707fa58bb"
   },
   "src/server/laliga/auth.ts": {
-    "mtime": 1786996390.329821,
-    "seen": 1786996682.2082272,
-    "ast_hash": "e917f98a9a25ede452bdfb3a4b9c16f6",
-    "semantic_hash": "e917f98a9a25ede452bdfb3a4b9c16f6"
+    "mtime": 1787005311.7285066,
+    "seen": 1787005636.1714916,
+    "ast_hash": "d4c95a66cd580fd5898a503ef11eb02b",
+    "semantic_hash": ""
   },
   "src/server/laliga/calendar.test.ts": {
     "mtime": 1786996390.329821,
-    "seen": 1786996682.208228,
+    "seen": 1787005636.1714926,
     "ast_hash": "57249c0dca5cab3997b8cacfc5e27879",
     "semantic_hash": "57249c0dca5cab3997b8cacfc5e27879"
   },
   "src/server/laliga/calendar.ts": {
     "mtime": 1786996390.329821,
-    "seen": 1786996682.208229,
+    "seen": 1787005636.1714935,
     "ast_hash": "370c67fc55451dab2872bb15078e506c",
     "semantic_hash": "370c67fc55451dab2872bb15078e506c"
   },
   "src/server/laliga/catalog-enrich.test.ts": {
     "mtime": 1786996390.329821,
-    "seen": 1786996682.2082303,
+    "seen": 1787005636.1714947,
     "ast_hash": "f760033989dba5ad6b280bbfcc07f6cc",
     "semantic_hash": "f760033989dba5ad6b280bbfcc07f6cc"
   },
   "src/server/laliga/catalog-enrich.ts": {
     "mtime": 1786996390.329821,
-    "seen": 1786996682.2082312,
+    "seen": 1787005636.1714957,
     "ast_hash": "29e4282248fd81a7b5fe9ebabd4c20f9",
     "semantic_hash": "29e4282248fd81a7b5fe9ebabd4c20f9"
   },
   "src/server/laliga/client.ts": {
     "mtime": 1786996390.329821,
-    "seen": 1786996682.208232,
+    "seen": 1787005636.1714966,
     "ast_hash": "613b70d82c16eea18354916fe21899cd",
     "semantic_hash": "613b70d82c16eea18354916fe21899cd"
   },
   "src/server/laliga/config.ts": {
     "mtime": 1786996390.329821,
-    "seen": 1786996682.2082329,
+    "seen": 1787005636.1714976,
     "ast_hash": "3fc0ba849e82ee77053aedf8ae40d619",
     "semantic_hash": "3fc0ba849e82ee77053aedf8ae40d619"
   },
   "src/server/laliga/dashboard.ts": {
     "mtime": 1786996390.3315997,
-    "seen": 1786996682.208234,
+    "seen": 1787005636.1714985,
     "ast_hash": "fceaeafd9aec0bd34a8331518afc1a56",
     "semantic_hash": "fceaeafd9aec0bd34a8331518afc1a56"
   },
   "src/server/laliga/economy/activity.test.ts": {
     "mtime": 1786996390.3315997,
-    "seen": 1786996682.2082348,
+    "seen": 1787005636.1714997,
     "ast_hash": "ce4d42e8b9424fc12878433f77e5245a",
     "semantic_hash": "ce4d42e8b9424fc12878433f77e5245a"
   },
   "src/server/laliga/economy/activity.ts": {
     "mtime": 1786996390.333555,
-    "seen": 1786996682.2082357,
+    "seen": 1787005636.1715007,
     "ast_hash": "21523b9ecd1fb852844950ff1d1cade0",
     "semantic_hash": "21523b9ecd1fb852844950ff1d1cade0"
   },
   "src/server/laliga/errors.ts": {
     "mtime": 1786996390.333555,
-    "seen": 1786996682.2082365,
+    "seen": 1787005636.171502,
     "ast_hash": "a4a922a4193f8ea548796eec373ed48a",
     "semantic_hash": "a4a922a4193f8ea548796eec373ed48a"
   },
   "src/server/laliga/exports/csv.test.ts": {
     "mtime": 1786996390.333555,
-    "seen": 1786996682.2082376,
+    "seen": 1787005636.171503,
     "ast_hash": "4b67768bd321b9f3a58b572729f94826",
     "semantic_hash": "4b67768bd321b9f3a58b572729f94826"
   },
   "src/server/laliga/exports/csv.ts": {
     "mtime": 1786996390.3344893,
-    "seen": 1786996682.2082384,
+    "seen": 1787005636.1715045,
     "ast_hash": "dad3e783cdf8e6b9962fd1d819d7c111",
     "semantic_hash": "dad3e783cdf8e6b9962fd1d819d7c111"
   },
   "src/server/laliga/exports/league-export.ts": {
     "mtime": 1786996390.3344893,
-    "seen": 1786996682.208239,
+    "seen": 1787005636.1715055,
     "ast_hash": "e64a47a6b7831878a41480fd62be9966",
     "semantic_hash": "e64a47a6b7831878a41480fd62be9966"
   },
   "src/server/laliga/lineup.test.ts": {
     "mtime": 1786996390.3344893,
-    "seen": 1786996682.20824,
+    "seen": 1787005636.1715066,
     "ast_hash": "3484524e5173867a513a1ed80e840ef7",
     "semantic_hash": "3484524e5173867a513a1ed80e840ef7"
   },
   "src/server/laliga/lineup.ts": {
     "mtime": 1786996390.3344893,
-    "seen": 1786996682.208241,
+    "seen": 1787005636.1715074,
     "ast_hash": "231a45ac96350de09d6ca58cd2317772",
     "semantic_hash": "231a45ac96350de09d6ca58cd2317772"
   },
   "src/server/laliga/mappers.ts": {
     "mtime": 1786996390.3344893,
-    "seen": 1786996682.208242,
+    "seen": 1787005636.1715086,
     "ast_hash": "a7241be4112c746a5dee51ab0c64729c",
     "semantic_hash": "a7241be4112c746a5dee51ab0c64729c"
   },
   "src/server/laliga/ownership.test.ts": {
     "mtime": 1786996390.3344893,
-    "seen": 1786996682.2082431,
+    "seen": 1787005636.1715097,
     "ast_hash": "d425418eb372de3422c7d17b9d6b629b",
     "semantic_hash": "d425418eb372de3422c7d17b9d6b629b"
   },
   "src/server/laliga/ownership.ts": {
     "mtime": 1786996390.3344893,
-    "seen": 1786996682.208244,
+    "seen": 1787005636.1715105,
     "ast_hash": "68bdb7fbb89318925b2b98305396dd02",
     "semantic_hash": "68bdb7fbb89318925b2b98305396dd02"
   },
   "src/server/laliga/player-team.test.ts": {
     "mtime": 1786996390.3344893,
-    "seen": 1786996682.208245,
+    "seen": 1787005636.1715117,
     "ast_hash": "c5caae3deea5e8be0cd1f2415fdfc5ae",
     "semantic_hash": "c5caae3deea5e8be0cd1f2415fdfc5ae"
   },
   "src/server/laliga/player-team.ts": {
     "mtime": 1786996390.3344893,
-    "seen": 1786996682.208246,
+    "seen": 1787005636.1715126,
     "ast_hash": "68bbda4ddb5dc0abfd286cfabae096f8",
     "semantic_hash": "68bbda4ddb5dc0abfd286cfabae096f8"
   },
   "src/server/laliga/probable-lineup.ts": {
     "mtime": 1786996390.3355997,
-    "seen": 1786996682.2082467,
+    "seen": 1787005636.1715136,
     "ast_hash": "7dc869adf452aa0f2315f72681bc5499",
     "semantic_hash": "7dc869adf452aa0f2315f72681bc5499"
   },
   "src/server/laliga/read.test.ts": {
     "mtime": 1786996390.3355997,
-    "seen": 1786996682.208248,
+    "seen": 1787005636.1715145,
     "ast_hash": "4e70a097ecb9e51bdbd590ebd2c99985",
     "semantic_hash": "4e70a097ecb9e51bdbd590ebd2c99985"
   },
   "src/server/laliga/read.ts": {
     "mtime": 1786996390.3355997,
-    "seen": 1786996682.2082486,
+    "seen": 1787005636.1715157,
     "ast_hash": "d36f024ee9043d94d8a0238edddd43c6",
     "semantic_hash": "d36f024ee9043d94d8a0238edddd43c6"
   },
   "src/server/laliga/schemas.ts": {
     "mtime": 1786996390.3355997,
-    "seen": 1786996682.2082496,
+    "seen": 1787005636.1715167,
     "ast_hash": "c406c90323206b9fa163403e490e030b",
     "semantic_hash": "c406c90323206b9fa163403e490e030b"
   },
   "src/server/laliga/session-cookie.test.ts": {
     "mtime": 1786996390.3355997,
-    "seen": 1786996682.2082505,
+    "seen": 1787005636.1715174,
     "ast_hash": "42e4bc65860e222224345c342cd9d9d1",
     "semantic_hash": "42e4bc65860e222224345c342cd9d9d1"
   },
   "src/server/laliga/session-cookie.ts": {
     "mtime": 1786996390.3355997,
-    "seen": 1786996682.2082515,
+    "seen": 1787005636.1715186,
     "ast_hash": "56a0dc0f7bef24e790fa5e5627819ebf",
     "semantic_hash": "56a0dc0f7bef24e790fa5e5627819ebf"
   },
   "src/server/laliga/session-mode.test.ts": {
     "mtime": 1786996390.3355997,
-    "seen": 1786996682.2082524,
+    "seen": 1787005636.1715195,
     "ast_hash": "551666f776cb543e81c3b66a59d55f2c",
     "semantic_hash": "551666f776cb543e81c3b66a59d55f2c"
   },
   "src/server/laliga/session-mode.ts": {
     "mtime": 1786996390.3355997,
-    "seen": 1786996682.2082531,
+    "seen": 1787005636.1715202,
     "ast_hash": "18ae88bc1d2afc62061675575fcd9663",
     "semantic_hash": "18ae88bc1d2afc62061675575fcd9663"
   },
   "src/server/laliga/session.ts": {
     "mtime": 1786996390.3355997,
-    "seen": 1786996682.208254,
+    "seen": 1787005636.1715212,
     "ast_hash": "9a3f81b10ede70c758603c8fe27814c7",
     "semantic_hash": "9a3f81b10ede70c758603c8fe27814c7"
   },
   "src/server/laliga/team-money.test.ts": {
     "mtime": 1786996390.3355997,
-    "seen": 1786996682.2082553,
+    "seen": 1787005636.1715224,
     "ast_hash": "82831b08176a4441d13866cdae4023fb",
     "semantic_hash": "82831b08176a4441d13866cdae4023fb"
   },
   "src/server/laliga/team-money.ts": {
     "mtime": 1786996390.3355997,
-    "seen": 1786996682.208256,
+    "seen": 1787005636.1715236,
     "ast_hash": "5f7037aaa23af2c857dfb100ae51d7f8",
     "semantic_hash": "5f7037aaa23af2c857dfb100ae51d7f8"
   },
   "src/server/laliga/teams.ts": {
     "mtime": 1786996390.3355997,
-    "seen": 1786996682.208257,
+    "seen": 1787005636.1715243,
     "ast_hash": "704c4b66d442cb66ae987f36df93239b",
     "semantic_hash": "704c4b66d442cb66ae987f36df93239b"
   },
   "src/server/laliga/token-crypto.test.ts": {
     "mtime": 1786996390.3355997,
-    "seen": 1786996682.2082582,
+    "seen": 1787005636.1715255,
     "ast_hash": "bb834c2076f1f001a41940989f15fb84",
     "semantic_hash": "bb834c2076f1f001a41940989f15fb84"
   },
   "src/server/laliga/token-crypto.ts": {
-    "mtime": 1786996390.3355997,
-    "seen": 1786996682.208259,
-    "ast_hash": "56c409fa0bb553b588943b54b8e79ac5",
-    "semantic_hash": "56c409fa0bb553b588943b54b8e79ac5"
+    "mtime": 1787005499.7565079,
+    "seen": 1787005636.1715262,
+    "ast_hash": "8fd37923c71ee386fcefcd2b89bafda3",
+    "semantic_hash": ""
   },
   "src/server/laliga/week-points.test.ts": {
     "mtime": 1786996390.3355997,
-    "seen": 1786996682.2082598,
+    "seen": 1787005636.1715271,
     "ast_hash": "e768443a28683d0fdd06a4ac12873c53",
     "semantic_hash": "e768443a28683d0fdd06a4ac12873c53"
   },
   "src/server/laliga/week-points.ts": {
     "mtime": 1786996390.3355997,
-    "seen": 1786996682.2082605,
+    "seen": 1787005636.171528,
     "ast_hash": "e4f7c835442cf563830d36a2fd34dcc2",
     "semantic_hash": "e4f7c835442cf563830d36a2fd34dcc2"
   },
   "src/server/laliga/writes.ts": {
     "mtime": 1786996390.3355997,
-    "seen": 1786996682.2082617,
+    "seen": 1787005636.1715293,
     "ast_hash": "69e6e3b75c8cbbd63705343942eb11a5",
     "semantic_hash": "69e6e3b75c8cbbd63705343942eb11a5"
   },
   "src/server/odds/football-data.test.ts": {
     "mtime": 1786996390.3395996,
-    "seen": 1786996682.2082624,
+    "seen": 1787005636.1715302,
     "ast_hash": "57c39d9837c39d47f0368b84785903ec",
     "semantic_hash": "57c39d9837c39d47f0368b84785903ec"
   },
   "src/server/odds/football-data.ts": {
     "mtime": 1786996390.3415866,
-    "seen": 1786996682.2082632,
+    "seen": 1787005636.1715312,
     "ast_hash": "e737ddb6271bbb697ffcefbffad46177",
     "semantic_hash": "e737ddb6271bbb697ffcefbffad46177"
   },
   "src/server/odds/implied.test.ts": {
     "mtime": 1786996390.3415866,
-    "seen": 1786996682.208264,
+    "seen": 1787005636.171532,
     "ast_hash": "ceedd8921dfd3fd62d502a1b8dee76fd",
     "semantic_hash": "ceedd8921dfd3fd62d502a1b8dee76fd"
   },
   "src/server/odds/implied.ts": {
     "mtime": 1786996390.3415866,
-    "seen": 1786996682.2082653,
+    "seen": 1787005636.171533,
     "ast_hash": "0fd3f231994aff1165ece73dea732e38",
     "semantic_hash": "0fd3f231994aff1165ece73dea732e38"
   },
   "src/server/odds/match-teams.test.ts": {
     "mtime": 1786996390.3415866,
-    "seen": 1786996682.208266,
+    "seen": 1787005636.171534,
     "ast_hash": "48e276437ebe9591ef467410c9d383c3",
     "semantic_hash": "48e276437ebe9591ef467410c9d383c3"
   },
   "src/server/odds/match-teams.ts": {
     "mtime": 1786996390.3415866,
-    "seen": 1786996682.2082667,
+    "seen": 1787005636.1715353,
     "ast_hash": "3d2d85568ce470eb29ed434cbe4b57a1",
     "semantic_hash": "3d2d85568ce470eb29ed434cbe4b57a1"
   },
   "src/server/odds/team-difficulty.test.ts": {
     "mtime": 1786996390.3415866,
-    "seen": 1786996682.2082675,
+    "seen": 1787005636.1715364,
     "ast_hash": "af08c14c55bee954b29c3776a97fdafd",
     "semantic_hash": "af08c14c55bee954b29c3776a97fdafd"
   },
   "src/server/odds/team-difficulty.ts": {
     "mtime": 1786996390.3415866,
-    "seen": 1786996682.2082684,
+    "seen": 1787005636.1715374,
     "ast_hash": "32d5b9a572e90e29543081f9e2c26bb6",
     "semantic_hash": "32d5b9a572e90e29543081f9e2c26bb6"
   },
   "src/server/storage/supabase-admin.ts": {
     "mtime": 1786996390.3415866,
-    "seen": 1786996682.2082694,
+    "seen": 1787005636.171538,
     "ast_hash": "bb3fa1de68a268023f58709dd7fdb5e9",
     "semantic_hash": "bb3fa1de68a268023f58709dd7fdb5e9"
   },
   "tsconfig.json": {
     "mtime": 1786996390.34549,
-    "seen": 1786996682.2082703,
+    "seen": 1787005636.1715393,
     "ast_hash": "8efff25e07cec4f56a1363de40c8f018",
     "semantic_hash": "8efff25e07cec4f56a1363de40c8f018"
   },
   "vercel.json": {
     "mtime": 1786996390.34549,
-    "seen": 1786996682.208271,
+    "seen": 1787005636.1715403,
     "ast_hash": "1dbde1d02bb90e1747d05147e64c7965",
     "semantic_hash": "1dbde1d02bb90e1747d05147e64c7965"
+  },
+  ".github/workflows/ci.yml": {
+    "mtime": 1786624344.6867764,
+    "seen": 1787005636.1715412,
+    "ast_hash": "a74d5b8d666bfe7494630659096f4356",
+    "semantic_hash": ""
+  },
+  ".github/workflows/ios-verify.yml": {
+    "mtime": 1786996390.2555997,
+    "seen": 1787005636.1715426,
+    "ast_hash": "126fa76974f0ecd22c9053c8ffcc489b",
+    "semantic_hash": ""
+  },
+  "CLAUDE.md": {
+    "mtime": 1786997051.8193398,
+    "seen": 1787005636.1715434,
+    "ast_hash": "82efb97a359f5c7290bf2513d14686be",
+    "semantic_hash": ""
+  },
+  "README.md": {
+    "mtime": 1786996390.2555997,
+    "seen": 1787005636.171544,
+    "ast_hash": "46e459629bf4c177a01e6b18b009bab3",
+    "semantic_hash": ""
+  },
+  "docs/AUDITORIA_FASE_1.md": {
+    "mtime": 1786996390.2995996,
+    "seen": 1787005636.171545,
+    "ast_hash": "69eb950844ba51665e44fbc42f221ea4",
+    "semantic_hash": ""
+  },
+  "docs/DIRECCION_VISUAL.md": {
+    "mtime": 1786996390.3035996,
+    "seen": 1787005636.1715465,
+    "ast_hash": "bf1936f461b9e662bd105e9f4f15f952",
+    "semantic_hash": ""
+  },
+  "docs/IPHONE_SOCIAL_LOGIN.md": {
+    "mtime": 1786996390.3035996,
+    "seen": 1787005636.1715472,
+    "ast_hash": "7a29f7fb058d86601dbf26ed123de5c0",
+    "semantic_hash": ""
+  },
+  "docs/LALIGA_SOCIAL_LOGIN.md": {
+    "mtime": 1786996390.3035996,
+    "seen": 1787005636.1715481,
+    "ast_hash": "cfafc63606cf916eae03d043a7818fda",
+    "semantic_hash": ""
+  },
+  "docs/TRASPASO.md": {
+    "mtime": 1786996390.3035996,
+    "seen": 1787005636.171549,
+    "ast_hash": "cd8db837d9200b84c694cea886121363",
+    "semantic_hash": ""
+  },
+  "docs/architecture.md": {
+    "mtime": 1786624344.6894445,
+    "seen": 1787005636.17155,
+    "ast_hash": "a929a1f70b760cd08c6fb0db5d76dfb5",
+    "semantic_hash": ""
+  },
+  "docs/data-model.md": {
+    "mtime": 1786624344.6941063,
+    "seen": 1787005636.171551,
+    "ast_hash": "73e459d304da3e37fd2df753f3aa3ff6",
+    "semantic_hash": ""
+  },
+  "docs/database-changelog.md": {
+    "mtime": 1786624344.6941063,
+    "seen": 1787005636.1715517,
+    "ast_hash": "a8dda375ef7d826e0466f90d5364643e",
+    "semantic_hash": ""
+  },
+  "docs/laliga-readonly-integration.md": {
+    "mtime": 1786624344.6941063,
+    "seen": 1787005636.1715524,
+    "ast_hash": "f2303b9ce136c6162dc775ba0c7a3b23",
+    "semantic_hash": ""
+  },
+  "docs/lovable-master-prompt.md": {
+    "mtime": 1786624344.6941063,
+    "seen": 1787005636.1715536,
+    "ast_hash": "880c7e42639f099a4cf1a463369c0bc9",
+    "semantic_hash": ""
+  },
+  "mobile-shell/index.html": {
+    "mtime": 1786996390.3035996,
+    "seen": 1787005636.1715546,
+    "ast_hash": "d0e3cafb45498debe5a2087671f79a76",
+    "semantic_hash": ""
+  },
+  "mobile-shell/offline.html": {
+    "mtime": 1786996390.3068404,
+    "seen": 1787005636.1715553,
+    "ast_hash": "9de892367f835cea38b6ec7f671c809c",
+    "semantic_hash": ""
+  },
+  "public/apple-touch-icon.png": {
+    "mtime": 1786996390.3155997,
+    "seen": 1787005636.171556,
+    "ast_hash": "7312f8229134ff358b79b3197ab6d50c",
+    "semantic_hash": ""
+  },
+  "public/favicon.svg": {
+    "mtime": 1786624344.6974444,
+    "seen": 1787005636.1715572,
+    "ast_hash": "65d2d7d0b0f2cb5580c3808f8282568d",
+    "semantic_hash": ""
+  },
+  "public/icon-192.png": {
+    "mtime": 1786996390.3155997,
+    "seen": 1787005636.171558,
+    "ast_hash": "49c8e4febfb6a00a455c3815211abd30",
+    "semantic_hash": ""
+  },
+  "public/icon-512.png": {
+    "mtime": 1786996390.3155997,
+    "seen": 1787005636.1715586,
+    "ast_hash": "20eaed88f5b89bc9518e38fcdc34ae24",
+    "semantic_hash": ""
+  },
+  "public/icon-maskable-512.png": {
+    "mtime": 1786996390.3195996,
+    "seen": 1787005636.1715596,
+    "ast_hash": "20eaed88f5b89bc9518e38fcdc34ae24",
+    "semantic_hash": ""
   }
 }
