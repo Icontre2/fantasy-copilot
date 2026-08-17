@@ -4,6 +4,7 @@ import { buildSessionCookies, createSession } from "@/src/server/laliga/session"
 import type { TokenSet } from "@/src/server/laliga/auth";
 
 export const dynamic = "force-dynamic";
+// Esta ruta usa Buffer para leer la expiración del JWT importado: mantenerla en Node, no Edge.
 export const runtime = "nodejs";
 
 type TokenPayload = {
