@@ -4,8 +4,9 @@ import type { League, LeagueTeam, Manager, MarketEntry, MarketValuePoint, Player
 import type { ClauseAlert } from "@/src/server/laliga/alerts/clause-alerts";
 import type { ManagerEconomy } from "@/src/server/laliga/economy/activity";
 import type { DiagnosticoDeSesion } from "@/src/server/laliga/session-mode";
+import type { Proveedor } from "@/src/server/auth/providers";
 
-export type { ClauseAlert, DiagnosticoDeSesion, League, LeagueTeam, Manager, ManagerEconomy, MarketEntry, MarketValuePoint, Player, StandingRow };
+export type { ClauseAlert, DiagnosticoDeSesion, League, LeagueTeam, Manager, ManagerEconomy, MarketEntry, MarketValuePoint, Player, Proveedor, StandingRow };
 
 export type LeaguesResponse = { leagues: League[] };
 

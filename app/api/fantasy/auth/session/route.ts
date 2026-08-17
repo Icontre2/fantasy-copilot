@@ -4,7 +4,7 @@ import { getMyProfile } from "@/src/server/laliga/read";
 import { diagnosticoDeSesion } from "@/src/server/laliga/session";
 import { accessTokenDe } from "@/src/server/auth/access";
 import { identidadDePeticion } from "@/src/server/auth/identity";
-import { configGoogle } from "@/src/server/auth/google";
+import { configAuth, proveedoresActivos } from "@/src/server/auth/supabase-oauth";
 import { hayAlmacenDeEnlaces } from "@/src/server/auth/links";
 
 export const dynamic = "force-dynamic";
@@ -21,15 +21,17 @@ export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
   const session = diagnosticoDeSesion();
   /*
-   * `google` describe el estado del acceso con proveedor, y tiene tres valores
-   * que la pantalla necesita distinguir:
-   *   - `disponible`: se puede ofrecer el botón.
-   *   - `identificado`: entraste con Google pero aún no has conectado LALIGA,
-   *     así que toca pedir la contraseña UNA vez.
-   * Sin esto la pantalla no sabría si enseñar el botón, el formulario, o ambos.
+   * Qué proveedores puede enseñar la pantalla, y si ya te has identificado con
+   * alguno. `proveedores` sale de preguntarle a Supabase cuáles tiene
+   * encendidos: así activar uno en su panel hace que aparezca su botón sin
+   * tocar código, y nunca se enseña uno que no funcionaría.
+   *
+   * `identificado` significa «sé quién eres, pero aún no me has dicho cuál es
+   * tu cuenta de LALIGA», que es el paso intermedio del flujo.
    */
-  const google = {
-    disponible: configGoogle() !== null && hayAlmacenDeEnlaces(),
+  const config = configAuth();
+  const social = {
+    proveedores: config && hayAlmacenDeEnlaces() ? await proveedoresActivos(config) : [],
     identificado: identidadDePeticion(request) !== null,
   };
 
@@ -41,14 +43,15 @@ export async function GET(request: Request) {
   const authError = leerCookie(request, COOKIE_ERROR) ?? null;
 
   // La cookie se borra en TODAS las salidas, incluida la de error: si solo se
-  // borrara en la buena, un fallo de LALIGA dejaría el aviso de Google pegado.
+  // borrara en la buena, un fallo de LALIGA dejaría el aviso del proveedor
+  // pegado a la pantalla para siempre.
   const responder = (cuerpo: Record<string, unknown>) =>
     authError ? privateJsonWithCookies(cuerpo, limpiarError()) : privateJson(cuerpo);
 
   try {
     const token = await accessTokenDe(request);
-    if (!token) return responder({ authenticated: false, session, google, authError });
-    return responder({ authenticated: true, manager: await getMyProfile(token), session, google, authError });
+    if (!token) return responder({ authenticated: false, session, social, authError });
+    return responder({ authenticated: true, manager: await getMyProfile(token), session, social, authError });
   } catch (error) {
     return errorJson(error);
   }

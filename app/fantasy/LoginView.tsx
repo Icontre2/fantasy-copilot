@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { post } from "./api";
-import type { DiagnosticoDeSesion, Manager } from "./types";
+import type { DiagnosticoDeSesion, Manager, Proveedor } from "./types";
 import { ErrorBox } from "./ui";
 import { Clock, LockKeyhole, Mail, ShieldCheck } from "lucide-react";
 
@@ -20,16 +20,16 @@ import { Clock, LockKeyhole, Mail, ShieldCheck } from "lucide-react";
 export function LoginView({
   onLogin,
   sesion,
-  google,
-  errorDeGoogle,
+  social,
+  errorDeAcceso,
 }: {
   onLogin: (manager: Manager) => void;
   /** Cuánto va a durar la sesión. Solo se avisa si va a durar poco. */
   sesion?: DiagnosticoDeSesion | null;
-  /** Si se puede entrar con Google, y si ya lo has hecho. */
-  google?: { disponible: boolean; identificado: boolean } | null;
-  /** Por qué falló el último acceso con Google, si falló. */
-  errorDeGoogle?: string | null;
+  /** Qué proveedores hay activos, y si ya te has identificado con alguno. */
+  social?: { proveedores: Proveedor[]; identificado: boolean } | null;
+  /** Por qué falló el último acceso con proveedor, si falló. */
+  errorDeAcceso?: string | null;
 }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -37,11 +37,11 @@ export function LoginView({
   const [error, setError] = useState<string | null>(null);
 
   /*
-   * El error del acceso con Google llega ya resuelto desde el servidor. Se usa
-   * mientras el usuario no haya intentado nada más: en cuanto escribe y pulsa
-   * «entrar», manda lo que diga ESE intento y no el anterior.
+   * El error del acceso con proveedor llega ya resuelto desde el servidor. Se
+   * usa mientras el usuario no haya intentado nada más: en cuanto escribe y
+   * pulsa «entrar», manda lo que diga ESE intento y no el anterior.
    */
-  const aVista = error ?? errorDeGoogle ?? null;
+  const aVista = error ?? errorDeAcceso ?? null;
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -76,20 +76,13 @@ export function LoginView({
         LALIGA una vez. Enseñar los dos a la vez haría pensar que hay que elegir,
         cuando en realidad son dos pasos del mismo camino.
       */}
-      {google?.disponible && !google.identificado && (
+      {social && social.proveedores.length > 0 && !social.identificado && (
         <div className="border-b border-white/8 p-6 pb-5">
-          {/*
-            Enlace y no botón con `fetch`: el navegador tiene que ACABAR en
-            Google, con su barra de direcciones y su candado, para que puedas
-            comprobar tú a quién le estás dando la contraseña.
-          */}
-          <a
-            href="/api/fantasy/auth/google/start"
-            className="flex min-h-[52px] w-full items-center justify-center gap-3 rounded-2xl bg-white px-4 font-bold text-[#1f1f1f]"
-          >
-            <LogoGoogle />
-            Entrar con Google
-          </a>
+          <div className="space-y-2">
+            {social.proveedores.map((proveedor) => (
+              <BotonProveedor key={proveedor} proveedor={proveedor} />
+            ))}
+          </div>
           <p className="mt-3 text-center text-[11px] leading-4 text-neutral-500">
             La primera vez te pedirá una sola vez la contraseña de LALIGA, para saber cuál es tu
             cuenta. Después ya no.
@@ -100,11 +93,11 @@ export function LoginView({
         </div>
       )}
 
-      {google?.identificado && (
+      {social?.identificado && (
         <div className="border-b border-white/8 p-6 pb-5">
           <p className="rounded-2xl bg-[#7c3aed]/15 p-3 text-[12px] leading-4 text-[#c4b5fd]">
-            <strong>Ya te has identificado con Google.</strong> Solo falta decirle cuál es tu cuenta
-            de LALIGA Fantasy: escribe su email y su contraseña una vez y no volverá a pedírtela.
+            <strong>Ya te has identificado.</strong> Solo falta decirle cuál es tu cuenta de LALIGA
+            Fantasy: escribe su email y su contraseña una vez y no volverá a pedírtela.
           </p>
         </div>
       )}
@@ -141,7 +134,7 @@ export function LoginView({
           disabled={busy}
           className="w-full rounded-2xl bg-[#7c3aed] px-4 py-4 font-bold text-white shadow-lg disabled:opacity-50"
         >
-          {busy ? "Entrando…" : google?.identificado ? "Conectar mi cuenta de LALIGA" : "Entrar"}
+          {busy ? "Entrando…" : social?.identificado ? "Conectar mi cuenta de LALIGA" : "Entrar"}
         </button>
         {/*
           Cuidado con esta frase: arriba hay un botón de Google, así que decir
@@ -149,7 +142,19 @@ export function LoginView({
           contradicción. Habla de la cuenta de LALIGA, que es otra distinta, y
           por eso lo dice con esas palabras.
         */}
-        <p className="flex gap-2 rounded-2xl bg-emerald-500/10 p-3 text-[11px] leading-4 text-emerald-300"><ShieldCheck size={16} className="shrink-0"/>La contraseña se usa una vez y no se guarda. Ojo: aquí va la de tu cuenta <strong>de LALIGA Fantasy</strong>, y si esa la creaste con Google, Apple o Facebook no tiene contraseña propia y no podrás conectarla.</p>
+        {/*
+          El texto va dentro de UN `span`. Sin él, el `strong` se convierte en
+          otro hijo del flex y la frase se parte en columnas — pasó, y se veía
+          fatal. Los hijos directos del flex son exactamente dos: icono y texto.
+        */}
+        <p className="flex gap-2 rounded-2xl bg-emerald-500/10 p-3 text-[11px] leading-4 text-emerald-300">
+          <ShieldCheck size={16} className="mt-px shrink-0" />
+          <span>
+            La contraseña se usa una vez y no se guarda. Ojo: aquí va la de tu cuenta{" "}
+            <strong>de LALIGA Fantasy</strong>, y si esa la creaste con Google, Apple o Facebook no
+            tiene contraseña propia y no podrás conectarla.
+          </span>
+        </p>
 
         {/*
           Si la sesión va a durar poco, se dice AQUÍ y antes de entrar. Es el
@@ -172,8 +177,57 @@ export function LoginView({
   );
 }
 
-/** El logotipo de Google. Va en SVG porque una imagen externa no cargaría: la
- *  política de contenido de esta app no permite pedir nada a otro servidor. */
+/**
+ * Un botón por proveedor.
+ *
+ * Es un ENLACE y no un botón con `fetch`: el navegador tiene que ACABAR en
+ * Google, Apple o Facebook, con su barra de direcciones y su candado, para que
+ * puedas comprobar tú a quién le estás dando la contraseña.
+ *
+ * Cada uno con su color de marca, que es como los reconoce la gente sin leer.
+ */
+function BotonProveedor({ proveedor }: { proveedor: Proveedor }) {
+  const estilo: Record<Proveedor, string> = {
+    google: "bg-white text-[#1f1f1f]",
+    apple: "bg-black text-white ring-1 ring-white/25",
+    facebook: "bg-[#1877F2] text-white",
+  };
+  const logo = { google: <LogoGoogle />, apple: <LogoApple />, facebook: <LogoFacebook /> };
+  return (
+    <a
+      href={`/api/fantasy/auth/social/start?provider=${proveedor}`}
+      className={`flex min-h-[52px] w-full items-center justify-center gap-3 rounded-2xl px-4 font-bold ${estilo[proveedor]}`}
+    >
+      {logo[proveedor]}
+      Entrar con {NOMBRES_PROVEEDOR[proveedor]}
+    </a>
+  );
+}
+
+const NOMBRES_PROVEEDOR: Record<Proveedor, string> = {
+  google: "Google",
+  apple: "Apple",
+  facebook: "Facebook",
+};
+
+/** Los logotipos van en SVG porque una imagen externa no cargaría: la política
+ *  de contenido de esta app no permite pedir nada a otro servidor. */
+function LogoApple() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden focusable="false">
+      <path d="M16.365 1.43c0 1.14-.42 2.2-1.26 3.03-.9.9-1.98 1.42-3.06 1.34-.12-1.1.42-2.24 1.26-3.06.9-.9 2.1-1.4 3.06-1.31zM20.5 17.1c-.54 1.24-.8 1.8-1.5 2.9-.98 1.53-2.36 3.44-4.06 3.45-1.52.02-1.91-.99-3.97-.98-2.06.01-2.49 1-4.01.98-1.7-.02-3-1.74-3.99-3.27C.2 16.9-.06 11.9 1.8 9.35c1.02-1.42 2.63-2.32 4.14-2.32 1.55 0 2.52 1 3.8 1 1.24 0 2-1 3.79-1 1.35 0 2.78.73 3.8 2-3.34 1.83-2.8 6.6.17 8.07z" />
+    </svg>
+  );
+}
+
+function LogoFacebook() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden focusable="false">
+      <path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.96h-1.51c-1.49 0-1.96.93-1.96 1.89v2.26h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07z" />
+    </svg>
+  );
+}
+
 function LogoGoogle() {
   return (
     <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden focusable="false">
