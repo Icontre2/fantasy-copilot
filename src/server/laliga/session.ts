@@ -30,6 +30,7 @@ import {
  */
 
 import { SESSION_TTL_MS } from './session-cookie.ts';
+import { diagnosticarSesion, type DiagnosticoDeSesion } from './session-mode.ts';
 
 /** Refrescos en vuelo, para no lanzar dos a la vez sobre la misma sesion. */
 const inflight = ((globalThis as { __llfRefreshes?: Map<string, Promise<string | null>> })
@@ -61,6 +62,22 @@ export function usingPortableCookieSessions(): boolean {
 /** Persistencia disponible para el historico economico. */
 export function hasPersistentStorage(): boolean {
   return hasSupabaseAdmin() && !usingPortableCookieSessions();
+}
+
+/**
+ * Que modo de sesion esta activo, para poder DECIRLO en pantalla.
+ *
+ * Lo unico que hace es leer el entorno y delegar en `session-mode.ts`, que es
+ * donde vive la decision y donde se puede testear. No devuelve ningun secreto:
+ * solo si cada variable esta puesta o no.
+ */
+export function diagnosticoDeSesion(): DiagnosticoDeSesion {
+  return diagnosticarSesion({
+    supabase: hasSupabaseAdmin(),
+    claveExplicita: Boolean(process.env.SESSION_ENCRYPTION_KEY?.trim()),
+    oidc: Boolean(process.env.VERCEL_OIDC_TOKEN?.trim()),
+    produccion: process.env.NODE_ENV === 'production',
+  });
 }
 
 export async function createSession(tokens: TokenSet): Promise<string> {

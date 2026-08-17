@@ -20,6 +20,7 @@ import {
   type AlertsResponse,
   type EconomyResponse,
   type DashboardResponse,
+  type DiagnosticoDeSesion,
   type League,
   type LeaguesResponse,
   type Manager,
@@ -43,6 +44,8 @@ import { Card, ErrorBox, Spinner } from "./ui";
 export default function FantasyApp() {
   const [manager, setManager] = useState<Manager | null>(null);
   const [checkingSession, setCheckingSession] = useState(true);
+  // Cuánto dura la sesión, para poder explicarlo si dura menos de lo que debería.
+  const [sesion, setSesion] = useState<DiagnosticoDeSesion | null>(null);
 
   const [leagues, setLeagues] = useState<League[]>([]);
   const [leagueId, setLeagueId] = useState<string | null>(null);
@@ -51,8 +54,11 @@ export default function FantasyApp() {
   const [section, setSection] = useState<Section>("inicio");
 
   useEffect(() => {
-    get<{ authenticated: boolean; manager?: Manager }>("/api/fantasy/auth/session")
-      .then((data) => setManager(data.authenticated && data.manager ? data.manager : null))
+    get<{ authenticated: boolean; manager?: Manager; session?: DiagnosticoDeSesion }>("/api/fantasy/auth/session")
+      .then((data) => {
+        setManager(data.authenticated && data.manager ? data.manager : null);
+        setSesion(data.session ?? null);
+      })
       .catch(() => setManager(null))
       .finally(() => setCheckingSession(false));
   }, []);
@@ -88,7 +94,7 @@ export default function FantasyApp() {
   }
 
   if (!manager) {
-    return <Shell><LoginView onLogin={setManager} /></Shell>;
+    return <Shell><LoginView onLogin={setManager} sesion={sesion} /></Shell>;
   }
 
   return (

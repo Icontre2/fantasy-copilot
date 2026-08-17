@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { post } from "./api";
-import type { Manager } from "./types";
+import type { DiagnosticoDeSesion, Manager } from "./types";
 import { ErrorBox } from "./ui";
-import { LockKeyhole, Mail, ShieldCheck } from "lucide-react";
+import { Clock, LockKeyhole, Mail, ShieldCheck } from "lucide-react";
 
 /**
  * Login con la cuenta de LALIGA Fantasy.
@@ -17,7 +17,14 @@ import { LockKeyhole, Mail, ShieldCheck } from "lucide-react";
  * contraseña en el proveedor de identidad de LALIGA. Se avisa antes de que el
  * usuario lo descubra con un error críptico.
  */
-export function LoginView({ onLogin }: { onLogin: (manager: Manager) => void }) {
+export function LoginView({
+  onLogin,
+  sesion,
+}: {
+  onLogin: (manager: Manager) => void;
+  /** Cuánto va a durar la sesión. Solo se avisa si va a durar poco. */
+  sesion?: DiagnosticoDeSesion | null;
+}) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -85,6 +92,23 @@ export function LoginView({ onLogin }: { onLogin: (manager: Manager) => void }) 
           {busy ? "Entrando…" : "Entrar"}
         </button>
         <p className="flex gap-2 rounded-2xl bg-emerald-500/10 p-3 text-[11px] leading-4 text-emerald-300"><ShieldCheck size={16} className="shrink-0"/>La contraseña se usa una vez y no se guarda. Las cuentas creadas con Google, Apple o Facebook no tienen contraseña propia.</p>
+
+        {/*
+          Si la sesión va a durar poco, se dice AQUÍ y antes de entrar. Es el
+          momento exacto en que a alguien le interesa saber por qué le echan: el
+          síntoma es volver a ver esta pantalla, y sin esto no hay forma de
+          distinguirlo de un fallo de LALIGA o de una contraseña mal escrita.
+        */}
+        {sesion?.degradado && (
+          <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 text-[11px] leading-4 text-amber-200">
+            <p className="flex items-center gap-2 font-bold">
+              <Clock size={14} className="shrink-0" />
+              {sesion.titulo} · durará {sesion.duracion}
+            </p>
+            <p className="mt-1.5">{sesion.explicacion}</p>
+            {sesion.arreglo && <p className="mt-1.5 text-amber-200/80">{sesion.arreglo}</p>}
+          </div>
+        )}
       </form>
     </section>
   );
