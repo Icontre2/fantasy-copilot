@@ -1196,10 +1196,10 @@
     },
     {
       "source": "GET()",
-      "target": "buildDashboard()",
+      "target": "getCuotas()",
       "source_files": [
-        "app/api/fantasy/leagues/[leagueId]/dashboard/route.ts",
-        "src/server/laliga/dashboard.ts"
+        "app/api/fantasy/difficulty/route.ts",
+        "src/server/odds/football-data.ts"
       ],
       "confidence": "EXTRACTED",
       "relation": "calls",
@@ -1209,17 +1209,17 @@
   "questions": [
     {
       "type": "bridge_node",
-      "question": "Why does `MarketValuePoint` connect `Community 2` to `Community 36`, `Community 12`, `Community 14`, `Community 16`, `Community 17`, `Community 21`, `Community 30`?",
+      "question": "Why does `MarketValuePoint` connect `Clause Alerts Builder` to `Fantasy Domain Types`, `Login View UI`, `League Data Reader`, `Data Mappers`, `Lineup Difficulty View`, `Squad Value History`, `Player Comparison`?",
       "why": "High betweenness centrality (0.047) - this node is a cross-community bridge."
     },
     {
       "type": "bridge_node",
-      "question": "Why does `Player` connect `Community 30` to `Community 2`, `Community 3`, `Community 36`, `Community 8`, `Community 10`, `Community 12`, `Community 16`, `Community 17`, `Community 21`, `Community 27`?",
+      "question": "Why does `Player` connect `Player Comparison` to `Clause Alerts Builder`, `Probable Lineups`, `Fantasy Domain Types`, `App Navigation Shell`, `Alerts View UI`, `Login View UI`, `Data Mappers`, `Lineup Difficulty View`, `Squad Value History`, `Market View UI`?",
       "why": "High betweenness centrality (0.029) - this node is a cross-community bridge."
     },
     {
       "type": "bridge_node",
-      "question": "Why does `Manager` connect `Community 13` to `Community 36`, `Community 8`, `Community 12`, `Community 14`, `Community 16`?",
+      "question": "Why does `Manager` connect `API Client & Mobile Auth` to `Fantasy Domain Types`, `App Navigation Shell`, `Login View UI`, `League Data Reader`, `Data Mappers`?",
       "why": "High betweenness centrality (0.028) - this node is a cross-community bridge."
     },
     {
@@ -1229,17 +1229,17 @@
     },
     {
       "type": "low_cohesion",
-      "question": "Should `Community 0` be split into smaller, more focused modules?",
+      "question": "Should `Session API Helpers` be split into smaller, more focused modules?",
       "why": "Cohesion score 0.051138294257560314 - nodes in this community are weakly interconnected."
     },
     {
       "type": "low_cohesion",
-      "question": "Should `Community 1` be split into smaller, more focused modules?",
+      "question": "Should `OAuth Login Flow` be split into smaller, more focused modules?",
       "why": "Cohesion score 0.07140538786108407 - nodes in this community are weakly interconnected."
     },
     {
       "type": "low_cohesion",
-      "question": "Should `Community 2` be split into smaller, more focused modules?",
+      "question": "Should `Clause Alerts Builder` be split into smaller, more focused modules?",
       "why": "Cohesion score 0.09365079365079365 - nodes in this community are weakly interconnected."
     }
   ]

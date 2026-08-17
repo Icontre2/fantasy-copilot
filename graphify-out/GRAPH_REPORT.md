@@ -6,7 +6,7 @@
 ## Summary
 - 968 nodes · 2254 edges · 42 communities (37 shown, 5 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 10 edges (avg confidence: 0.62)
-- Token cost: 0 input · 0 output
+- Token cost: 35,759 input · 4,408 output
 
 ## Graph Freshness
 - Built from commit: `6cc3d364`
@@ -14,47 +14,47 @@
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
-- Community 0
-- Community 1
-- Community 2
-- Community 3
-- Community 4
-- Community 5
-- Community 6
-- Community 7
-- Community 8
-- Community 9
-- Community 10
-- Community 11
-- Community 12
-- Community 13
-- Community 14
-- Community 15
-- Community 16
-- Community 17
-- Community 18
-- Community 19
-- Community 20
-- Community 21
-- Community 22
-- Community 23
-- Community 24
-- Community 25
-- Community 26
-- Community 27
-- Community 28
-- Community 29
-- Community 30
-- Community 31
-- Community 32
-- Community 33
-- Community 34
-- Community 35
-- Community 36
-- Community 39
-- Community 40
-- Community 47
-- Community 48
+- Session API Helpers
+- OAuth Login Flow
+- Clause Alerts Builder
+- Probable Lineups
+- Social OAuth Callback
+- Football Odds Data
+- Package Dependencies
+- App Shell & Demo Data
+- App Navigation Shell
+- CSV Export API
+- Alerts View UI
+- Dashboard View
+- Login View UI
+- API Client & Mobile Auth
+- League Data Reader
+- Dev Dependencies
+- Data Mappers
+- Lineup Difficulty View
+- API Zod Schemas
+- CSV Squad Import
+- Bottom Sheet Gestures
+- Squad Value History
+- TypeScript Config
+- League Context Provider
+- iOS OAuth Plugin
+- LaLiga Connector
+- Calendar & Odds View
+- Market View UI
+- Supabase Database Types
+- Token Import Parsing
+- Player Comparison
+- Player Catalog Enrichment
+- Onboarding & Demo Modals
+- Weekly Points Data
+- Team Money Calculations
+- Root Layout
+- Fantasy Domain Types
+- ESLint Config
+- Next.js Config
+- PostCSS Config
+- Vercel Config
 
 ## God Nodes (most connected - your core abstractions)
 1. `errorJson()` - 48 edges
@@ -77,155 +77,155 @@
   app/api/fantasy/auth/token/route.ts → src/server/laliga/session.ts
 - `GET()` --calls--> `getCuotas()`  [EXTRACTED]
   app/api/fantasy/calendar/route.ts → src/server/odds/football-data.ts
-- `GET()` --calls--> `buildDashboard()`  [EXTRACTED]
-  app/api/fantasy/leagues/[leagueId]/dashboard/route.ts → src/server/laliga/dashboard.ts
+- `GET()` --calls--> `getCuotas()`  [EXTRACTED]
+  app/api/fantasy/difficulty/route.ts → src/server/odds/football-data.ts
 
 ## Import Cycles
 - None detected.
 
 ## Communities (42 total, 5 thin omitted)
 
-### Community 0 - "Community 0"
+### Community 0 - "Session API Helpers"
 Cohesion: 0.05
 Nodes (85): base64url(), dynamic, POST(), runtime, POST(), dynamic, GET(), maxDuration (+77 more)
 
-### Community 1 - "Community 1"
+### Community 1 - "OAuth Login Flow"
 Cohesion: 0.07
 Nodes (63): dynamic, POST(), dynamic, POST(), clearOAuthCookie(), decodeState(), dynamic, OAuthState (+55 more)
 
-### Community 2 - "Community 2"
+### Community 2 - "Clause Alerts Builder"
 Cohesion: 0.09
 Nodes (28): MarketValuePoint, ClauseAlertsReport, mapWithConcurrency(), MAX_HISTORY_REQUESTS, PREFILTER_VALUE_RATIO, AlertLevel, buildAlert(), buildClauseAlerts() (+20 more)
 
-### Community 3 - "Community 3"
+### Community 3 - "Probable Lineups"
 Cohesion: 0.07
 Nodes (39): LeagueTeam, Position, fetchTeam(), getProbableLineups(), getProbableTeam(), headers, mapConcurrent(), ProbableTeam (+31 more)
 
-### Community 4 - "Community 4"
+### Community 4 - "Social OAuth Callback"
 Cohesion: 0.09
 Nodes (43): dynamic, GET(), dynamic, GET(), dynamic, GET(), RFC-7636, atributos() (+35 more)
 
-### Community 5 - "Community 5"
+### Community 5 - "Football Odds Data"
 Cohesion: 0.12
 Nodes (25): ALIAS, cuotasDeFila(), CuotasDePartido, equipoDe(), fechaIso(), FilaCsv, getCuotas(), interpretar() (+17 more)
 
-### Community 6 - "Community 6"
+### Community 6 - "Package Dependencies"
 Cohesion: 0.05
 Nodes (36): cheerio, drizzle-orm, lucide-react, next, dependencies, cheerio, drizzle-orm, lucide-react (+28 more)
 
-### Community 7 - "Community 7"
+### Community 7 - "App Shell & Demo Data"
 Cohesion: 0.07
 Nodes (18): AuthMode, AuthPanel(), Club, demoMarket, demoPlayers, emptyLiveData, LiveData, MarketEntry (+10 more)
 
-### Community 8 - "Community 8"
+### Community 8 - "App Navigation Shell"
 Cohesion: 0.13
 Nodes (16): ExportView(), BottomNav(), DataSection, ENDPOINT, LOADING_LABEL, NAV_ICONS, LeagueView(), RivalLineup (+8 more)
 
-### Community 9 - "Community 9"
+### Community 9 - "CSV Export API"
 Cohesion: 0.14
 Nodes (24): dynamic, GET(), dynamic, GET(), RFC-4180, MarketEntry, csvResponse(), computeDailyTrend() (+16 more)
 
-### Community 10 - "Community 10"
+### Community 10 - "Alerts View UI"
 Cohesion: 0.13
 Nodes (22): AlertCard(), AlertsView(), buyout(), blindaje(), Filter, FILTERS, LEVEL_STYLE, motivoSinTendencia() (+14 more)
 
-### Community 11 - "Community 11"
+### Community 11 - "Dashboard View"
 Cohesion: 0.12
 Nodes (18): chartCoordinates(), currentPoint(), DashboardView(), filterHistory(), historyCache, isPortfolioPoint(), localDate(), MiniChart() (+10 more)
 
-### Community 12 - "Community 12"
+### Community 12 - "Login View UI"
 Cohesion: 0.11
 Nodes (13): LoginView(), NOMBRES_PROVEEDOR, AlertsResponse, LeaguesResponse, ScheduleStatus, SyncResponse, ErrorBox(), Proveedor (+5 more)
 
-### Community 13 - "Community 13"
+### Community 13 - "API Client & Mobile Auth"
 Cohesion: 0.15
 Nodes (18): del(), get(), post(), request(), FantasyApp(), logout(), SectionData(), OnceDelRival() (+10 more)
 
-### Community 14 - "Community 14"
+### Community 14 - "League Data Reader"
 Cohesion: 0.16
 Nodes (18): privateFetch(), mapLeagueTeam(), mapManager(), mapSquadPlayer(), mapStandingRow(), completarCajas(), getCurrentWeek(), getLeagueStanding() (+10 more)
 
-### Community 15 - "Community 15"
+### Community 15 - "Dev Dependencies"
 Cohesion: 0.06
 Nodes (33): @cloudflare/vite-plugin, drizzle-kit, eslint, eslint-config-next, devDependencies, @cloudflare/vite-plugin, drizzle-kit, eslint (+25 more)
 
-### Community 16 - "Community 16"
+### Community 16 - "Data Mappers"
 Cohesion: 0.13
 Nodes (18): mapLeague(), mapMarketEntry(), mapMarketValueHistory(), mapPlayerMaster(), POSITION_BY_ID, POSITION_ORDER, toPosition(), resolveTeamId() (+10 more)
 
-### Community 17 - "Community 17"
+### Community 17 - "Lineup Difficulty View"
 Cohesion: 0.11
 Nodes (23): cargar(), colorDeDificultad(), DifficultyResponse, tonoDeDificultad(), useDificultad(), LineupsResponse, LineupsView(), MySquadView() (+15 more)
 
-### Community 18 - "Community 18"
+### Community 18 - "API Zod Schemas"
 Cohesion: 0.10
 Nodes (19): apiActivityEntrySchema, apiActivitySchema, apiLeagueSchema, apiLeagueTeamSchema, apiManagerSchema, apiMarketItemSchema, apiMarketSchema, apiMarketValuePointSchema (+11 more)
 
-### Community 19 - "Community 19"
+### Community 19 - "CSV Squad Import"
 Cohesion: 0.22
 Nodes (14): countDelimiterOutsideQuotes(), CsvPosition, CsvSquadParseResult, CsvSquadRow, detectDelimiter(), findHeaderIndex(), headerAliases, normalizePlayerName() (+6 more)
 
-### Community 20 - "Community 20"
+### Community 20 - "Bottom Sheet Gestures"
 Cohesion: 0.26
 Nodes (12): BottomSheet(), alMover(), alSoltar(), debeCerrarse(), desplazamientoDe(), Gesto, MINIMO_PARA_ARRASTRAR, opacidadDeFondo() (+4 more)
 
-### Community 21 - "Community 21"
+### Community 21 - "Squad Value History"
 Cohesion: 0.24
 Nodes (12): aggregateCurrentSquad(), filterPlayerHistory(), historyDelta(), HistoryRange, SQUAD_HISTORY_START, MiniTrend(), RANGES, Response (+4 more)
 
-### Community 22 - "Community 22"
+### Community 22 - "TypeScript Config"
 Cohesion: 0.06
 Nodes (34): @cloudflare/workers-types, @cloudflare/workers-types, db, dom, dom.iterable, esnext, examples, **/*.mts (+26 more)
 
-### Community 23 - "Community 23"
+### Community 23 - "League Context Provider"
 Cohesion: 0.33
 Nodes (5): LigaContext, LigaProvider(), useLeagueId(), Clausula(), pagar()
 
-### Community 24 - "Community 24"
+### Community 24 - "iOS OAuth Plugin"
 Cohesion: 0.15
 Nodes (12): ASPresentationAnchor, ASWebAuthenticationPresentationContextProviding, ASWebAuthenticationSession, AuthenticationServices, Capacitor, CAPBridgedPlugin, CAPPlugin, CAPPluginCall (+4 more)
 
-### Community 25 - "Community 25"
+### Community 25 - "LaLiga Connector"
 Cohesion: 0.14
 Nodes (8): LaligaConnectionCard(), LaligaConnectionModal(), connectorState, getLaligaConnectorState(), LaligaConnectorState, LaligaConnectorStatus, LaligaLeagueSummary, LaligaReadOnlyProvider
 
-### Community 26 - "Community 26"
+### Community 26 - "Calendar & Odds View"
 Cohesion: 0.21
 Nodes (9): agruparPorDia(), CalendarResponse, CalendarView(), Equipo, hora(), Partido(), SemanaCargada(), Cuotas (+1 more)
 
-### Community 27 - "Community 27"
+### Community 27 - "Market View UI"
 Cohesion: 0.20
 Nodes (9): horasParaCierre(), MarketView(), act(), Orden, ORDENES, PositionFilter, pujas(), SourceFilter (+1 more)
 
-### Community 28 - "Community 28"
+### Community 28 - "Supabase Database Types"
 Cohesion: 0.17
 Nodes (11): CompositeTypes, Constants, Database, DatabaseWithoutInternals, DefaultSchema, Enums, Json, Tables (+3 more)
 
-### Community 29 - "Community 29"
+### Community 29 - "Token Import Parsing"
 Cohesion: 0.33
 Nodes (11): dynamic, expiryFromAbsolute(), expiryFromJwt(), expiryFromTtl(), looksLikeToken(), numericValue(), parseImportedToken(), runtime (+3 more)
 
-### Community 30 - "Community 30"
+### Community 30 - "Player Comparison"
 Cohesion: 0.18
 Nodes (10): ComparisonPlayer, mergeComparisonPlayers(), base, CompareView(), Histories, trend(), PlayerImage(), TeamsResponse (+2 more)
 
-### Community 31 - "Community 31"
+### Community 31 - "Player Catalog Enrichment"
 Cohesion: 0.29
 Nodes (8): construirIndice(), DatosDeCatalogo, enriquecerJugador(), enriquecerJugadores(), Enriquecible, catalogo, Jugador, completarJugadores()
 
-### Community 32 - "Community 32"
+### Community 32 - "Onboarding & Demo Modals"
 Cohesion: 0.22
 Nodes (9): AddMarketModal(), AddSquadModal(), Dashboard(), DemoPlayerRow(), formatMoney(), MarketView(), Onboarding(), parseEuropeanNumber() (+1 more)
 
-### Community 33 - "Community 33"
+### Community 33 - "Weekly Points Data"
 Cohesion: 0.46
 Nodes (6): JornadaPuntos, leerJornada(), leerJornadas(), numero(), puntosDeJornada(), ultimasJornadas()
 
-### Community 34 - "Community 34"
+### Community 34 - "Team Money Calculations"
 Cohesion: 0.47
 Nodes (3): ConCaja, equiposSinCaja(), mezclarCajas()
 
-### Community 36 - "Community 36"
+### Community 36 - "Fantasy Domain Types"
 Cohesion: 0.15
 Nodes (10): League, PlayerStatus, POSITIONS, StandingRow, Team, ApiMatchLike, mapCalendar(), Match (+2 more)
 
@@ -237,17 +237,17 @@ Nodes (10): League, PlayerStatus, POSITIONS, StandingRow, Team, ApiMatchLike, ma
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `MarketValuePoint` connect `Community 2` to `Community 36`, `Community 12`, `Community 14`, `Community 16`, `Community 17`, `Community 21`, `Community 30`?**
+- **Why does `MarketValuePoint` connect `Clause Alerts Builder` to `Fantasy Domain Types`, `Login View UI`, `League Data Reader`, `Data Mappers`, `Lineup Difficulty View`, `Squad Value History`, `Player Comparison`?**
   _High betweenness centrality (0.047) - this node is a cross-community bridge._
-- **Why does `Player` connect `Community 30` to `Community 2`, `Community 3`, `Community 36`, `Community 8`, `Community 10`, `Community 12`, `Community 16`, `Community 17`, `Community 21`, `Community 27`?**
+- **Why does `Player` connect `Player Comparison` to `Clause Alerts Builder`, `Probable Lineups`, `Fantasy Domain Types`, `App Navigation Shell`, `Alerts View UI`, `Login View UI`, `Data Mappers`, `Lineup Difficulty View`, `Squad Value History`, `Market View UI`?**
   _High betweenness centrality (0.029) - this node is a cross-community bridge._
-- **Why does `Manager` connect `Community 13` to `Community 36`, `Community 8`, `Community 12`, `Community 14`, `Community 16`?**
+- **Why does `Manager` connect `API Client & Mobile Auth` to `Fantasy Domain Types`, `App Navigation Shell`, `Login View UI`, `League Data Reader`, `Data Mappers`?**
   _High betweenness centrality (0.028) - this node is a cross-community bridge._
 - **What connects `Body`, `Body`, `FetchOptions` to the rest of the system?**
   _265 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `Community 0` be split into smaller, more focused modules?**
+- **Should `Session API Helpers` be split into smaller, more focused modules?**
   _Cohesion score 0.051138294257560314 - nodes in this community are weakly interconnected._
-- **Should `Community 1` be split into smaller, more focused modules?**
+- **Should `OAuth Login Flow` be split into smaller, more focused modules?**
   _Cohesion score 0.07140538786108407 - nodes in this community are weakly interconnected._
-- **Should `Community 2` be split into smaller, more focused modules?**
+- **Should `Clause Alerts Builder` be split into smaller, more focused modules?**
   _Cohesion score 0.09365079365079365 - nodes in this community are weakly interconnected._
