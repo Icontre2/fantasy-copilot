@@ -4,7 +4,7 @@ import { useState } from "react";
 import { post } from "./api";
 import type { DiagnosticoDeSesion, Manager, Proveedor } from "./types";
 import { ErrorBox } from "./ui";
-import { Clock, LockKeyhole, Mail, ShieldCheck } from "lucide-react";
+import { Clock, ExternalLink, KeyRound, LockKeyhole, Mail, ShieldCheck } from "lucide-react";
 
 /**
  * Login con la cuenta de LALIGA Fantasy.
@@ -13,9 +13,9 @@ import { Clock, LockKeyhole, Mail, ShieldCheck } from "lucide-react";
  * tokens contra el login oficial de LALIGA y la descarta. Nunca se guarda ni
  * vuelve al navegador; lo único que queda es una cookie httpOnly con un id.
  *
- * No funciona con cuentas de Google, Apple ni Facebook: esas no tienen
- * contraseña en el proveedor de identidad de LALIGA. Se avisa antes de que el
- * usuario lo descubra con un error críptico.
+ * Las cuentas creadas con Google, Apple o Facebook no tienen contraseña propia
+ * en B2C. Para ellas se ofrece debajo la importación de la respuesta de token
+ * que entrega el login oficial de LALIGA.
  */
 export function LoginView({
   onLogin,
@@ -35,6 +35,10 @@ export function LoginView({
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showSocialToken, setShowSocialToken] = useState(false);
+  const [tokenInput, setTokenInput] = useState("");
+  const [tokenBusy, setTokenBusy] = useState(false);
+  const [tokenError, setTokenError] = useState<string | null>(null);
 
   /*
    * El error del acceso con proveedor llega ya resuelto desde el servidor. Se
@@ -61,6 +65,27 @@ export function LoginView({
     }
   }
 
+  async function submitImportedToken() {
+    if (!tokenInput.trim()) {
+      setTokenError("Pega primero la respuesta JSON del login de LALIGA.");
+      return;
+    }
+
+    setTokenBusy(true);
+    setTokenError(null);
+    try {
+      const { manager } = await post<{ manager: Manager }>("/api/fantasy/auth/token", {
+        token: tokenInput,
+      });
+      setTokenInput("");
+      onLogin(manager);
+    } catch (caught) {
+      setTokenError(caught instanceof Error ? caught.message : "No se pudo validar esa sesión de LALIGA.");
+    } finally {
+      setTokenBusy(false);
+    }
+  }
+
   return (
     <section className="mx-auto mt-[8vh] w-full max-w-md overflow-hidden rounded-[32px] glass">
       <div className="bg-[linear-gradient(145deg,#17121f,#32175d)] p-6 text-white">
@@ -71,10 +96,10 @@ export function LoginView({
       </div>
 
       {/*
-        Entrar con Google va ARRIBA del formulario y solo si aún no te has
-        identificado. Una vez identificado, lo que toca es lo de abajo: conectar
-        LALIGA una vez. Enseñar los dos a la vez haría pensar que hay que elegir,
-        cuando en realidad son dos pasos del mismo camino.
+        Este bloque identifica al usuario EN ESTA WEB mediante Supabase. No
+        sustituye el login de LALIGA: la primera vez sigue haciendo falta enlazar
+        la cuenta del juego. Solo se muestra cuando el proveedor está realmente
+        activo en Supabase.
       */}
       {social && social.proveedores.length > 0 && !social.identificado && (
         <div className="border-b border-white/8 p-6 pb-5">
@@ -84,8 +109,7 @@ export function LoginView({
             ))}
           </div>
           <p className="mt-3 text-center text-[11px] leading-4 text-neutral-500">
-            La primera vez te pedirá una sola vez la contraseña de LALIGA, para saber cuál es tu
-            cuenta. Después ya no.
+            Esto te identifica en LigaLab. Para enlazar LALIGA Fantasy hace falta una sesión válida del juego.
           </p>
           <p className="mt-4 text-center text-[11px] font-semibold uppercase tracking-[.14em] text-neutral-600">
             o con tu cuenta de LALIGA
@@ -96,8 +120,8 @@ export function LoginView({
       {social?.identificado && (
         <div className="border-b border-white/8 p-6 pb-5">
           <p className="rounded-2xl bg-[#7c3aed]/15 p-3 text-[12px] leading-4 text-[#c4b5fd]">
-            <strong>Ya te has identificado.</strong> Solo falta decirle cuál es tu cuenta de LALIGA
-            Fantasy: escribe su email y su contraseña una vez y no volverá a pedírtela.
+            <strong>Ya te has identificado en LigaLab.</strong> Ahora conecta la cuenta de LALIGA Fantasy con
+            email y contraseña o, si la creaste con Google, Apple o Facebook, usa el acceso social de abajo.
           </p>
         </div>
       )}
@@ -136,32 +160,88 @@ export function LoginView({
         >
           {busy ? "Entrando…" : social?.identificado ? "Conectar mi cuenta de LALIGA" : "Entrar"}
         </button>
-        {/*
-          Cuidado con esta frase: arriba hay un botón de Google, así que decir
-          «las cuentas de Google no tienen contraseña» a secas se lee como una
-          contradicción. Habla de la cuenta de LALIGA, que es otra distinta, y
-          por eso lo dice con esas palabras.
-        */}
-        {/*
-          El texto va dentro de UN `span`. Sin él, el `strong` se convierte en
-          otro hijo del flex y la frase se parte en columnas — pasó, y se veía
-          fatal. Los hijos directos del flex son exactamente dos: icono y texto.
-        */}
+
+        <button
+          type="button"
+          onClick={() => {
+            setShowSocialToken((current) => !current);
+            setTokenError(null);
+          }}
+          className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[.04] px-4 py-3.5 text-sm font-bold text-white transition hover:bg-white/[.07]"
+          aria-expanded={showSocialToken}
+        >
+          <KeyRound size={17} />
+          Mi cuenta usa Google, Apple o Facebook
+        </button>
+
+        {showSocialToken && (
+          <div className="space-y-3 rounded-2xl border border-[#7c3aed]/30 bg-[#7c3aed]/10 p-4">
+            <div>
+              <p className="text-sm font-bold text-[#ddd6fe]">Conectar una cuenta social de LALIGA</p>
+              <p className="mt-1 text-[11px] leading-4 text-neutral-300">
+                LALIGA no permite a una web externa recibir su callback social. La alternativa segura es iniciar
+                sesión en la web oficial y pegar aquí la respuesta de token que LALIGA te entrega.
+              </p>
+            </div>
+
+            <ol className="list-decimal space-y-1.5 pl-4 text-[11px] leading-4 text-neutral-300">
+              <li>En un ordenador, abre LALIGA e inicia sesión con Google, Apple o Facebook.</li>
+              <li>Abre F12 → Network/Red y activa “Preserve log”.</li>
+              <li>Filtra por <code className="rounded bg-black/30 px-1 py-0.5">token?p=B2C_1A_5ULAIP_PARAMETRIZED_SIGNIN</code>.</li>
+              <li>Abre esa petición → Response/Respuesta y copia el JSON completo.</li>
+            </ol>
+
+            <a
+              href="https://miliga.laliga.com/"
+              target="_blank"
+              rel="noreferrer"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-white px-3 py-2.5 text-xs font-bold text-[#1f1f1f]"
+            >
+              Abrir acceso oficial de LALIGA <ExternalLink size={14} />
+            </a>
+
+            <label className="block">
+              <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-neutral-400">
+                Respuesta JSON de LALIGA
+              </span>
+              <textarea
+                value={tokenInput}
+                onChange={(event) => setTokenInput(event.target.value)}
+                spellCheck={false}
+                autoCapitalize="off"
+                autoCorrect="off"
+                placeholder={'{"access_token":"…","refresh_token":"…"}'}
+                className="min-h-28 w-full resize-y rounded-xl border border-white/10 bg-black/25 p-3 font-mono text-[11px] leading-4 text-white outline-none focus:border-[#8b5cf6]"
+              />
+            </label>
+
+            {tokenError && <ErrorBox message={tokenError} />}
+
+            <button
+              type="button"
+              onClick={submitImportedToken}
+              disabled={tokenBusy || !tokenInput.trim()}
+              className="w-full rounded-xl bg-[#7c3aed] px-4 py-3 text-sm font-bold text-white disabled:opacity-50"
+            >
+              {tokenBusy ? "Validando con LALIGA…" : "Conectar esta sesión"}
+            </button>
+
+            <p className="text-[10px] leading-4 text-neutral-500">
+              El token no se guarda en localStorage ni se registra: el servidor lo valida con LALIGA y lo convierte
+              en una cookie HttpOnly. En iPhone/iPad Safari no hay DevTools; el acceso social automático allí requiere
+              una app nativa que pueda recibir el callback de LALIGA.
+            </p>
+          </div>
+        )}
+
         <p className="flex gap-2 rounded-2xl bg-emerald-500/10 p-3 text-[11px] leading-4 text-emerald-300">
           <ShieldCheck size={16} className="mt-px shrink-0" />
           <span>
-            La contraseña se usa una vez y no se guarda. Ojo: aquí va la de tu cuenta{" "}
-            <strong>de LALIGA Fantasy</strong>, y si esa la creaste con Google, Apple o Facebook no
-            tiene contraseña propia y no podrás conectarla.
+            La contraseña se usa una vez y no se guarda. Si tu cuenta <strong>de LALIGA Fantasy</strong> nació con
+            Google, Apple o Facebook, usa el acceso social de arriba en vez de una contraseña que esa cuenta no tiene.
           </span>
         </p>
 
-        {/*
-          Si la sesión va a durar poco, se dice AQUÍ y antes de entrar. Es el
-          momento exacto en que a alguien le interesa saber por qué le echan: el
-          síntoma es volver a ver esta pantalla, y sin esto no hay forma de
-          distinguirlo de un fallo de LALIGA o de una contraseña mal escrita.
-        */}
         {sesion?.degradado && (
           <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 text-[11px] leading-4 text-amber-200">
             <p className="flex items-center gap-2 font-bold">
@@ -178,13 +258,8 @@ export function LoginView({
 }
 
 /**
- * Un botón por proveedor.
- *
- * Es un ENLACE y no un botón con `fetch`: el navegador tiene que ACABAR en
- * Google, Apple o Facebook, con su barra de direcciones y su candado, para que
- * puedas comprobar tú a quién le estás dando la contraseña.
- *
- * Cada uno con su color de marca, que es como los reconoce la gente sin leer.
+ * Un botón por proveedor para identificarse en LigaLab mediante Supabase.
+ * Es un enlace real para que el navegador termine en el proveedor.
  */
 function BotonProveedor({ proveedor }: { proveedor: Proveedor }) {
   const estilo: Record<Proveedor, string> = {
