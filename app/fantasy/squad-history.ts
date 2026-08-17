@@ -32,8 +32,12 @@ export function aggregateCurrentSquad(histories: Record<string, MarketValuePoint
   const indexes = series.map((points) => new Map(points.map((point) => [point.date, point.marketValue])));
   return dates.flatMap((date) => {
     const values = indexes.map((index) => index.get(date));
-    if (values.some((value) => value === undefined)) return [];
-    return [{ date, marketValue: values.reduce((sum, value) => sum + value!, 0) }];
+    let marketValue = 0;
+    for (const value of values) {
+      if (value === undefined) return [];
+      marketValue += value;
+    }
+    return [{ date, marketValue }];
   });
 }
 
