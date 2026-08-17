@@ -58,8 +58,9 @@ export function toPublicMessage(error: unknown): string {
   if (error instanceof LaligaError) {
     switch (error.kind) {
       case 'unauthorized':
-        // El detalle de Azure B2C ("The username or password provided in the
-        // request are invalid", etc.) es MUCHO mas util que la frase generica.
+        // Se pasa tal cual: quien lanza este error ya ha puesto un mensaje
+        // concreto y en castellano. Los del login vienen traducidos de Azure B2C
+        // por `auth-errors.ts`; una frase generica aqui los perderia.
         return error.message;
       case 'timeout':
         return 'La API de LALIGA tardo demasiado en responder.';

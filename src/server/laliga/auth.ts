@@ -1,4 +1,5 @@
 import { AUTH_CONFIG } from './config';
+import { mensajeDeLogin } from './auth-errors.ts';
 import { LaligaError } from './errors';
 
 /**
@@ -69,10 +70,15 @@ async function postToken(policy: string, body: Record<string, string>): Promise<
   const payload = (await response.json().catch(() => ({}))) as B2CTokenResponse;
 
   if (!response.ok || payload.error) {
-    // B2C detalla el motivo (credenciales, cuenta social...) en error_description.
-    // Se corta en la primera linea: el resto trae ids de correlacion internos.
+    /*
+     * B2C detalla el motivo (credenciales, cuenta social...) en
+     * `error_description`. Se corta en la primera linea porque el resto son ids
+     * de correlacion internos, y se traduce: el texto crudo llegaba a la
+     * pantalla en ingles y con un codigo `AADB2Cnnnnn` que no le dice nada a
+     * quien intenta entrar.
+     */
     const detail = payload.error_description?.split('\n')[0] ?? payload.error ?? `HTTP ${response.status}`;
-    throw new LaligaError('unauthorized', detail, 'auth', 401);
+    throw new LaligaError('unauthorized', mensajeDeLogin(detail), 'auth', 401);
   }
 
   return payload;
