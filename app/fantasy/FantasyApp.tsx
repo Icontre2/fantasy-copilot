@@ -30,6 +30,7 @@ import {
   type TeamsResponse,
 } from "./types";
 import { Card, ErrorBox, Spinner } from "./ui";
+import { LigaProvider } from "./league-context";
 
 /**
  * Contenedor de la app: sesión, liga seleccionada y sección visible.
@@ -145,7 +146,9 @@ export default function FantasyApp() {
       ) : leaguesError ? (
         <ErrorBox message={leaguesError} />
       ) : leagueId ? (
-        <SectionContent section={section} leagueId={leagueId} onNavigate={setSection} />
+        <LigaProvider leagueId={leagueId}>
+          <SectionContent section={section} leagueId={leagueId} onNavigate={setSection} />
+        </LigaProvider>
       ) : (
         <Card>
           <p className="text-sm text-neutral-600">
