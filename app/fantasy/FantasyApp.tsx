@@ -46,6 +46,8 @@ export default function FantasyApp() {
   const [checkingSession, setCheckingSession] = useState(true);
   // Cuánto dura la sesión, para poder explicarlo si dura menos de lo que debería.
   const [sesion, setSesion] = useState<DiagnosticoDeSesion | null>(null);
+  const [google, setGoogle] = useState<{ disponible: boolean; identificado: boolean } | null>(null);
+  const [errorDeGoogle, setErrorDeGoogle] = useState<string | null>(null);
 
   const [leagues, setLeagues] = useState<League[]>([]);
   const [leagueId, setLeagueId] = useState<string | null>(null);
@@ -54,10 +56,18 @@ export default function FantasyApp() {
   const [section, setSection] = useState<Section>("inicio");
 
   useEffect(() => {
-    get<{ authenticated: boolean; manager?: Manager; session?: DiagnosticoDeSesion }>("/api/fantasy/auth/session")
+    get<{
+      authenticated: boolean;
+      manager?: Manager;
+      session?: DiagnosticoDeSesion;
+      google?: { disponible: boolean; identificado: boolean };
+      authError?: string | null;
+    }>("/api/fantasy/auth/session")
       .then((data) => {
         setManager(data.authenticated && data.manager ? data.manager : null);
         setSesion(data.session ?? null);
+        setGoogle(data.google ?? null);
+        setErrorDeGoogle(data.authError ?? null);
       })
       .catch(() => setManager(null))
       .finally(() => setCheckingSession(false));
@@ -94,7 +104,7 @@ export default function FantasyApp() {
   }
 
   if (!manager) {
-    return <Shell><LoginView onLogin={setManager} sesion={sesion} /></Shell>;
+    return <Shell><LoginView onLogin={setManager} sesion={sesion} google={google} errorDeGoogle={errorDeGoogle} /></Shell>;
   }
 
   return (

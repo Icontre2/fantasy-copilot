@@ -2,6 +2,8 @@ import { errorJson, privateJson, privateJsonWithCookies } from "@/src/server/htt
 import { passwordLogin } from "@/src/server/laliga/auth";
 import { getMyProfile } from "@/src/server/laliga/read";
 import { buildSessionCookies, createSession } from "@/src/server/laliga/session";
+import { guardarEnlace, hayAlmacenDeEnlaces } from "@/src/server/auth/links";
+import { identidadDePeticion } from "@/src/server/auth/identity";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +31,20 @@ export async function POST(request: Request) {
     const tokens = await passwordLogin(email, password);
     const manager = await getMyProfile(tokens.accessToken);
     const sessionId = await createSession(tokens);
+
+    /*
+     * Si ya habias entrado con Google, esta contraseña sirve ademas para dejar
+     * conectada tu cuenta de LALIGA: se guarda el enlace y ya no vuelve a
+     * pedirse. Es justo el paso que convierte "entrar con Google" en algo util.
+     *
+     * Si falla el guardado NO se tumba el login: acabas de identificarte bien y
+     * mereces entrar. Lo unico que pasa es que la proxima vez habra que
+     * reconectar, y eso la pantalla ya lo sabe decir.
+     */
+    const identidad = identidadDePeticion(request);
+    if (identidad && hayAlmacenDeEnlaces()) {
+      await guardarEnlace(identidad, tokens, email).catch(() => undefined);
+    }
 
     return privateJsonWithCookies({ manager }, buildSessionCookies(sessionId));
   } catch (error) {

@@ -1,4 +1,4 @@
-import { getValidAccessToken, readSessionId } from '@/src/server/laliga/session';
+import { accessTokenDe } from '@/src/server/auth/access';
 import { privateJson } from './responses';
 
 /**
@@ -13,7 +13,7 @@ import { privateJson } from './responses';
 export async function requireSession(
   request: Request,
 ): Promise<{ token: string } | { response: Response }> {
-  const token = await getValidAccessToken(readSessionId(request));
+  const token = await accessTokenDe(request);
   if (!token) {
     return {
       response: privateJson({ error: 'No has iniciado sesion en LALIGA Fantasy.', kind: 'unauthorized' }, 401),
