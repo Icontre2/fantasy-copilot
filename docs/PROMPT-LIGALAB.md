@@ -20,6 +20,11 @@ El usuario es una persona que juega una liga privada con amigos. Usa la app **de
 pie, con una mano, en el móvil**, normalmente mirando algo rápido antes de que
 cierre el mercado.
 
+**A dónde va todo esto:** el objetivo final es que la app pueda **jugar sola**,
+ejecutando reglas que escribe el usuario, mientras él duerme. Está detallado en
+§12 y conviene leerlo antes de tomar decisiones de arquitectura: casi todo lo que
+se construya acaba siendo un ladrillo de eso.
+
 ---
 
 ## 2. LA REGLA QUE MANDA SOBRE TODAS LAS DEMÁS
@@ -53,13 +58,29 @@ arruinado. Eso es exactamente lo que no se puede hacer.
 
 ### 2.1 Prohibido (no negociable)
 
-Estas funciones **no se construyen**, aunque parezcan útiles:
+Lo prohibido **no es automatizar**: es **inventar un número y presentarlo como si
+se supiera**. Con eso en la cabeza, esto no se construye:
 
-- Autopilot, Copilot, o cualquier automatismo que decida por el usuario
-- Consejos de fichaje, recomendaciones o sugerencias de compra/venta
-- Predicciones de puntos, "puntos esperados" o cualquier número inventado
-- "Nota de fichaje", "puja máxima recomendada", "valor objetivo"
+- Predicciones de puntos, "puntos esperados" o cualquier cifra futura inventada
+- Consejos de fichaje disfrazados de dato ("nota de fichaje", "valor objetivo",
+  "puja máxima recomendada")
 - Presentar el once probable como un consejo de alineación
+- Cualquier número que el usuario no pueda recalcular a mano
+
+Lo que **sí** se permite, y es la diferencia que sostiene todo el proyecto:
+
+| Permitido | Prohibido |
+|---|---|
+| Ejecutar **reglas que escribe el usuario** | Decidir por su cuenta qué conviene |
+| Aritmética sobre datos oficiales | Modelos cuyo resultado no se puede comprobar |
+| «Su valor está a un 4 % de la cláusula» | «Este jugador va a hacer 8 puntos» |
+
+Enseñar el once **más probable según porcentajes publicados por terceros** está
+permitido, diciendo de quién son esos porcentajes y que no cambia la alineación
+oficial de nadie.
+
+Ver §12: el objetivo final del proyecto es un piloto automático, y encaja con
+esta regla precisamente porque **obedece reglas, no opina**.
 
 Sí se permite: enseñar el once **más probable según los porcentajes publicados
 por terceros**, dejando claro de quién son esos porcentajes y que no cambia la
@@ -480,20 +501,85 @@ variables estén puestas.
 
 ---
 
-## 12. Lo que falta por construir
+## 12. El objetivo final: piloto automático
+
+**A dónde va el proyecto:** que la app pueda jugar sola mientras el usuario
+duerme. Este es el destino, no el punto de partida.
+
+### 12.1 Los dos pilotos, y por qué solo uno encaja
+
+**Piloto que EJECUTA REGLAS (este es el que se construye).** El usuario escribe
+las condiciones y la app las cumple:
+
+> «Si la cláusula de un jugador mío queda a menos del 5 % de su valor, súbela.»
+> «Si alguien pone en venta un portero por debajo de 4 M, puja 4,2 M.»
+> «Nunca gastes más de 20 M sin preguntarme.»
+
+Cada acción sale de **aritmética sobre datos oficiales**, se puede recalcular a
+mano, y queda registrada junto a **la regla que la disparó**. La app no opina:
+obedece. Por eso no rompe la §2 — no hay ningún número inventado por el camino.
+
+**Piloto que DECIDE SOLO (no es el objetivo).** Elegir a quién fichar exige
+comparar rendimientos futuros, o sea predecir, o sea inventar. Si alguna vez se
+construye, cada cifra tiene que ir etiquetada como **estimación de esta app** y
+nunca presentarse como dato. No es el camino por defecto.
+
+### 12.2 Lo que hace falta para que funcione
+
+- **Sesión que aguante sin el usuario delante.** Un piloto que se apaga cada 24 h
+  no es un piloto: exige el modo `PERSISTENTE` de §5.3, con renovación
+  automática. Sin eso, no se empieza.
+- **Tarea programada** en el servidor que evalúe las reglas cada pocos minutos.
+- **Registro de todo**: qué evaluó, qué disparó, qué hizo, y qué regla lo mandó.
+  Sin esto es una caja negra moviendo dinero.
+
+### 12.3 Frenos obligatorios
+
+Las acciones de LALIGA **no se deshacen**. Un piloto sin límites es un piloto que
+te vacía la caja a las tres de la mañana.
+
+- **Modo ensayo** (por defecto al crear cualquier regla): dice qué *habría* hecho,
+  sin hacerlo. Solo se activa de verdad cuando el usuario lo aprueba.
+- **Tope de gasto** por operación y acumulado, configurable.
+- **Parada de emergencia** siempre visible, que desactiva todo de golpe.
+- **Aviso de cada acción ejecutada**, con su motivo.
+
+### 12.4 Antes de activarlo
+
+Automatizar acciones sobre el servicio de LALIGA es distinto de consultar datos.
+Revisa sus términos de uso: es una decisión del dueño del proyecto, no del
+código, y conviene tenerla resuelta antes de encender nada.
+
+### 12.5 El camino hasta ahí
+
+El piloto no es un salto: es el último escalón de una escalera que ya tiene los
+primeros puestos.
+
+1. Alertas que se consultan — **hecho**
+2. Ejecutar acciones desde la app (pagar cláusula) — **hecho**
+3. Alertas que avisan solas (§13.1) — es la misma maquinaria: cron + sesión que
+   aguanta. Un piloto no es más que una alerta que, en vez de avisar, actúa.
+4. Reglas escritas por el usuario, en modo ensayo
+5. Reglas ejecutándose de verdad, con topes y parada
+
+---
+
+## 13. Lo que falta por construir
 
 1. **Alertas que avisen de verdad.** Hoy se calculan al abrir la pantalla: no
    avisan, se consultan. Hace falta service worker + Web Push (VAPID) + tabla de
    suscripciones + tarea programada que recalcule en el servidor. En iOS solo
-   funciona si la app está **instalada en la pantalla de inicio**.
+   funciona si la app está **instalada en la pantalla de inicio**. Es además el
+   cimiento del piloto automático (§12.5).
 
 2. **Estado de forma de varias fuentes** en la ficha del jugador (§4.5).
 
-3. **Subir tu propia cláusula.** Sin confirmar que la API lo permita (§4.1).
+3. **Subir tu propia cláusula.** Sin confirmar que la API lo permita (§4.1). Es
+   requisito de una de las reglas más obvias del piloto.
 
 ---
 
-## 13. Criterios de aceptación
+## 14. Criterios de aceptación
 
 Antes de dar algo por terminado:
 
@@ -505,3 +591,11 @@ Antes de dar algo por terminado:
 - [ ] Cada caso de "no se puede" explica **por qué**
 - [ ] Cada color viene acompañado de una palabra
 - [ ] Ningún dato que falta se ha rellenado con un cero ni con una media
+
+Y si lo que has tocado automatiza algo (§12):
+
+- [ ] Cada acción automática deja registrado **qué regla la disparó**
+- [ ] Toda regla nueva nace en **modo ensayo**, nunca ejecutando
+- [ ] Hay tope de gasto y parada de emergencia, y funcionan
+- [ ] Ninguna decisión automática depende de un número que la app se haya
+      inventado
