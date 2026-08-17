@@ -8,3 +8,7 @@ dist/
 
 # Next.js genera este fichero en cada build
 next-env.d.ts
+
+# Graphify: mapa de conocimiento del repo (graph.json/graph.html/GRAPH_REPORT.md sí se commitean)
+graphify-out/cost.json
+graphify-out/cache/
