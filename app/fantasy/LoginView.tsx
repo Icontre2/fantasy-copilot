@@ -27,7 +27,7 @@ export function LoginView({
   /** Cuánto va a durar la sesión. Solo se avisa si va a durar poco. */
   sesion?: DiagnosticoDeSesion | null;
   /** Qué proveedores hay activos, y si ya te has identificado con alguno. */
-  social?: { proveedores: Proveedor[]; identificado: boolean } | null;
+  social?: { proveedores: Proveedor[]; identificado: boolean; motivo?: string | null } | null;
   /** Por qué falló el último acceso con proveedor, si falló. */
   errorDeAcceso?: string | null;
 }) {
@@ -113,6 +113,28 @@ export function LoginView({
           </p>
           <p className="mt-4 text-center text-[11px] font-semibold uppercase tracking-[.14em] text-neutral-600">
             o con tu cuenta de LALIGA
+          </p>
+        </div>
+      )}
+
+      {/*
+        Cuando NO hay botones, se dice por qué.
+
+        Antes este hueco se quedaba mudo: ni botones ni explicación, y quien
+        monta el despliegue no tenía forma de saber si faltaba una variable, si
+        faltaba encender el proveedor en Supabase, o si la app no lo llevaba.
+        Son tres cosas distintas y se arreglan en tres sitios distintos.
+
+        Se nombra el fichero o el panel, nunca un valor. Y se enseña como nota
+        gris, no como error rojo: para quien solo quiere entrar con su
+        contraseña esto no es un fallo, es una función que este despliegue
+        todavía no ofrece.
+      */}
+      {social && social.proveedores.length === 0 && social.motivo && (
+        <div className="border-b border-white/8 px-6 py-4">
+          <p className="text-[11px] leading-4 text-neutral-500">
+            <strong className="text-neutral-400">Entrar con Google, Apple o Facebook está sin configurar.</strong>{" "}
+            {social.motivo}
           </p>
         </div>
       )}
