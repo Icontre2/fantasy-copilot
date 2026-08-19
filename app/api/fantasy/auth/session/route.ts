@@ -26,28 +26,21 @@ export async function GET(request: Request) {
    * encendidos: así activar uno en su panel hace que aparezca su botón sin
    * tocar código, y nunca se enseña uno que no funcionaría.
    *
+   * IMPORTANTE: detectar e iniciar un proveedor NO necesita service_role. La
+   * clave administrativa solo sirve para recordar de forma persistente el
+   * enlace con LALIGA. Bloquear aquí los proveedores por no tenerla impedía
+   * incluso comprobar si Google/Apple/Facebook estaban bien configurados.
+   *
    * `identificado` significa «sé quién eres, pero aún no me has dicho cuál es
    * tu cuenta de LALIGA», que es el paso intermedio del flujo.
    */
   const config = configAuth();
-  const proveedores = config && hayAlmacenDeEnlaces() ? await proveedoresActivos(config) : [];
+  const hayEnlaces = hayAlmacenDeEnlaces();
+  const proveedores = config ? await proveedoresActivos(config) : [];
   const social = {
     proveedores,
     identificado: identidadDePeticion(request) !== null,
-    /*
-     * POR QUÉ no hay botones, cuando no los hay.
-     *
-     * Sin esto la pantalla de acceso simplemente no enseñaba nada: ni botones
-     * ni explicación. Quien monta el despliegue se queda mirando un hueco sin
-     * saber si falta una variable, si falta encender el proveedor en Supabase o
-     * si es que la app no lo lleva. Son tres cosas distintas y se arreglan en
-     * sitios distintos.
-     *
-     * Dice QUÉ falta, nunca un valor: que `SUPABASE_URL` esté o no puesta no es
-     * un secreto; su contenido sí. Es el mismo criterio que ya sigue el
-     * diagnóstico de sesión de aquí al lado.
-     */
-    motivo: motivoSinProveedores(config !== null, hayAlmacenDeEnlaces(), proveedores.length),
+    motivo: motivoSinProveedores(config !== null, hayEnlaces, proveedores.length),
   };
 
   /*
@@ -75,19 +68,20 @@ export async function GET(request: Request) {
 /**
  * Qué le falta a este despliegue para poder ofrecer Google, Apple o Facebook.
  *
- * `null` cuando no falta nada: entonces los botones están ahí y no hay nada que
- * explicar. El orden importa — se nombra el PRIMER paso que falta, no todos a
- * la vez, porque hasta que no está ese no se puede comprobar el siguiente.
+ * `null` cuando los botones pueden ofrecerse. La falta de almacenamiento de
+ * enlaces no bloquea la identidad social: solo significa que, después, el
+ * usuario tendrá que conectar LALIGA y ese vínculo no sobrevivirá como acceso
+ * social automático hasta configurar almacenamiento persistente.
  */
 function motivoSinProveedores(hayConfig: boolean, hayEnlaces: boolean, activos: number): string | null {
   if (!hayConfig) {
-    return "Faltan SUPABASE_URL y SUPABASE_PUBLISHABLE_KEY en las variables de entorno del despliegue.";
-  }
-  if (!hayEnlaces) {
-    return "Falta SUPABASE_SERVICE_ROLE_KEY: sin base de datos no hay dónde recordar qué cuenta de LALIGA es la tuya, y entrar con Google te dejaría igual.";
+    return "Falta la configuración pública de Supabase para consultar los proveedores sociales.";
   }
   if (activos === 0) {
     return "Ninguno está encendido en Supabase → Authentication → Providers. Al activar uno, su botón aparece aquí solo, sin desplegar nada.";
+  }
+  if (!hayEnlaces) {
+    return "Google, Apple y Facebook pueden identificarte, pero falta almacenamiento persistente para recordar automáticamente tu cuenta de LALIGA entre accesos.";
   }
   return null;
 }

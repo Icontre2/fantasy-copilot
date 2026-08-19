@@ -2,7 +2,6 @@ import { configAuth, proveedoresActivos, urlDeAutorizacion } from "@/src/server/
 import { proveedorValido, NOMBRES } from "@/src/server/auth/providers";
 import { cookieDeIntento } from "@/src/server/auth/cookies";
 import { empaquetar, nuevoIntento } from "@/src/server/auth/pkce";
-import { hayAlmacenDeEnlaces } from "@/src/server/auth/links";
 import { privateJson } from "@/src/server/http/responses";
 
 export const dynamic = "force-dynamic";
@@ -14,6 +13,10 @@ export const dynamic = "force-dynamic";
  * JavaScript: tienes que ACABAR en Google, Apple o Facebook, con su barra de
  * direcciones y su candado, para poder comprobar tú a quién le estás dando la
  * contraseña. Por eso el botón de la pantalla es un enlace.
+ *
+ * El inicio de OAuth solo necesita la configuración pública de Supabase. El
+ * almacenamiento persistente del enlace con LALIGA es una capacidad posterior
+ * y no debe impedir que el proveedor identifique al usuario.
  */
 export async function GET(request: Request) {
   // Lista blanca: lo que no es uno de los nuestros no llega a la URL de salida.
@@ -22,15 +25,6 @@ export async function GET(request: Request) {
 
   const config = configAuth();
   if (!config) return privateJson({ error: "El acceso con proveedor no está configurado en este despliegue." }, 501);
-
-  if (!hayAlmacenDeEnlaces()) {
-    /*
-     * Sin base de datos no se puede recordar qué cuenta de LALIGA va con esta
-     * identidad, así que entrar así te dejaría igual: pidiéndote la contraseña
-     * de LALIGA cada vez. Mejor no ofrecerlo que ofrecer algo que no cumple.
-     */
-    return privateJson({ error: "El acceso con proveedor necesita la base de datos configurada." }, 501);
-  }
 
   const activos = await proveedoresActivos(config);
   if (!activos.includes(proveedor)) {
