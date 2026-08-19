@@ -30,7 +30,7 @@ import {
   type TeamsResponse,
 } from "./types";
 import { Card, ErrorBox, Spinner } from "./ui";
-import { AppInstalable } from "./AppInstalable";
+import { AppInstalable, useServiceWorkerDeApp } from "./AppInstalable";
 import { LigaProvider } from "./league-context";
 
 /**
@@ -45,6 +45,10 @@ import { LigaProvider } from "./league-context";
  * solo quería mirar el mercado.
  */
 export default function FantasyApp() {
+  // Antes de cualquier rama: el service worker de la pantalla "sin conexión"
+  // tiene que quedar registrado se entre o no.
+  useServiceWorkerDeApp();
+
   const [manager, setManager] = useState<Manager | null>(null);
   const [checkingSession, setCheckingSession] = useState(true);
   // Cuánto dura la sesión, para poder explicarlo si dura menos de lo que debería.
