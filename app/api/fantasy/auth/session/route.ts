@@ -30,9 +30,24 @@ export async function GET(request: Request) {
    * tu cuenta de LALIGA», que es el paso intermedio del flujo.
    */
   const config = configAuth();
+  const proveedores = config && hayAlmacenDeEnlaces() ? await proveedoresActivos(config) : [];
   const social = {
-    proveedores: config && hayAlmacenDeEnlaces() ? await proveedoresActivos(config) : [],
+    proveedores,
     identificado: identidadDePeticion(request) !== null,
+    /*
+     * POR QUÉ no hay botones, cuando no los hay.
+     *
+     * Sin esto la pantalla de acceso simplemente no enseñaba nada: ni botones
+     * ni explicación. Quien monta el despliegue se queda mirando un hueco sin
+     * saber si falta una variable, si falta encender el proveedor en Supabase o
+     * si es que la app no lo lleva. Son tres cosas distintas y se arreglan en
+     * sitios distintos.
+     *
+     * Dice QUÉ falta, nunca un valor: que `SUPABASE_URL` esté o no puesta no es
+     * un secreto; su contenido sí. Es el mismo criterio que ya sigue el
+     * diagnóstico de sesión de aquí al lado.
+     */
+    motivo: motivoSinProveedores(config !== null, hayAlmacenDeEnlaces(), proveedores.length),
   };
 
   /*
@@ -55,4 +70,24 @@ export async function GET(request: Request) {
   } catch (error) {
     return errorJson(error);
   }
+}
+
+/**
+ * Qué le falta a este despliegue para poder ofrecer Google, Apple o Facebook.
+ *
+ * `null` cuando no falta nada: entonces los botones están ahí y no hay nada que
+ * explicar. El orden importa — se nombra el PRIMER paso que falta, no todos a
+ * la vez, porque hasta que no está ese no se puede comprobar el siguiente.
+ */
+function motivoSinProveedores(hayConfig: boolean, hayEnlaces: boolean, activos: number): string | null {
+  if (!hayConfig) {
+    return "Faltan SUPABASE_URL y SUPABASE_PUBLISHABLE_KEY en las variables de entorno del despliegue.";
+  }
+  if (!hayEnlaces) {
+    return "Falta SUPABASE_SERVICE_ROLE_KEY: sin base de datos no hay dónde recordar qué cuenta de LALIGA es la tuya, y entrar con Google te dejaría igual.";
+  }
+  if (activos === 0) {
+    return "Ninguno está encendido en Supabase → Authentication → Providers. Al activar uno, su botón aparece aquí solo, sin desplegar nada.";
+  }
+  return null;
 }

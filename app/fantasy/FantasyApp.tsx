@@ -53,7 +53,7 @@ export default function FantasyApp() {
   const [checkingSession, setCheckingSession] = useState(true);
   // Cuánto dura la sesión, para poder explicarlo si dura menos de lo que debería.
   const [sesion, setSesion] = useState<DiagnosticoDeSesion | null>(null);
-  const [social, setSocial] = useState<{ proveedores: Proveedor[]; identificado: boolean } | null>(null);
+  const [social, setSocial] = useState<{ proveedores: Proveedor[]; identificado: boolean; motivo?: string | null } | null>(null);
   const [errorDeAcceso, setErrorDeAcceso] = useState<string | null>(null);
 
   const [leagues, setLeagues] = useState<League[]>([]);
@@ -67,7 +67,7 @@ export default function FantasyApp() {
       authenticated: boolean;
       manager?: Manager;
       session?: DiagnosticoDeSesion;
-      social?: { proveedores: Proveedor[]; identificado: boolean };
+      social?: { proveedores: Proveedor[]; identificado: boolean; motivo?: string | null };
       authError?: string | null;
     }>("/api/fantasy/auth/session")
       .then((data) => {
