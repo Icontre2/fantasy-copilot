@@ -6,10 +6,12 @@ import { get } from "./api";
 import { millions, signedMillions } from "./format";
 import { PlayerImage } from "./PlayerImage";
 import { TrendChart } from "./TrendChart";
+import { dayMonth, sparklinePoints, trendColor, trendTone } from "./trend";
 import {
   aggregateCurrentSquad,
   filterPlayerHistory,
   historyDelta,
+  RANGES,
   type HistoryRange,
 } from "./squad-history";
 
@@ -19,12 +21,6 @@ type Response = {
   histories: Record<string, MarketValuePoint[]>;
   failedPlayerIds: string[];
 };
-
-const RANGES: Array<{ value: HistoryRange; label: string }> = [
-  { value: 7, label: "7D" },
-  { value: 14, label: "14D" },
-  { value: "AUG1", label: "Desde 1 ago" },
-];
 
 export function SquadValueHistory({
   leagueId,
@@ -78,7 +74,7 @@ export function SquadValueHistory({
         </span>
       </div>
 
-      <div className="mt-3 grid grid-cols-3 gap-1 rounded-xl bg-white/[.04] p-1" aria-label="Periodo de evolución">
+      <div className="mt-3 grid grid-cols-5 gap-1 rounded-xl bg-white/[.04] p-1" aria-label="Periodo de evolución">
         {RANGES.map((option) => (
           <button key={String(option.value)} type="button" onClick={() => setRange(option.value)} aria-pressed={range === option.value} className={`min-h-11 rounded-lg px-2 text-xs font-bold ${range === option.value ? "bg-[#7c3aed] text-white" : "text-neutral-500"}`}>
             {option.label}
@@ -96,9 +92,9 @@ export function SquadValueHistory({
           <TrendChart
             points={total.map((point) => ({ date: point.date, value: point.marketValue }))}
             formatValue={millions}
-            formatDate={shortDate}
+            formatDate={dayMonth}
             color={trendColor(totalDelta)}
-            label={`Evolución de la plantilla actual desde ${shortDate(total[0]!.date)}. Desliza para ver cada día.`}
+            label={`Evolución de la plantilla actual desde ${dayMonth(total[0]!.date)}. Desliza para ver cada día.`}
           />
           {movers.length > 0 ? (
             <div className="mt-3 flex flex-wrap gap-1.5" aria-label="Jugadores que más explican el cambio">
@@ -111,8 +107,19 @@ export function SquadValueHistory({
           ) : null}
         </div>
       ) : (
-        <p className="mt-3 grid h-28 place-items-center rounded-2xl border border-dashed border-white/10 px-4 text-center text-xs text-neutral-500">
-          Cargando históricos oficiales desde el 1 de agosto…
+        /*
+          Tres motivos distintos para un mismo hueco, y cada uno se dice: aún no
+          ha llegado la respuesta, LALIGA no ha publicado nada, o el periodo
+          elegido es tan corto que no llega a dos días. El último solo aparece
+          desde que existen «1D» y «3D», y decir «Cargando…» ahí dejaría la
+          pantalla mintiendo para siempre.
+        */
+        <p className="mt-3 grid h-28 place-items-center rounded-2xl border border-dashed border-white/10 px-4 text-center text-xs leading-5 text-neutral-500">
+          {data === null
+            ? "Cargando históricos oficiales desde el 1 de agosto…"
+            : Object.keys(data.histories).length === 0
+              ? "LALIGA no ha publicado el histórico de ningún jugador de esta plantilla."
+              : "En este periodo no hay dos días con valor de toda la plantilla. Prueba un periodo más largo."}
         </p>
       )}
 
@@ -157,28 +164,11 @@ export function SquadValueHistory({
 }
 
 function MiniTrend({ points, delta }: { points: MarketValuePoint[]; delta: number | null }) {
-  if (points.length < 2) return <span className="text-center text-[10px] text-neutral-700">—</span>;
-  const values = points.map((point) => point.marketValue);
-  const min = Math.min(...values);
-  const span = Math.max(Math.max(...values) - min, 1);
-  const coords = points.map((point, index) => `${(index / (points.length - 1)) * 100},${22 - ((point.marketValue - min) / span) * 18}`).join(" ");
+  const coords = sparklinePoints(points.map((point) => point.marketValue));
+  if (!coords) return <span className="text-center text-[10px] text-neutral-700">—</span>;
   return (
     <svg viewBox="0 0 100 24" preserveAspectRatio="none" className="h-10 w-full" role="img" aria-label={delta !== null && delta >= 0 ? "Valor en subida" : "Valor en bajada"}>
       <polyline points={coords} fill="none" stroke={trendColor(delta)} strokeWidth="1.7" vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
-}
-
-function trendColor(delta: number | null) {
-  if (delta === null || delta === 0) return "#a1a1aa";
-  return delta > 0 ? "#34d399" : "#fb7185";
-}
-
-function trendTone(delta: number | null) {
-  if (delta === null || delta === 0) return "bg-white/[.06] text-neutral-400";
-  return delta > 0 ? "bg-emerald-500/15 text-emerald-400" : "bg-rose-500/15 text-rose-400";
-}
-
-function shortDate(iso: string) {
-  return new Date(iso).toLocaleDateString("es-ES", { day: "2-digit", month: "short" });
 }

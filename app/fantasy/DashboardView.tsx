@@ -1,61 +1,64 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
-import { Banknote, Coins, Trophy, Users } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Banknote, ChevronRight, Coins, Trophy, Users } from "lucide-react";
 import Image from "next/image";
-import type { DashboardResponse } from "./types";
+import type { DashboardResponse, MarketValuePoint } from "./types";
+import { get } from "./api";
 import { millions } from "./format";
+import { ManagerSheet } from "./ManagerSheet";
 import { TrendChart } from "./TrendChart";
+import { dayMonth, trendColor } from "./trend";
+import {
+  aggregateCurrentSquad,
+  filterPlayerHistory,
+  historyDelta,
+  RANGES,
+  type HistoryRange,
+} from "./squad-history";
 import { ErrorBox } from "./ui";
 
-type Range = 7 | 30 | 90 | "MAX";
-type PortfolioPoint = {
-  date: string;
-  // `null` = no lo publica LALIGA. Guardar 0 en el historico grabaria en disco
-  // la misma mentira que se corrigio en pantalla: "este manager no tiene caja".
-  managers: Record<string, { teamValue: number; teamMoney: number | null; netWorth: number | null }>;
+type ValueHistoryResponse = {
+  teamId: string;
+  from: string;
+  histories: Record<string, MarketValuePoint[]>;
+  failedPlayerIds: string[];
 };
-
-const RANGE_OPTIONS: Array<{ value: Range; label: string }> = [
-  { value: 7, label: "7D" },
-  { value: 30, label: "30D" },
-  { value: 90, label: "90D" },
-  { value: "MAX", label: "Todo" },
-];
-
-const historyCache = new Map<string, { signature: string; points: PortfolioPoint[] }>();
-const subscribeHistory = () => () => undefined;
 
 /**
  * Los rivales, siempre como lista.
  *
  * Si la respuesta llega sin `competitors` —endpoint caido, cuerpo raro— el
- * `for...of` de mas abajo reventaba con "is not iterable" y se llevaba por
- * delante la pantalla entera: ni tu valor, ni tu caja, ni nada. Tu resumen no
- * depende de que se hayan podido leer los rivales, asi que no debe caerse con
- * ellos. Es el mismo blindaje que ya llevaba la ficha de jugador.
+ * `map` de mas abajo reventaba con "is not iterable" y se llevaba por delante
+ * la pantalla entera: ni tu valor, ni tu caja, ni nada. Tu resumen no depende
+ * de que se hayan podido leer los rivales, asi que no debe caerse con ellos.
  */
 function rivalesDe(data: DashboardResponse) {
   return Array.isArray(data.competitors) ? data.competitors : [];
 }
 
 export function DashboardView({ data }: { data: DashboardResponse }) {
-  const [range, setRange] = useState<Range>(30);
+  const [range, setRange] = useState<HistoryRange>("AUG1");
+  const [abierto, setAbierto] = useState<string | null>(null);
   const competitors = rivalesDe(data);
   // Sin tu equipo no hay resumen que enseñar. Se dice; no se revienta con una
   // pantalla en blanco y un `undefined` por consola.
   const sinEquipo = !data?.me?.teamId;
-  const history = usePortfolioHistory(data);
-  const visibleHistory = useMemo(() => filterHistory(history, range), [history, range]);
-  const myPoints = visibleHistory.flatMap((point) => {
-    const value = point.managers[data.me?.teamId ?? ""]?.teamValue;
-    return value === undefined ? [] : [{ date: point.date, value }];
-  });
-  const delta = myPoints.length > 1 ? myPoints.at(-1)!.value - myPoints[0]!.value : null;
+  const { histories, cargando, error } = useSquadHistory(data.league?.id, data.me?.teamId);
+
+  const total = useMemo(() => {
+    const recortado = Object.fromEntries(
+      Object.entries(histories).map(([playerId, points]) => [playerId, filterPlayerHistory(points, range)]),
+    );
+    return aggregateCurrentSquad(recortado);
+  }, [histories, range]);
+  const delta = historyDelta(total);
 
   if (sinEquipo) {
     return <ErrorBox message="LALIGA no ha devuelto tu equipo en esta liga. Vuelve a entrar en unos minutos." />;
   }
+
+  const competidorAbierto = competitors.find((competitor) => competitor.teamId === abierto);
 
   return (
     <div className="space-y-5">
@@ -65,7 +68,7 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
             <p className="text-xs font-semibold uppercase tracking-[.16em] text-[#a78bfa]">Valor de tu plantilla</p>
             <p className="mt-2 text-[36px] font-bold leading-none tracking-[-.04em]">{millions(data.me.teamValue)}</p>
             <p className={`mt-2 text-sm ${delta === null ? "text-white/45" : delta >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
-              {delta === null ? "Seguimiento real iniciado" : `${delta >= 0 ? "+" : ""}${millions(delta)} en el periodo`}
+              {delta === null ? "Sin variación medible en este periodo" : `${delta >= 0 ? "+" : ""}${millions(delta)} en el periodo`}
             </p>
           </div>
           <div className="rounded-2xl bg-white/[.06] px-3 py-2 text-center backdrop-blur">
@@ -76,10 +79,7 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
         </div>
 
         <RangePicker value={range} onChange={setRange} />
-        {/* `history` es todo lo guardado; `myPoints` solo lo que cae en el rango
-            elegido. Para explicar la espera hay que contar lo primero: si llevas
-            tres dias y miras "7D", el problema no es que falten dias. */}
-        <ValueChart points={myPoints} diasGuardados={history.length} />
+        <ValueChart points={total} cargando={cargando} error={error} delta={delta} />
 
         <div className="mt-4 grid grid-cols-2 gap-2">
           {/* Las mismas dos cifras que en cada rival, para poder compararte de un vistazo. */}
@@ -87,7 +87,9 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
           <Metric icon={<Banknote size={16} />} label="Valor equipo" value={millions(data.me.teamValue)} />
         </div>
         <p className="mt-3 text-[10px] leading-4 text-white/45">
-          Valores oficiales guardados en este dispositivo. El seguimiento empieza en la primera visita; no reconstruimos ni inventamos fechas anteriores.
+          Curva reconstruida con la cotización oficial que LALIGA publica de cada jugador que hoy
+          está en tu plantilla. Una compra o una venta pasada cambia quién estaba de verdad en el
+          equipo aquel día; el valor de hoy, arriba, sí es el oficial.
         </p>
       </section>
 
@@ -103,32 +105,40 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           {competitors.map((competitor) => {
-            const points = visibleHistory.flatMap((point) => {
-              const value = point.managers[competitor.teamId]?.teamValue;
-              return value === undefined ? [] : [{ date: point.date, value }];
-            });
             // Respaldo individual: nunca se le aplica el ajuste de otro manager.
             const estimatedCash = competitor.estimatedCash;
             return (
-              <article key={competitor.teamId} className="overflow-hidden rounded-[26px] glass p-4">
-                <div className="flex items-center gap-3">
-                  <Avatar name={competitor.manager.name} image={competitor.manager.avatar} />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-semibold text-white">{competitor.manager.name}</p>
-                    <p className="text-xs text-neutral-400">#{competitor.position ?? "—"} · {competitor.points ?? "—"} pts</p>
+              <article key={competitor.teamId} className="overflow-hidden rounded-[26px] glass">
+                {/*
+                  La tarjeta ENTERA es el botón. Antes solo se podía tocar a un
+                  rival desde la pantalla de Liga, así que su once y su plantilla
+                  estaban a dos pantallas de distancia de donde se le mira.
+                */}
+                <button
+                  type="button"
+                  onClick={() => setAbierto(competitor.teamId)}
+                  className="w-full p-4 text-left active:scale-[.99]"
+                  aria-label={`Ver la ficha de ${competitor.manager.name}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <Avatar name={competitor.manager.name} image={competitor.manager.avatar} />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-semibold text-white">{competitor.manager.name}</p>
+                      <p className="text-xs text-neutral-400">#{competitor.position ?? "—"} · {competitor.points ?? "—"} pts</p>
+                    </div>
+                    <p className="text-sm font-bold text-white">{millions(competitor.teamValue)}</p>
+                    <ChevronRight size={16} className="shrink-0 text-neutral-500" />
                   </div>
-                  <p className="text-sm font-bold text-white">{millions(competitor.teamValue)}</p>
-                </div>
-                <MiniChart points={points} />
-                <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
-                  <SmallMetric
-                    label={competitor.teamMoney !== undefined ? "Caja" : "Caja aprox."}
-                    value={competitor.teamMoney !== undefined ? millions(competitor.teamMoney) : `≈ ${millions(estimatedCash)}`}
-                    lime={(competitor.teamMoney ?? estimatedCash) >= 0}
-                    nota={competitor.teamMoney === undefined ? "estimada, no valor de equipo" : undefined}
-                  />
-                  <SmallMetric label="Valor equipo" value={millions(competitor.teamValue)} />
-                </div>
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                    <SmallMetric
+                      label={competitor.teamMoney !== undefined ? "Caja" : "Caja aprox."}
+                      value={competitor.teamMoney !== undefined ? millions(competitor.teamMoney) : `≈ ${millions(estimatedCash)}`}
+                      lime={(competitor.teamMoney ?? estimatedCash) >= 0}
+                      nota={competitor.teamMoney === undefined ? "estimada, no valor de equipo" : undefined}
+                    />
+                    <SmallMetric label="Valor equipo" value={millions(competitor.teamValue)} />
+                  </div>
+                </button>
               </article>
             );
           })}
@@ -163,128 +173,119 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
           </p>
         )}
       </section>
+
+      {competidorAbierto && (
+        // El `key` es lo que hace que abrir otro manager empiece de cero en vez
+        // de enseñar un instante la plantilla del anterior.
+        <ManagerSheet
+          key={competidorAbierto.teamId}
+          competitor={competidorAbierto}
+          leagueId={data.league.id}
+          onClose={() => setAbierto(null)}
+        />
+      )}
     </div>
   );
 }
 
-function usePortfolioHistory(data: DashboardResponse) {
-  const current = useMemo(() => currentPoint(data), [data]);
-  const serverHistory = useMemo(() => [current], [current]);
-  const key = `ligalab:portfolio:v1:${data.league?.id ?? "sin-liga"}`;
-  const signature = JSON.stringify(current);
-  const getSnapshot = useCallback(() => {
-    const cached = historyCache.get(key);
-    if (cached?.signature === signature) return cached.points;
-    let stored: PortfolioPoint[] = [];
-    try {
-      const parsed = JSON.parse(window.localStorage.getItem(key) ?? "[]");
-      stored = Array.isArray(parsed) ? parsed.filter(isPortfolioPoint) : [];
-    } catch {
-      stored = [];
-    }
-    const points = [...stored.filter((point) => point.date !== current.date), current]
-      .sort((a, b) => a.date.localeCompare(b.date))
-      .slice(-366);
-    historyCache.set(key, { signature, points });
-    return points;
-  }, [current, key, signature]);
-  const getServerSnapshot = useCallback(() => serverHistory, [serverHistory]);
-  const history = useSyncExternalStore(subscribeHistory, getSnapshot, getServerSnapshot);
-  useEffect(() => {
-    try {
-      window.localStorage.setItem(key, JSON.stringify(history));
-    } catch { /* Safari puede bloquear almacenamiento privado; la pantalla sigue funcionando. */ }
-  }, [history, key]);
-  return history;
-}
-
-function currentPoint(data: DashboardResponse): PortfolioPoint {
-  const current: PortfolioPoint = { date: localDate(), managers: {} };
-  // `data.me` puede faltar si la respuesta viene incompleta: se filtra aqui en
-  // vez de dejar que un `undefined.teamId` tumbe el hook y con el la pantalla.
-  for (const team of [data.me, ...rivalesDe(data)].filter((team) => team?.teamId)) {
-    current.managers[team.teamId] = {
-      teamValue: team.teamValue ?? 0,
-      teamMoney: team.teamMoney ?? null,
-      netWorth: null,
-    };
-  }
-  return current;
-}
-
-function isPortfolioPoint(value: unknown): value is PortfolioPoint {
-  if (!value || typeof value !== "object") return false;
-  const point = value as Partial<PortfolioPoint>;
-  return typeof point.date === "string" && Boolean(point.managers && typeof point.managers === "object");
-}
-
-function localDate() {
-  const now = new Date();
-  const offset = now.getTimezoneOffset() * 60_000;
-  return new Date(now.getTime() - offset).toISOString().slice(0, 10);
-}
-
-function filterHistory(points: PortfolioPoint[], range: Range) {
-  if (range === "MAX") return points;
-  const first = new Date();
-  first.setDate(first.getDate() - range + 1);
-  const threshold = first.toISOString().slice(0, 10);
-  return points.filter((point) => point.date >= threshold);
-}
-
-function RangePicker({ value, onChange }: { value: Range; onChange: (value: Range) => void }) {
-  return <div className="mt-5 grid grid-cols-4 gap-1 rounded-2xl bg-white/[.06] p-1" aria-label="Periodo del histórico">{RANGE_OPTIONS.map((option) => <button key={String(option.value)} type="button" onClick={() => onChange(option.value)} className={`min-h-11 rounded-xl text-xs font-bold transition ${value === option.value ? "bg-[#7c3aed] text-white" : "text-white/55"}`} aria-pressed={value === option.value}>{option.label}</button>)}</div>;
-}
-
-function ValueChart({ points, diasGuardados }: { points: { date: string; value: number }[]; diasGuardados: number }) {
-  /*
-   * Por que este hueco existe y no se rellena solo.
-   *
-   * LALIGA no publica el historico del valor de una PLANTILLA: solo el valor de
-   * hoy. Asi que la serie se construye guardando una foto por dia en este
-   * dispositivo, desde la primera vez que abres la app. No hay forma de
-   * reconstruir hacia atras sin inventarla, y por eso no se inventa.
-   *
-   * Lo que si se puede hacer es dejar de repetir el mismo mensaje vago: se dice
-   * cuantos dias llevan guardados y cuando aparece la linea.
-   */
-  if (points.length < 2) {
-    return <div className="mt-3 grid h-28 place-items-center rounded-2xl border border-dashed border-white/15 bg-white/5 px-6 text-center text-xs leading-5 text-white/45">
-      <span>
-        {diasGuardados <= 1
-          ? "Hoy es el primer día guardado. Mañana, al abrir la app, aparece la primera línea."
-          : `Llevas ${diasGuardados} días guardados, pero ninguno cae en este periodo. Prueba «Todo».`}
-        <span className="mt-1 block text-white/30">LALIGA no publica el histórico del valor de una plantilla: se va guardando aquí, día a día.</span>
-      </span>
-    </div>;
-  }
-  const sube = (points.at(-1)?.value ?? 0) >= (points[0]?.value ?? 0);
-  return <TrendChart
-    className="mt-3"
-    points={points}
-    formatValue={millions}
-    formatDate={(iso) => new Date(iso).toLocaleDateString("es-ES", { day: "2-digit", month: "short" })}
-    color={sube ? "#34d399" : "#fb7185"}
-    label={`Histórico real del valor de tu plantilla, ${points.length} días guardados. Desliza para ver cada día.`}
-  />;
-}
-
-/*
- * El hueco de "todavia no hay historico" era una barra clara: en una pantalla
- * negra se leia como un error de carga. Ahora es un hueco oscuro CON TEXTO,
- * porque un espacio vacio no explica por que esta vacio.
+/**
+ * El histórico oficial de tu plantilla.
+ *
+ * ── Por qué ya no se guarda una foto al día en el dispositivo ────────────────
+ * Esta gráfica se alimentaba de `localStorage`: una foto diaria a partir de la
+ * primera visita. Eso tenía un defecto que no se arregla ajustando nada, y es
+ * el que se ve en pantalla: recién instalada la app hay UN punto, y entonces
+ * «7D», «30D» y «Todo» enseñan exactamente lo mismo —nada— durante semanas. El
+ * selector de periodo no servía para nada porque no había periodo que elegir.
+ *
+ * Y no hacía falta: LALIGA sí publica la cotización diaria de cada JUGADOR, y
+ * la app ya la descargaba para la pantalla de Plantilla. Sumando la de los
+ * jugadores que hoy tienes se obtiene una serie real desde el 1 de agosto, con
+ * la que 1D, 3D, 7D y 30D son periodos de verdad desde el primer día.
+ *
+ * El precio, escrito en pantalla y no escondido aquí: la curva mira hacia atrás
+ * con la plantilla de HOY, así que un fichaje de la semana pasada aparece como
+ * si siempre hubiera estado. Es lo mismo que ya advertía la pantalla de
+ * Plantilla, y sigue siendo preferible a un selector que no selecciona nada.
  */
-function MiniChart({ points }: { points: { date: string; value: number }[] }) {
-  if (points.length < 2) return <p className="mt-3 grid h-8 place-items-center rounded-xl border border-dashed border-white/10 text-[10px] text-neutral-600">Sin histórico todavía</p>;
-  const sube = (points.at(-1)?.value ?? 0) >= (points[0]?.value ?? 0);
-  return <svg viewBox="0 0 100 24" preserveAspectRatio="none" className="mt-3 h-8 w-full" role="img" aria-label="Evolución del competidor"><polyline points={chartCoordinates(points, 21, 18)} fill="none" stroke={sube ? "#34d399" : "#fb7185"} strokeWidth="1.6" vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round"/></svg>;
+function useSquadHistory(leagueId: string | undefined, teamId: string | undefined) {
+  const [histories, setHistories] = useState<Record<string, MarketValuePoint[]>>({});
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!leagueId || !teamId) return;
+    let cancelado = false;
+    get<ValueHistoryResponse>(
+      `/api/fantasy/leagues/${encodeURIComponent(leagueId)}/teams/${encodeURIComponent(teamId)}/value-history`,
+    )
+      .then((respuesta) => {
+        if (cancelado) return;
+        setHistories(respuesta.histories ?? {});
+        setError(null);
+      })
+      .catch((caught: unknown) => {
+        if (!cancelado) setError(caught instanceof Error ? caught.message : "No se pudo cargar la evolución.");
+      })
+      .finally(() => { if (!cancelado) setCargando(false); });
+    return () => { cancelado = true; };
+  }, [leagueId, teamId]);
+
+  return { histories, cargando, error };
 }
 
-function chartCoordinates(points: { value: number }[], bottom: number, height: number) {
-  const values = points.map((point) => point.value);
-  const min = Math.min(...values);
-  const range = Math.max(Math.max(...values) - min, 1);
-  return points.map((point, index) => `${(index / (points.length - 1)) * 100},${bottom - ((point.value - min) / range) * height}`).join(" ");
+function RangePicker({ value, onChange }: { value: HistoryRange; onChange: (value: HistoryRange) => void }) {
+  return (
+    <div className="mt-5 grid grid-cols-5 gap-1 rounded-2xl bg-white/[.06] p-1" aria-label="Periodo del histórico">
+      {RANGES.map((option) => (
+        <button
+          key={String(option.value)}
+          type="button"
+          onClick={() => onChange(option.value)}
+          className={`min-h-11 rounded-xl text-xs font-bold transition ${value === option.value ? "bg-[#7c3aed] text-white" : "text-white/55"}`}
+          aria-pressed={value === option.value}
+        >
+          {option.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function ValueChart({
+  points,
+  cargando,
+  error,
+  delta,
+}: {
+  points: MarketValuePoint[];
+  cargando: boolean;
+  error: string | null;
+  delta: number | null;
+}) {
+  // Un hueco vacío no explica por qué está vacío: los tres motivos posibles
+  // —todavía cargando, LALIGA no responde, periodo demasiado corto— se dicen.
+  if (points.length < 2) {
+    return (
+      <div className="mt-3 grid h-28 place-items-center rounded-2xl border border-dashed border-white/15 bg-white/5 px-6 text-center text-xs leading-5 text-white/45">
+        <span>
+          {error ?? (cargando
+            ? "Cargando la cotización oficial de tus jugadores…"
+            : "En este periodo no hay dos días con valor de toda la plantilla. Prueba uno más largo.")}
+        </span>
+      </div>
+    );
+  }
+  return (
+    <TrendChart
+      className="mt-3"
+      points={points.map((point) => ({ date: point.date, value: point.marketValue }))}
+      formatValue={millions}
+      formatDate={dayMonth}
+      color={trendColor(delta)}
+      label={`Valor de tu plantilla desde ${dayMonth(points[0]!.date)}, ${points.length} días. Desliza para ver cada día.`}
+    />
+  );
 }
 
 function Metric({ icon, label, value, accent = false }: { icon: React.ReactNode; label: string; value: string; accent?: boolean }) {
