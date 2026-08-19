@@ -241,6 +241,59 @@ test("buildClauseAlerts ordena por urgencia y descarta lo que no alerta", () => 
   );
 });
 
+test("manda cuándo se puede fichar: primero las abiertas y luego por plazo creciente", () => {
+  // Todos con el valor pegado a la clausula, para que el nivel no desempate y
+  // se vea SOLO el efecto del blindaje.
+  const cerca = { marketValue: 19_500_000, buyoutClause: 20_000_000 };
+  const owned: OwnedPlayer[] = [
+    {
+      player: player({ id: "sin-fecha", ...cerca, isShielded: true }),
+      owner,
+      history: [],
+    },
+    {
+      player: player({ id: "bloqueada-larga", ...cerca, isShielded: true, shieldedUntil: "2026-08-20T12:00:00.000Z" }),
+      owner,
+      history: [],
+    },
+    {
+      player: player({ id: "abierta", ...cerca }),
+      owner,
+      history: [],
+    },
+    {
+      player: player({ id: "bloqueada-corta", ...cerca, isShielded: true, shieldedUntil: "2026-08-14T12:00:00.000Z" }),
+      owner,
+      history: [],
+    },
+  ];
+
+  assert.deepEqual(
+    buildClauseAlerts(owned, NOW).map((alert) => alert.player.id),
+    ["abierta", "bloqueada-corta", "bloqueada-larga", "sin-fecha"],
+  );
+});
+
+test("dentro del mismo plazo sigue mandando la urgencia", () => {
+  const owned: OwnedPlayer[] = [
+    {
+      player: player({ id: "media-abierta", marketValue: 18_200_000, buyoutClause: 20_000_000 }),
+      owner,
+      history: risingHistory(16_100_000, 350_000, 7),
+    },
+    {
+      player: player({ id: "critica-abierta", marketValue: 19_500_000, buyoutClause: 20_000_000 }),
+      owner,
+      history: [],
+    },
+  ];
+
+  assert.deepEqual(
+    buildClauseAlerts(owned, NOW).map((alert) => alert.player.id),
+    ["critica-abierta", "media-abierta"],
+  );
+});
+
 // --- Frescura del historico -------------------------------------------------
 //
 // Estos tests salen de un fallo REAL encontrado el 2026-08-13 pidiendo el

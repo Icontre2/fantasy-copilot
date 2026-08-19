@@ -2,6 +2,7 @@
 
 import type { PlayerWithProbability } from "./types";
 import { PlayerImage } from "./PlayerImage";
+import { puntosEnJornada } from "./jornadas";
 import { colorDeDificultad, useDificultad, type DificultadDeEquipo } from "./difficulty";
 
 /**
@@ -17,7 +18,7 @@ export function Pitch({
   onSelect,
 }: {
   starters: PlayerWithProbability[];
-  /** Jornada en curso, para poner los puntos. `null` = no rotular ninguno. */
+  /** Jornada de la que se rotulan los puntos. `null` = no rotular ninguno. */
   jornada: number | null;
   onSelect: (player: PlayerWithProbability) => void;
 }) {
@@ -58,11 +59,6 @@ export function Pitch({
       )}
     </>
   );
-}
-
-/** Puntos de ese jugador en esa jornada, o `null` si no consta. */
-export function puntosEnJornada(player: PlayerWithProbability, jornada: number): number | null {
-  return player.weekPoints?.find((entrada) => entrada.jornada === jornada)?.puntos ?? null;
 }
 
 function groupByPosition(players: PlayerWithProbability[]) {

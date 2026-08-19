@@ -60,6 +60,13 @@ export function AlertsView({ data, onChanged }: { data: AlertsResponse; onChange
     {/* En rejilla y no en scroll lateral: asi no queda ningun filtro cortado por el borde. */}
     <div className="flex flex-wrap gap-2" aria-label="Filtrar alertas">{FILTERS.map((option) => <button key={option.id} type="button" onClick={() => setFilter(option.id)} aria-pressed={filter === option.id} className={`min-h-11 grow rounded-2xl px-3 text-sm font-bold ${filter === option.id ? "bg-[#7c3aed] text-white" : "glass text-neutral-500"}`}>{option.label}</button>)}</div>
     {message && <p className="rounded-2xl glass p-4 text-sm text-neutral-200" role="status">{message}</p>}
+    {/*
+      El orden lo decide el servidor (`buildClauseAlerts`) y aqui solo se filtra,
+      que conserva el orden. Se dice en pantalla porque un orden que no se
+      anuncia se lee como si no hubiera ninguno, y este no es el obvio: manda
+      cuando se puede fichar, no lo grave que sea la alerta.
+    */}
+    {visible.length > 0 && <p className="px-1 text-[11px] leading-4 text-neutral-500">Primero las que puedes pagar ya; después, las bloqueadas de menos a más tiempo para abrirse.</p>}
     {visible.length === 0 ? <Empty>Ningún jugador cumple este criterio ahora mismo.</Empty> : <div className="space-y-3">{visible.map((alert) => <AlertCard key={`${alert.owner.teamId}-${alert.player.id}`} alert={alert} mine={alert.owner.managerId === data.myManagerId} cash={data.myTeamMoney} busy={busy === alert.player.id} onSelect={setSelected} onBuyout={buyout}/>)}</div>}
     <p className="rounded-2xl glass px-4 py-3 text-xs leading-5 text-neutral-500">{data.playersWithoutClause} sin cláusula publicada · {data.skippedForBudget} fuera del límite de consultas{data.historyFailures > 0 ? ` · ${data.historyFailures} sin histórico` : ""}</p>
     <DataNotes notes={data.dataNotes}/>{selected ? <PlayerDetails player={selected} onClose={() => setSelected(null)}/> : null}

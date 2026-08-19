@@ -300,8 +300,30 @@ export function buildAlert(
 }
 
 /**
- * Alertas de toda la liga, ordenadas por urgencia y, dentro del mismo nivel,
- * por lo cerca que esta el valor de la clausula.
+ * Cuando se puede fichar a ese jugador, en dias desde ahora.
+ *
+ * 0 = ahora mismo, sin blindaje. `Infinity` = LALIGA no publica hasta cuando
+ * esta bloqueado, asi que no se sabe si se abre mañana o en un mes; va al final
+ * y no delante de plazos que si constan, porque ordenar por un dato que no
+ * existe seria inventarse el orden.
+ */
+function diasHastaPoderFichar(alert: ClauseAlert): number {
+  if (!alert.official.isShielded) return 0;
+  return alert.official.daysUntilUnshielded ?? Number.POSITIVE_INFINITY;
+}
+
+/**
+ * Alertas de toda la liga, ordenadas por CUANDO se puede actuar.
+ *
+ * Primero las que ya estan abiertas, y despues las bloqueadas de menos a mas
+ * tiempo para desbloquearse. Antes mandaba el nivel de alerta, y eso ponia
+ * arriba una CRITICA blindada tres semanas —sobre la que hoy no se puede hacer
+ * absolutamente nada— por delante de una alerta menor que se abre esta tarde.
+ * Una lista de avisos se lee de arriba abajo hasta que uno se cansa, asi que
+ * arriba tiene que estar lo que se puede fichar antes.
+ *
+ * El nivel y lo cerca que esta el valor siguen decidiendo, pero como desempate
+ * dentro del mismo plazo.
  */
 export function buildClauseAlerts(owned: OwnedPlayer[], now: Date = new Date()): ClauseAlert[] {
   return owned
@@ -309,6 +331,7 @@ export function buildClauseAlerts(owned: OwnedPlayer[], now: Date = new Date()):
     .filter((alert): alert is ClauseAlert => alert !== null)
     .sort(
       (a, b) =>
+        diasHastaPoderFichar(a) - diasHastaPoderFichar(b) ||
         LEVEL_ORDER[a.level] - LEVEL_ORDER[b.level] ||
         b.calculated.valueToClauseRatio - a.calculated.valueToClauseRatio,
     );
