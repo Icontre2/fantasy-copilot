@@ -30,6 +30,15 @@ import { activosDe, type Proveedor } from './providers.ts';
 /** Cuanto se recuerda que proveedores estan activos. */
 const CACHE_MS = 5 * 60 * 1000;
 
+/**
+ * La URL y la publishable key NO son secretos: Supabase las diseña para poder
+ * vivir en clientes web y repositorios públicos. Las variables de entorno siguen
+ * teniendo prioridad para que previews/otros despliegues puedan apuntar a otro
+ * proyecto, pero producción ya no queda inutilizada si Vercel no las inyecta.
+ */
+const SUPABASE_URL_PUBLICA = 'https://ggqealkrogfgbykicmfo.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY_PUBLICA = 'sb_publishable_BqPIfs-29PVz6UdF9e9z7Q_kik1zcol';
+
 export type ConfigSupabaseAuth = { url: string; apiKey: string; redirectUri: string };
 
 /**
@@ -40,8 +49,10 @@ export type ConfigSupabaseAuth = { url: string; apiKey: string; redirectUri: str
  * servicio seria darle a este flujo mas poder del que necesita.
  */
 export function configAuth(): ConfigSupabaseAuth | null {
-  const url = process.env.SUPABASE_URL?.trim();
-  const apiKey = (process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY)?.trim();
+  const url = process.env.SUPABASE_URL?.trim() || SUPABASE_URL_PUBLICA;
+  const apiKey =
+    (process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY)?.trim() ||
+    SUPABASE_PUBLISHABLE_KEY_PUBLICA;
   if (!url || !apiKey) return null;
   return { url: url.replace(/\/$/, ''), apiKey, redirectUri: redirectUri() };
 }
