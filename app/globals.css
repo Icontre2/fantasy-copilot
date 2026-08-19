@@ -47,7 +47,20 @@
 
   body {
     margin: 0;
+    /*
+     * `dvh` y no `vh`: en Safari `100vh` cuenta la altura CON la barra de
+     * direcciones escondida, así que la página siempre mide de más y da un
+     * salto al aparecer y desaparecer la barra. `dvh` es la altura real de
+     * ahora mismo. Se deja `vh` de reserva para navegadores que no lo tengan.
+     */
     min-height: 100vh;
+    min-height: 100dvh;
+    /*
+     * Sin esto, arrastrar hacia abajo estando ya arriba del todo despega la
+     * app entera y enseña el fondo del navegador. En una web es normal; en algo
+     * instalado en la pantalla de inicio es lo que delata que no es una app.
+     */
+    overscroll-behavior-y: none;
     background: linear-gradient(180deg, #08070a 0%, var(--paper) 60%, #020203 100%);
     color: var(--ink);
     font-family: var(--font-geist-sans), Arial, sans-serif;
@@ -107,6 +120,17 @@
   a,
   button {
     -webkit-tap-highlight-color: transparent;
+    /*
+     * Mantener el dedo sobre un botón no debe seleccionar su texto ni sacar el
+     * menú de "Copiar / Buscar" de iOS con su lupa. En una app pulsar es
+     * pulsar; ese menú saliendo encima de una tarjeta de jugador es de los
+     * detalles que más delatan que hay un navegador debajo.
+     *
+     * Va SOLO en botones y enlaces: los textos, las cifras y las notas siguen
+     * seleccionándose, que es donde alguien de verdad querría copiar algo.
+     */
+    -webkit-touch-callout: none;
+    user-select: none;
   }
 
   button:focus-visible,

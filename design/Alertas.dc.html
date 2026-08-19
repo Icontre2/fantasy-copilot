@@ -1,0 +1,193 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
+  <style>
+    body { margin: 0; font-family: Manrope, "Helvetica Neue", Arial, sans-serif; }
+    a { color: #a78bfa; } a:hover { color: #c4b5fd; }
+    .lienzo { position: relative; width: 390px; min-height: 844px; overflow: hidden;
+      background: linear-gradient(180deg, #08070a 0%, #050506 60%, #020203 100%);
+      color: #f7f5ff; -webkit-font-smoothing: antialiased; }
+    .luz { position: absolute; inset: 0; pointer-events: none;
+      background:
+        radial-gradient(58% 34% at 12% 6%, rgba(124,58,237,.30), transparent 70%),
+        radial-gradient(46% 28% at 92% 22%, rgba(244,63,94,.10), transparent 72%),
+        radial-gradient(60% 32% at 50% 96%, rgba(139,92,246,.16), transparent 74%);
+      filter: blur(6px); }
+    .glass { background: linear-gradient(157deg, rgba(255,255,255,.10) 0%, rgba(255,255,255,.035) 46%, rgba(255,255,255,.06) 100%);
+      border: 1px solid rgba(255,255,255,.11);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.20), inset 0 -1px 0 rgba(255,255,255,.04), 0 10px 32px rgba(0,0,0,.28); }
+    .glass-strong { background: linear-gradient(157deg, rgba(255,255,255,.13) 0%, rgba(124,58,237,.16) 48%, rgba(255,255,255,.05) 100%), rgba(13,11,18,.55);
+      border: 1px solid rgba(167,139,250,.26);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.26), inset 0 -1px 0 rgba(255,255,255,.05), 0 28px 80px rgba(0,0,0,.48); }
+    .glass-soft { background: linear-gradient(157deg, rgba(255,255,255,.09), rgba(255,255,255,.035));
+      border: 1px solid rgba(255,255,255,.08); box-shadow: inset 0 1px 0 rgba(255,255,255,.12); }
+    .cifra { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; }
+    .cejilla { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .16em; }
+    .chip { display: grid; place-items: center; height: 44px; border-radius: 17px; font-size: 13.5px; font-weight: 700; }
+  </style>
+</helmet>
+
+<div class="lienzo">
+  <div class="luz"></div>
+  <div style="position: relative; display: flex; flex-direction: column; gap: 14px; padding: 16px 16px 112px;">
+
+    <!-- Cabecera de pantalla -->
+    <section class="glass-strong" style="border-radius: 28px; padding: 20px; overflow: hidden">
+      <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 16px">
+        <div style="min-width: 0">
+          <p class="cejilla" style="margin: 0; color: #a78bfa">Vigila las cláusulas</p>
+          <h2 style="margin: 6px 0 0; font-size: 26px; font-weight: 800; letter-spacing: -.035em">Alertas</h2>
+          <p style="margin: 7px 0 0; font-size: 13.5px; line-height: 1.35; color: rgba(247,245,255,.55)">Datos oficiales, tendencia real y acción directa.</p>
+        </div>
+        <span style="display: grid; place-items: center; width: 48px; height: 48px; flex-shrink: 0; border-radius: 17px; background: linear-gradient(150deg, #8b5cf6, #6d28d9); box-shadow: 0 8px 22px rgba(124,58,237,.42), inset 0 1px 0 rgba(255,255,255,.26)">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+        </span>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 16px">
+        <div class="glass-soft" style="padding: 12px; border-radius: 17px">
+          <p style="margin: 0; font-size: 10.5px; color: rgba(247,245,255,.45)">Alertas activas</p>
+          <p class="cifra" style="margin: 4px 0 0; font-size: 22px; font-weight: 800; letter-spacing: -.03em; color: #a78bfa">4</p>
+        </div>
+        <div class="glass-soft" style="padding: 12px; border-radius: 17px">
+          <p style="margin: 0; font-size: 10.5px; color: rgba(247,245,255,.45)">Con cláusula</p>
+          <p class="cifra" style="margin: 4px 0 0; font-size: 22px; font-weight: 800; letter-spacing: -.03em; color: #a78bfa">10</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Buscador -->
+    <label class="glass" style="display: flex; align-items: center; gap: 10px; height: 48px; padding: 0 16px; border-radius: 17px; color: #777180">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+      <span style="font-size: 13.5px; color: #5f5a68">Buscar jugador, equipo o manager…</span>
+    </label>
+
+    <!-- Filtros -->
+    <div style="display: flex; flex-wrap: wrap; gap: 8px">
+      <span class="chip" style="flex-grow: 1; padding: 0 14px; background: linear-gradient(160deg, #8b5cf6, #7c3aed); box-shadow: 0 5px 16px rgba(124,58,237,.45), inset 0 1px 0 rgba(255,255,255,.24); color: #fff">Todas</span>
+      <span class="chip glass" style="flex-grow: 1; padding: 0 14px; color: #8b8794">Críticas</span>
+      <span class="chip glass" style="flex-grow: 1; padding: 0 14px; color: #8b8794">Abiertas</span>
+      <span class="chip glass" style="flex-grow: 1; padding: 0 14px; color: #8b8794">≤ 7 días</span>
+      <span class="chip glass" style="flex-grow: 1; padding: 0 14px; color: #8b8794">Bloqueadas</span>
+    </div>
+
+    <p style="margin: 0; padding: 0 4px; font-size: 11px; line-height: 1.4; color: #777180">Primero las que puedes pagar ya; después, las bloqueadas de menos a más tiempo para abrirse.</p>
+
+    <!-- Alerta abierta -->
+    <article class="glass" style="position: relative; border-radius: 26px; padding: 16px; overflow: hidden">
+      <span style="position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: linear-gradient(180deg, #34d399, rgba(52,211,153,.25))"></span>
+      <div style="display: flex; align-items: center; gap: 12px">
+        <span style="display: grid; place-items: center; width: 52px; height: 52px; flex-shrink: 0; border-radius: 16px; background: linear-gradient(150deg, rgba(255,255,255,.14), rgba(255,255,255,.05)); box-shadow: inset 0 1px 0 rgba(255,255,255,.18); font-size: 17px; font-weight: 800; color: #d4d0da">A</span>
+        <div style="min-width: 0; flex-grow: 1">
+          <p style="margin: 0; font-size: 15.5px; font-weight: 800; letter-spacing: -.015em">Abierta Ahora</p>
+          <p style="margin: 3px 0 0; font-size: 11.5px; color: #777180">DEL · SEV · Marta</p>
+        </div>
+        <span style="flex-shrink: 0; padding: 5px 10px; border-radius: 999px; background: rgba(217,144,23,.16); box-shadow: inset 0 0 0 1px rgba(217,144,23,.35); font-size: 10.5px; font-weight: 800; letter-spacing: .04em; color: #e0b458">MEDIA</span>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 15px">
+        <div class="glass-soft" style="padding: 11px 13px; border-radius: 16px">
+          <p style="margin: 0; font-size: 10.5px; color: #777180">Valor</p>
+          <p class="cifra" style="margin: 4px 0 0; font-size: 16px; font-weight: 800; letter-spacing: -.025em">18,0 M€</p>
+        </div>
+        <div style="padding: 11px 13px; border-radius: 16px; background: rgba(124,58,237,.20); box-shadow: inset 0 0 0 1px rgba(124,58,237,.40), inset 0 1px 0 rgba(255,255,255,.12)">
+          <p style="margin: 0; font-size: 10.5px; color: rgba(196,181,253,.75)">Cláusula</p>
+          <p class="cifra" style="margin: 4px 0 0; font-size: 16px; font-weight: 800; letter-spacing: -.025em; color: #ddd3ff">20,0 M€</p>
+        </div>
+      </div>
+
+      <!-- LA cifra: lo que separa el valor de la clausula -->
+      <p style="display: flex; align-items: baseline; justify-content: center; gap: 6px; margin: 8px 0 0; padding: 10px 12px; border-radius: 14px; background: linear-gradient(160deg, rgba(244,63,94,.16), rgba(244,63,94,.07)); box-shadow: inset 0 0 0 1px rgba(244,63,94,.30), inset 0 1px 0 rgba(255,255,255,.06)">
+        <span style="font-size: 11.5px; color: rgba(253,164,175,.85)">Faltan</span>
+        <span class="cifra" style="font-size: 16px; font-weight: 800; letter-spacing: -.025em; color: #fb7185">2,00 M€</span>
+        <span style="font-size: 11.5px; color: rgba(253,164,175,.85)">para la cláusula</span>
+      </p>
+
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 8px">
+        <div class="glass-soft" style="padding: 9px 8px; border-radius: 16px; text-align: center">
+          <p style="margin: 0; display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 9.5px; color: #777180">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>Subida/día</p>
+          <p class="cifra" style="margin: 5px 0 0; font-size: 11.5px; font-weight: 700; color: #d4d0da">+0,15 M€</p>
+        </div>
+        <div class="glass-soft" style="padding: 9px 8px; border-radius: 16px; text-align: center">
+          <p style="margin: 0; font-size: 9.5px; color: #777180">Cubierta</p>
+          <p class="cifra" style="margin: 5px 0 0; font-size: 11.5px; font-weight: 700; color: #d4d0da">90,0 %</p>
+        </div>
+        <div class="glass-soft" style="padding: 9px 8px; border-radius: 16px; text-align: center">
+          <p style="margin: 0; display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 9.5px; color: #777180">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Estimación</p>
+          <p class="cifra" style="margin: 5px 0 0; font-size: 11.5px; font-weight: 700; color: #d4d0da">13,0 días</p>
+        </div>
+      </div>
+
+      <p style="display: flex; align-items: center; gap: 6px; margin: 13px 0 0; font-size: 12px; font-weight: 600; color: #34d399">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0"><path d="m2 2 20 20"/><path d="M5 5a1 1 0 0 0-1 1v7c0 5 3.5 7.5 7.67 8.94a1 1 0 0 0 .67 0c1.2-.41 2.32-.96 3.3-1.67"/><path d="M9.18 3.5 11.7 2.6a1 1 0 0 1 .6 0l7 2.5a1 1 0 0 1 .7.96V13a8 8 0 0 1-.35 2.3"/></svg>
+        Desbloqueada ahora
+      </p>
+
+      <span style="display: grid; place-items: center; height: 46px; margin-top: 13px; border-radius: 17px; background: linear-gradient(160deg, #8b5cf6, #7c3aed); box-shadow: 0 8px 22px rgba(124,58,237,.40), inset 0 1px 0 rgba(255,255,255,.24); font-size: 14px; font-weight: 800; letter-spacing: -.01em; color: #fff">Pagar 20,0 M€</span>
+    </article>
+
+    <!-- Alerta bloqueada, con el valor ya por encima de la clausula -->
+    <article class="glass" style="position: relative; border-radius: 26px; padding: 16px; overflow: hidden">
+      <span style="position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: linear-gradient(180deg, #fb7185, rgba(251,113,133,.25))"></span>
+      <div style="display: flex; align-items: center; gap: 12px">
+        <span style="display: grid; place-items: center; width: 52px; height: 52px; flex-shrink: 0; border-radius: 16px; background: linear-gradient(150deg, rgba(255,255,255,.14), rgba(255,255,255,.05)); box-shadow: inset 0 1px 0 rgba(255,255,255,.18); font-size: 17px; font-weight: 800; color: #d4d0da">B</span>
+        <div style="min-width: 0; flex-grow: 1">
+          <p style="margin: 0; font-size: 15.5px; font-weight: 800; letter-spacing: -.015em">Bloqueada 2 días</p>
+          <p style="margin: 3px 0 0; font-size: 11.5px; color: #777180">DEL · SEV · Marta</p>
+        </div>
+        <span style="flex-shrink: 0; padding: 5px 10px; border-radius: 999px; background: rgba(244,63,94,.16); box-shadow: inset 0 0 0 1px rgba(244,63,94,.35); font-size: 10.5px; font-weight: 800; letter-spacing: .04em; color: #fb7185">CRÍTICA</span>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 15px">
+        <div class="glass-soft" style="padding: 11px 13px; border-radius: 16px">
+          <p style="margin: 0; font-size: 10.5px; color: #777180">Valor</p>
+          <p class="cifra" style="margin: 4px 0 0; font-size: 16px; font-weight: 800; letter-spacing: -.025em">21,4 M€</p>
+        </div>
+        <div style="padding: 11px 13px; border-radius: 16px; background: rgba(124,58,237,.20); box-shadow: inset 0 0 0 1px rgba(124,58,237,.40), inset 0 1px 0 rgba(255,255,255,.12)">
+          <p style="margin: 0; font-size: 10.5px; color: rgba(196,181,253,.75)">Cláusula</p>
+          <p class="cifra" style="margin: 4px 0 0; font-size: 16px; font-weight: 800; letter-spacing: -.025em; color: #ddd3ff">20,0 M€</p>
+        </div>
+      </div>
+
+      <p style="margin: 8px 0 0; padding: 10px 12px; border-radius: 14px; background: linear-gradient(160deg, rgba(244,63,94,.24), rgba(244,63,94,.12)); box-shadow: inset 0 0 0 1px rgba(244,63,94,.45), inset 0 1px 0 rgba(255,255,255,.08); text-align: center; font-size: 12.5px; font-weight: 800; letter-spacing: -.01em; color: #fecdd3">
+        El valor ya supera la cláusula en <span class="cifra">1,40 M€</span>
+      </p>
+
+      <p style="display: flex; align-items: center; gap: 6px; margin: 13px 0 0; font-size: 12px; font-weight: 600; color: #fb7185">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>
+        Bloqueada hasta 21/08, 12:00 · quedan 2,0 días
+      </p>
+
+      <span style="display: grid; place-items: center; height: 46px; margin-top: 13px; border-radius: 17px; background: rgba(255,255,255,.05); box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); font-size: 14px; font-weight: 700; color: #5f5a68">Cláusula bloqueada</span>
+    </article>
+  </div>
+
+  <div style="position: absolute; left: 12px; right: 12px; bottom: 12px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); padding: 6px; border-radius: 24px; background: linear-gradient(157deg, rgba(255,255,255,.09), rgba(255,255,255,.03)), rgba(10,9,13,.82); border: 1px solid rgba(255,255,255,.09); box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 -8px 32px rgba(0,0,0,.5)">
+    <span style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; height: 56px; font-size: 10px; font-weight: 600; color: rgba(247,245,255,.5)">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Inicio</span>
+    <span style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; height: 56px; font-size: 10px; font-weight: 600; color: rgba(247,245,255,.5)">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 21a8 8 0 0 0-16 0"/><circle cx="10" cy="8" r="5"/><path d="M22 20c0-3.37-2-6.5-4-8a5 5 0 0 0-.45-8.3"/></svg>Plantilla</span>
+    <span style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; height: 56px; font-size: 10px; font-weight: 600; color: rgba(247,245,255,.5)">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 11v1a3 3 0 0 1-6 0v-1"/><path d="M6.331 8h11.339a2 2 0 0 1 1.977 2.304l-1.255 8.152A3 3 0 0 1 15.426 21H8.574a3 3 0 0 1-2.966-2.544l-1.255-8.152A2 2 0 0 1 6.331 8"/><path d="m7.5 8 3.72-5.107a1 1 0 0 1 1.56 0L16.5 8"/></svg>Mercado</span>
+    <span style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; height: 56px; border-radius: 18px; background: linear-gradient(160deg, #8b5cf6, #7c3aed); box-shadow: 0 6px 18px rgba(124,58,237,.5), inset 0 1px 0 rgba(255,255,255,.24); font-size: 10px; font-weight: 700; color: #fff">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M22 8c0-2.3-.8-4.3-2-6"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/><path d="M4 2C2.8 3.7 2 5.7 2 8"/></svg>Alertas</span>
+    <span style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; height: 56px; font-size: 10px; font-weight: 600; color: rgba(247,245,255,.5)">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h.01M12 12h.01M16 12h.01"/></svg>Más</span>
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

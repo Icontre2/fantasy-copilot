@@ -79,6 +79,7 @@ function AlertCard({ alert, mine, cash, busy, onSelect, onBuyout }: { alert: Cla
   return <article className="rounded-[26px] glass p-4">
     <button type="button" onClick={() => onSelect(alert.player)} className="flex w-full items-center gap-3 text-left"><PlayerImage player={alert.player} size={52}/><div className="min-w-0 flex-1"><p className="truncate font-bold text-white">{alert.player.name}</p><p className="truncate text-xs text-neutral-500">{alert.player.position} · {alert.player.team} · {alert.owner.managerName}</p></div><span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold ${LEVEL_STYLE[alert.level]}`}>{alert.level === "INFORMATIVA" ? "INFO" : alert.level}</span></button>
     <div className="mt-4 grid grid-cols-2 gap-2"><Metric label="Valor" value={millions(alert.official.marketValue)}/><Metric label="Cláusula" value={millions(alert.official.buyoutClause)} accent/></div>
+    <Diferencia gap={alert.calculated.gap}/>
     <div className="mt-2 grid grid-cols-3 gap-2"><CompactMetric icon={<ArrowUpRight size={13}/>} label="Subida/día" value={signedMillions(alert.calculated.dailyTrend)}/><CompactMetric label="Cubierta" value={percent(alert.calculated.valueToClauseRatio)}/><CompactMetric icon={<Clock3 size={13}/>} label="Estimación" value={alert.calculated.estimatedDays !== null ? days(alert.calculated.estimatedDays) : UNKNOWN}/></div>
     {/*
       Cuando no hay tendencia ni estimacion, la tarjeta dice POR QUE. Dejar dos
@@ -86,10 +87,40 @@ function AlertCard({ alert, mine, cash, busy, onSelect, onBuyout }: { alert: Cla
       es que a la app le faltan datos, y son cosas muy distintas.
     */}
     {motivoSinTendencia(alert) && <p className="mt-2 rounded-xl bg-white/[.03] px-3 py-2 text-[11px] leading-4 text-neutral-500">{motivoSinTendencia(alert)}</p>}
-    <div className="mt-3 flex flex-wrap items-start justify-between gap-x-3 gap-y-1 text-xs"><span className={`flex min-w-0 items-start gap-1 leading-4 ${alert.official.isShielded ? "text-rose-400" : "text-emerald-400"}`}>{alert.official.isShielded ? <ShieldCheck className="mt-px shrink-0" size={14}/> : <ShieldOff className="mt-px shrink-0" size={14}/>} {alert.official.isShielded ? blindaje(alert) : "Desbloqueada ahora"}</span><span className="shrink-0 text-neutral-500">Faltan {millions(Math.max(0, alert.calculated.gap))}</span></div>
+    <div className="mt-3 flex flex-wrap items-start justify-between gap-x-3 gap-y-1 text-xs"><span className={`flex min-w-0 items-start gap-1 leading-4 ${alert.official.isShielded ? "text-rose-400" : "text-emerald-400"}`}>{alert.official.isShielded ? <ShieldCheck className="mt-px shrink-0" size={14}/> : <ShieldOff className="mt-px shrink-0" size={14}/>} {alert.official.isShielded ? blindaje(alert) : "Desbloqueada ahora"}</span></div>
     {!mine && <button type="button" disabled={disabled} onClick={() => onBuyout(alert)} className="mt-3 min-h-11 w-full rounded-2xl bg-[#7c3aed] px-4 text-sm font-bold text-white disabled:bg-white/5 disabled:text-neutral-600">{busy ? "Confirmando…" : alert.official.isShielded ? "Cláusula bloqueada" : cannotAfford ? "Caja insuficiente" : `Pagar ${millions(alert.official.buyoutClause)}`}</button>}
   </article>;
 }
+/**
+ * Lo que separa el valor de la cláusula, que es LA cifra de esta pantalla.
+ *
+ * Es la resta de las dos cajas de arriba y va en rojo porque es el aviso: es lo
+ * que le queda a ese jugador para ponerse al alcance de cualquiera. Antes iba
+ * en gris, en una esquina, del mismo tamaño que el resto — la cifra que da
+ * sentido a la tarjeta escondida entre las que la acompañan.
+ *
+ * Y cuando el valor YA pasó la cláusula se dice tal cual. Antes se recortaba
+ * con `Math.max(0, gap)` y salía «Faltan 0 €», que no es que falte poco: es que
+ * no falta nada y además sobra. Ese es justo el caso más urgente de la
+ * pantalla, y era el peor explicado.
+ */
+function Diferencia({ gap }: { gap: number }) {
+  if (gap <= 0) {
+    return (
+      <p className="mt-2 rounded-xl bg-rose-500/20 px-3 py-2 text-center text-xs font-bold leading-4 text-rose-200 ring-1 ring-rose-500/40">
+        El valor ya supera la cláusula en {millions(-gap)}
+      </p>
+    );
+  }
+  return (
+    <p className="mt-2 flex items-baseline justify-center gap-1.5 rounded-xl bg-rose-500/10 px-3 py-2 text-center leading-4 ring-1 ring-rose-500/25">
+      <span className="text-[11px] text-rose-300/80">Faltan</span>
+      <span className="text-sm font-bold tabular-nums text-rose-400">{millions(gap)}</span>
+      <span className="text-[11px] text-rose-300/80">para la cláusula</span>
+    </p>
+  );
+}
+
 /**
  * Cuanto le queda al blindaje.
  *

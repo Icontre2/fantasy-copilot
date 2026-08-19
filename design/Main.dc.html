@@ -1,0 +1,209 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
+  <style>
+    body { margin: 0; font-family: Manrope, "Helvetica Neue", Arial, sans-serif; }
+    a { color: #a78bfa; } a:hover { color: #c4b5fd; }
+    .lienzo {
+      position: relative; width: 390px; min-height: 844px; overflow: hidden;
+      background: linear-gradient(180deg, #08070a 0%, #050506 60%, #020203 100%);
+      color: #f7f5ff; -webkit-font-smoothing: antialiased;
+    }
+    /* El campo de luz de detrás del vidrio: sin él, difuminar negro da negro. */
+    .luz { position: absolute; inset: 0; pointer-events: none;
+      background:
+        radial-gradient(58% 34% at 12% 6%, rgba(124,58,237,.30), transparent 70%),
+        radial-gradient(46% 28% at 92% 22%, rgba(59,130,246,.13), transparent 72%),
+        radial-gradient(60% 32% at 50% 96%, rgba(139,92,246,.16), transparent 74%);
+      filter: blur(6px);
+    }
+    .glass { background: linear-gradient(157deg, rgba(255,255,255,.10) 0%, rgba(255,255,255,.035) 46%, rgba(255,255,255,.06) 100%);
+      border: 1px solid rgba(255,255,255,.11);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.20), inset 0 -1px 0 rgba(255,255,255,.04), 0 10px 32px rgba(0,0,0,.28); }
+    .glass-strong { background: linear-gradient(157deg, rgba(255,255,255,.13) 0%, rgba(124,58,237,.16) 48%, rgba(255,255,255,.05) 100%), rgba(13,11,18,.55);
+      border: 1px solid rgba(167,139,250,.26);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.26), inset 0 -1px 0 rgba(255,255,255,.05), 0 28px 80px rgba(0,0,0,.48); }
+    .glass-soft { background: linear-gradient(157deg, rgba(255,255,255,.09), rgba(255,255,255,.035));
+      border: 1px solid rgba(255,255,255,.08); box-shadow: inset 0 1px 0 rgba(255,255,255,.12); }
+    .cifra { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; }
+    .cejilla { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .16em; }
+  </style>
+</helmet>
+
+<div class="lienzo">
+  <div class="luz"></div>
+
+  <div style="position: relative; display: flex; flex-direction: column; gap: 20px; padding: 16px 16px 112px;">
+
+    <!-- Cabecera -->
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 4px">
+      <div style="display: flex; align-items: center; gap: 12px; min-width: 0">
+        <span style="display: grid; place-items: center; width: 44px; height: 44px; border-radius: 15px; background: linear-gradient(150deg, #8b5cf6, #6d28d9); box-shadow: 0 0 28px rgba(124,58,237,.35), inset 0 1px 0 rgba(255,255,255,.28); font-size: 17px; font-weight: 800; letter-spacing: -.02em">LL</span>
+        <div style="min-width: 0">
+          <p style="margin: 0; font-size: 12px; font-weight: 500; color: #8b8794">LigaLab</p>
+          <p style="margin: 2px 0 0; font-size: 16px; font-weight: 700; letter-spacing: -.01em">Hola, Contre</p>
+        </div>
+      </div>
+      <span style="display: grid; place-items: center; width: 44px; height: 44px; border-radius: 999px; border: 1px solid rgba(255,255,255,.10); background: rgba(255,255,255,.05); color: #a8a3b3">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
+      </span>
+    </div>
+
+    <!-- Resumen -->
+    <section class="glass-strong" style="border-radius: 30px; padding: 20px; overflow: hidden">
+      <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 16px">
+        <div style="min-width: 0">
+          <p class="cejilla" style="margin: 0; color: #a78bfa">Valor de tu plantilla</p>
+          <p class="cifra" style="margin: 10px 0 0; font-size: 40px; font-weight: 800; line-height: 1; letter-spacing: -.045em">120,0 <span style="font-size: 24px; font-weight: 700; letter-spacing: -.02em; color: rgba(247,245,255,.72)">M€</span></p>
+          <p style="margin: 8px 0 0; display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px 3px 7px; border-radius: 999px; background: rgba(52,211,153,.14); box-shadow: inset 0 0 0 1px rgba(52,211,153,.26); font-size: 12.5px; font-weight: 700; color: #34d399">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 15 7-7 7 7"/></svg>
+            <span class="cifra">+4,32 M€</span><span style="font-weight: 500; color: rgba(52,211,153,.75)">en el periodo</span>
+          </p>
+        </div>
+        <div style="flex-shrink: 0; padding: 9px 12px; border-radius: 17px; background: rgba(255,255,255,.06); box-shadow: inset 0 1px 0 rgba(255,255,255,.12); text-align: center">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block; margin: 0 auto"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+          <p class="cifra" style="margin: 5px 0 0; font-size: 18px; font-weight: 800; letter-spacing: -.02em">#2</p>
+          <p style="margin: 1px 0 0; font-size: 10px; color: rgba(247,245,255,.5)">posición</p>
+        </div>
+      </div>
+
+      <!-- Periodos -->
+      <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; margin-top: 18px; padding: 4px; border-radius: 17px; background: rgba(255,255,255,.06); box-shadow: inset 0 1px 0 rgba(255,255,255,.07)">
+        <span style="display: grid; place-items: center; height: 36px; border-radius: 13px; font-size: 12px; font-weight: 700; color: rgba(247,245,255,.5)">1D</span>
+        <span style="display: grid; place-items: center; height: 36px; border-radius: 13px; font-size: 12px; font-weight: 700; color: rgba(247,245,255,.5)">3D</span>
+        <span style="display: grid; place-items: center; height: 36px; border-radius: 13px; font-size: 12px; font-weight: 700; color: rgba(247,245,255,.5)">7D</span>
+        <span style="display: grid; place-items: center; height: 36px; border-radius: 13px; font-size: 12px; font-weight: 700; color: rgba(247,245,255,.5)">30D</span>
+        <span style="display: grid; place-items: center; height: 36px; border-radius: 13px; background: linear-gradient(160deg, #8b5cf6, #7c3aed); box-shadow: 0 4px 14px rgba(124,58,237,.42), inset 0 1px 0 rgba(255,255,255,.24); font-size: 12px; font-weight: 700; color: #fff">Todo</span>
+      </div>
+
+      <!-- Grafica -->
+      <div style="margin-top: 14px">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 8px; font-size: 11.5px">
+          <span style="color: #777180">Desliza el dedo por la gráfica</span>
+          <span><span class="cifra" style="font-weight: 700">113,5 M€</span> <span style="color: #777180">· 19 ago</span></span>
+        </div>
+        <div style="position: relative; height: 150px">
+          <svg viewBox="0 0 100 40" preserveAspectRatio="none" style="width: 100%; height: 100%; overflow: visible">
+            <defs>
+              <linearGradient id="relleno" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#34d399" stop-opacity=".26"/>
+                <stop offset="100%" stop-color="#34d399" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <path d="M0,34 L11,32 L22,31 L33,27 L44,25 L55,20 L66,17 L77,12 L88,9 L100,4 L100,40 L0,40 Z" fill="url(#relleno)"/>
+            <path d="M0,34 L11,32 L22,31 L33,27 L44,25 L55,20 L66,17 L77,12 L88,9 L100,4" fill="none" stroke="#34d399" stroke-width="2.2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span style="position: absolute; right: -3px; top: 7px; width: 11px; height: 11px; border-radius: 999px; border: 2px solid #050506; background: #34d399; box-shadow: 0 0 0 4px rgba(52,211,153,.22)"></span>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 16px">
+        <div style="padding: 12px; border-radius: 17px; background: rgba(124,58,237,.25); box-shadow: inset 0 0 0 1px rgba(124,58,237,.45), inset 0 1px 0 rgba(255,255,255,.14)">
+          <p style="margin: 0; display: flex; align-items: center; gap: 7px; font-size: 12px; color: rgba(247,245,255,.62)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></svg>
+            Caja</p>
+          <p class="cifra" style="margin: 5px 0 0; font-size: 19px; font-weight: 800; letter-spacing: -.03em; color: #c4b5fd">20,0 M€</p>
+        </div>
+        <div class="glass-soft" style="padding: 12px; border-radius: 17px">
+          <p style="margin: 0; display: flex; align-items: center; gap: 7px; font-size: 12px; color: rgba(247,245,255,.62)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>
+            Valor equipo</p>
+          <p class="cifra" style="margin: 5px 0 0; font-size: 19px; font-weight: 800; letter-spacing: -.03em">120,0 M€</p>
+        </div>
+      </div>
+
+      <p style="margin: 12px 0 0; font-size: 10.5px; line-height: 1.45; color: rgba(247,245,255,.45)">
+        Curva reconstruida con la cotización oficial que LALIGA publica de cada jugador que hoy está en tu plantilla.
+      </p>
+    </section>
+
+    <!-- Competidores -->
+    <section>
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px">
+        <div>
+          <p class="cejilla" style="margin: 0; font-size: 10.5px; letter-spacing: .13em; color: #8b8794">Tu liga</p>
+          <h2 style="margin: 3px 0 0; font-size: 21px; font-weight: 800; letter-spacing: -.025em">Competidores</h2>
+        </div>
+        <span style="display: inline-flex; align-items: center; gap: 5px; padding: 7px 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,.10); background: rgba(255,255,255,.06); font-size: 12px; font-weight: 600; color: #d4d0da">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 21a8 8 0 0 0-16 0"/><circle cx="10" cy="8" r="5"/><path d="M22 20c0-3.37-2-6.5-4-8a5 5 0 0 0-.45-8.3"/></svg> 3
+        </span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 10px">
+        <article class="glass" style="border-radius: 26px; padding: 15px">
+          <div style="display: flex; align-items: center; gap: 12px">
+            <span style="display: grid; place-items: center; width: 40px; height: 40px; flex-shrink: 0; border-radius: 999px; background: linear-gradient(150deg, rgba(139,92,246,.32), rgba(124,58,237,.18)); box-shadow: inset 0 1px 0 rgba(255,255,255,.18); font-size: 14px; font-weight: 800; color: #c4b5fd">M</span>
+            <div style="min-width: 0; flex-grow: 1">
+              <p style="margin: 0; font-size: 15px; font-weight: 700; letter-spacing: -.01em">Marta</p>
+              <p class="cifra" style="margin: 2px 0 0; font-size: 12px; color: #8b8794">#1 · 95 pts</p>
+            </div>
+            <p class="cifra" style="margin: 0; font-size: 14.5px; font-weight: 800; letter-spacing: -.02em">131,0 M€</p>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6a6572" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0"><path d="m9 18 6-6-6-6"/></svg>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 12px">
+            <div style="padding: 9px 12px; border-radius: 15px; background: rgba(52,211,153,.12); box-shadow: inset 0 0 0 1px rgba(52,211,153,.24)">
+              <p style="margin: 0; font-size: 11px; color: #8b8794">Caja aprox.</p>
+              <p class="cifra" style="margin: 3px 0 0; font-size: 14px; font-weight: 700; color: #34d399">≈ 92,0 M€</p>
+              <p style="margin: 3px 0 0; font-size: 9.5px; color: #6a6572">estimada, no valor de equipo</p>
+            </div>
+            <div class="glass-soft" style="padding: 9px 12px; border-radius: 15px">
+              <p style="margin: 0; font-size: 11px; color: #8b8794">Valor equipo</p>
+              <p class="cifra" style="margin: 3px 0 0; font-size: 14px; font-weight: 700">131,0 M€</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="glass" style="border-radius: 26px; padding: 15px">
+          <div style="display: flex; align-items: center; gap: 12px">
+            <span style="display: grid; place-items: center; width: 40px; height: 40px; flex-shrink: 0; border-radius: 999px; background: linear-gradient(150deg, rgba(139,92,246,.32), rgba(124,58,237,.18)); box-shadow: inset 0 1px 0 rgba(255,255,255,.18); font-size: 14px; font-weight: 800; color: #c4b5fd">L</span>
+            <div style="min-width: 0; flex-grow: 1">
+              <p style="margin: 0; font-size: 15px; font-weight: 700; letter-spacing: -.01em">Luis</p>
+              <p class="cifra" style="margin: 2px 0 0; font-size: 12px; color: #8b8794">#3 · 81 pts</p>
+            </div>
+            <p class="cifra" style="margin: 0; font-size: 14.5px; font-weight: 800; letter-spacing: -.02em">110,0 M€</p>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6a6572" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0"><path d="m9 18 6-6-6-6"/></svg>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 12px">
+            <div style="padding: 9px 12px; border-radius: 15px; background: rgba(52,211,153,.12); box-shadow: inset 0 0 0 1px rgba(52,211,153,.24)">
+              <p style="margin: 0; font-size: 11px; color: #8b8794">Caja</p>
+              <p class="cifra" style="margin: 3px 0 0; font-size: 14px; font-weight: 700; color: #34d399">4,00 M€</p>
+            </div>
+            <div class="glass-soft" style="padding: 9px 12px; border-radius: 15px">
+              <p style="margin: 0; font-size: 11px; color: #8b8794">Valor equipo</p>
+              <p class="cifra" style="margin: 3px 0 0; font-size: 14px; font-weight: 700">110,0 M€</p>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+  </div>
+
+  <!-- Barra inferior -->
+  <div style="position: absolute; left: 12px; right: 12px; bottom: 12px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); padding: 6px; border-radius: 24px; background: linear-gradient(157deg, rgba(255,255,255,.09), rgba(255,255,255,.03)), rgba(10,9,13,.82); border: 1px solid rgba(255,255,255,.09); box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 -8px 32px rgba(0,0,0,.5)">
+    <span style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; height: 56px; border-radius: 18px; background: linear-gradient(160deg, #8b5cf6, #7c3aed); box-shadow: 0 6px 18px rgba(124,58,237,.5), inset 0 1px 0 rgba(255,255,255,.24); font-size: 10px; font-weight: 700; color: #fff">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Inicio</span>
+    <span style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; height: 56px; font-size: 10px; font-weight: 600; color: rgba(247,245,255,.5)">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 21a8 8 0 0 0-16 0"/><circle cx="10" cy="8" r="5"/><path d="M22 20c0-3.37-2-6.5-4-8a5 5 0 0 0-.45-8.3"/></svg>Plantilla</span>
+    <span style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; height: 56px; font-size: 10px; font-weight: 600; color: rgba(247,245,255,.5)">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 11v1a3 3 0 0 1-6 0v-1"/><path d="M6.331 8h11.339a2 2 0 0 1 1.977 2.304l-1.255 8.152A3 3 0 0 1 15.426 21H8.574a3 3 0 0 1-2.966-2.544l-1.255-8.152A2 2 0 0 1 6.331 8"/><path d="m7.5 8 3.72-5.107a1 1 0 0 1 1.56 0L16.5 8"/></svg>Mercado</span>
+    <span style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; height: 56px; font-size: 10px; font-weight: 600; color: rgba(247,245,255,.5)">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M22 8c0-2.3-.8-4.3-2-6"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/><path d="M4 2C2.8 3.7 2 5.7 2 8"/></svg>Alertas</span>
+    <span style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; height: 56px; font-size: 10px; font-weight: 600; color: rgba(247,245,255,.5)">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h.01M12 12h.01M16 12h.01"/></svg>Más</span>
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

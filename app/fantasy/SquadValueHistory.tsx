@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { MarketValuePoint, Player } from "./types";
-import { get } from "./api";
+import { getCacheado } from "./api";
 import { millions, signedMillions } from "./format";
 import { PlayerImage } from "./PlayerImage";
 import { TrendChart } from "./TrendChart";
@@ -31,7 +31,17 @@ export function SquadValueHistory({
 }: {
   leagueId: string;
   teamId: string;
-  players: Player[];
+  /**
+   * La plantilla, o `null` si quien llama todavía la está pidiendo.
+   *
+   * Acepta `null` para que esta descarga NO tenga que esperar a esa otra: el
+   * endpoint deduce los jugadores del `teamId` él solo, así que la gráfica del
+   * total no necesita la lista para nada. Solo la usan la lista de abajo y los
+   * jugadores que más se mueven, que aparecen cuando llegue. Sin esto, en la
+   * ficha de un rival las dos descargas lentas iban en fila y la espera era la
+   * suma de las dos.
+   */
+  players: Player[] | null;
   title: string;
   onPlayer: (player: Player) => void;
 }) {
@@ -41,7 +51,7 @@ export function SquadValueHistory({
 
   useEffect(() => {
     let cancelled = false;
-    get<Response>(`/api/fantasy/leagues/${encodeURIComponent(leagueId)}/teams/${encodeURIComponent(teamId)}/value-history`)
+    getCacheado<Response>(`/api/fantasy/leagues/${encodeURIComponent(leagueId)}/teams/${encodeURIComponent(teamId)}/value-history`)
       .then((response) => { if (!cancelled) setData(response); })
       .catch((caught: unknown) => {
         if (!cancelled) setError(caught instanceof Error ? caught.message : "No se pudo cargar la evolución.");
@@ -54,7 +64,7 @@ export function SquadValueHistory({
   ), [data?.histories, range]);
   const total = useMemo(() => aggregateCurrentSquad(visibleHistories), [visibleHistories]);
   const totalDelta = historyDelta(total);
-  const movers = players
+  const movers = (players ?? [])
     .flatMap((player) => {
       const delta = historyDelta(visibleHistories[player.id] ?? []);
       return delta === null ? [] : [{ player, delta }];
@@ -67,7 +77,9 @@ export function SquadValueHistory({
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[.12em] text-neutral-500">Plantilla completa</p>
-          <h3 className="text-lg font-bold text-white">{title} · {players.length}</h3>
+          {/* Sin lista todavía no se escribe "· 0": un cero ahí se lee como una
+              plantilla vacía, que es justo lo que no sabemos aún. */}
+          <h3 className="text-lg font-bold text-white">{title}{players ? ` · ${players.length}` : ""}</h3>
         </div>
         <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${trendTone(totalDelta)}`}>
           {totalDelta === null ? "Cargando…" : signedMillions(totalDelta)}
@@ -138,6 +150,13 @@ export function SquadValueHistory({
         La curva total suma la plantilla actual hacia atrás; una compra o venta pasada cambia quién estaba realmente en el equipo. Cada mini-gráfica sí es el histórico oficial del jugador.
       </p>
 
+      {/* La lista llega cuando llega. El total de arriba ya es correcto sin
+          ella, así que no se esconde la gráfica esperando a esto. */}
+      {players === null ? (
+        <p className="mt-3 rounded-2xl bg-white/[.03] p-3 text-center text-xs text-neutral-500">
+          Cargando la lista de jugadores…
+        </p>
+      ) : (
       <ul className="mt-3 space-y-2">
         {players.map((player) => {
           const points = visibleHistories[player.id] ?? [];
@@ -159,6 +178,7 @@ export function SquadValueHistory({
           );
         })}
       </ul>
+      )}
     </section>
   );
 }

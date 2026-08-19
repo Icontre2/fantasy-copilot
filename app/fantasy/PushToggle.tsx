@@ -46,7 +46,7 @@ export function PushToggle({ leagueId }: { leagueId: string }) {
         return;
       }
 
-      const registro = await navigator.serviceWorker.register("/sw-push.js", { scope: "/sw-push/" });
+      const registro = await registroDeAvisos();
       const suscripcion = await registro.pushManager.getSubscription();
       if (!cancelado) setEstado(suscripcion ? "encendido" : "apagado");
     }
@@ -68,7 +68,7 @@ export function PushToggle({ leagueId }: { leagueId: string }) {
       const { publicKey } = await get<{ publicKey: string | null }>("/api/fantasy/push/status");
       if (!publicKey) throw new Error("Falta la clave pública de notificaciones.");
 
-      const registro = await navigator.serviceWorker.ready;
+      const registro = await registroDeAvisos();
       const suscripcion = await registro.pushManager.subscribe({
         userVisibleOnly: true, // exigido por el navegador: cada push tiene que producir un aviso visible, nunca uno silencioso.
         applicationServerKey: base64UrlABytes(publicKey),
@@ -92,7 +92,7 @@ export function PushToggle({ leagueId }: { leagueId: string }) {
     setEstado("trabajando");
     setError(null);
     try {
-      const registro = await navigator.serviceWorker.ready;
+      const registro = await registroDeAvisos();
       const suscripcion = await registro.pushManager.getSubscription();
       if (suscripcion) {
         await post("/api/fantasy/push/unsubscribe", { leagueId, endpoint: suscripcion.endpoint });
@@ -137,6 +137,46 @@ export function PushToggle({ leagueId }: { leagueId: string }) {
       {motivo && <p className="px-1 text-xs text-neutral-500">{motivo}</p>}
     </div>
   );
+}
+
+/**
+ * El service worker de los avisos, activo y listo para suscribir.
+ *
+ * ── Por qué esto no puede ser `navigator.serviceWorker.ready` ────────────────
+ * Aquí había `await navigator.serviceWorker.ready`, y era un cuelgue seguro.
+ * `ready` espera a la registración cuyo ÁMBITO CUBRE LA PÁGINA ACTUAL, y este
+ * worker se registra en `/sw-push/` mientras la app vive en `/`. Ese ámbito no
+ * cubre `/`, así que la promesa no se resolvía nunca: el botón se quedaba en
+ * "Un momento…" para siempre, sin error y sin manera de saber por qué.
+ *
+ * No saltó en las pruebas porque el navegador de pruebas no deja usar push de
+ * verdad y el guion sustituía `ready` por una promesa ya resuelta: el simulacro
+ * tapaba justo la línea que fallaba. Ahora se usa la registración concreta, que
+ * además es lo correcto habiendo dos service workers —este y el de la pantalla
+ * sin conexión, que sí vive en `/`—: con `ready` se habría cogido el otro, que
+ * no sabe pintar un aviso, y las notificaciones habrían dejado de llegar sin
+ * que nada diera error.
+ *
+ * `register` devuelve la registración enseguida, pero suscribirse exige un
+ * worker ACTIVO; la primera vez todavía está instalándose, así que se espera.
+ */
+async function registroDeAvisos(): Promise<ServiceWorkerRegistration> {
+  const registro = await navigator.serviceWorker.register("/sw-push.js", { scope: "/sw-push/" });
+  if (registro.active) return registro;
+
+  const worker = registro.installing ?? registro.waiting;
+  if (!worker) return registro;
+  await new Promise<void>((resolve) => {
+    const alCambiar = () => {
+      if (worker.state === "activated" || worker.state === "redundant") {
+        worker.removeEventListener("statechange", alCambiar);
+        resolve();
+      }
+    };
+    worker.addEventListener("statechange", alCambiar);
+    alCambiar(); // Por si ya cambió entre el `register` y este escuchador.
+  });
+  return registro;
 }
 
 /**
