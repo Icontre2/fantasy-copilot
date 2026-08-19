@@ -63,8 +63,32 @@
     overscroll-behavior-y: none;
     background: linear-gradient(180deg, #08070a 0%, var(--paper) 60%, #020203 100%);
     color: var(--ink);
-    font-family: var(--font-geist-sans), Arial, sans-serif;
+    /*
+     * `--font-sora` la define `app/layout.tsx` con `next/font`. Antes aquí ponía
+     * `--font-geist-sans`, que no se definía en ningún sitio: una `var()` sin
+     * valor y sin respaldo invalida la declaración entera, así que la app no
+     * usaba ni esa letra ni el `Arial` de al lado — se quedaba con la del
+     * sistema. El respaldo va DENTRO del `var()` justamente por eso.
+     */
+    font-family: var(--font-sora, "Helvetica Neue", Arial, sans-serif);
     -webkit-font-smoothing: antialiased;
+    /*
+     * Cifras de ancho fijo en toda la app. Es una pantalla de dinero: sin esto
+     * los números bailan de sitio al pasar de «7D» a «30D» o al actualizarse un
+     * valor, porque un 1 ocupa menos que un 8.
+     */
+    font-variant-numeric: tabular-nums;
+    /*
+     * Sora trae el espacio entre palabras muy apretado: 0,20 em, cuando lo
+     * corriente ronda 0,26. Medido en el navegador, a 10 px de texto eso son
+     * DOS píxeles, y en las notas al pie las palabras se pegaban unas a otras
+     * («que LALIGA» se leía «queLALIGA»). No es cosa del `tabular-nums` —
+     * comprobado midiendo con y sin, da igual.
+     *
+     * Se compensa lo justo para llegar a un espacio normal. Más de esto y el
+     * texto se deshilacha, que es el defecto contrario.
+     */
+    word-spacing: 0.05em;
   }
 
   /*
