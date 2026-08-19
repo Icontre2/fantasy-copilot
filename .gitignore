@@ -8,3 +8,8 @@ dist/
 
 # Next.js genera este fichero en cada build
 next-env.d.ts
+
+# El lienzo de diseño publicado: 2,2 MB de editor empaquetado que se regenera
+# entero desde los .dc.html de al lado. Se versionan las fuentes, no la salida.
+design/*.html
+!design/*.dc.html

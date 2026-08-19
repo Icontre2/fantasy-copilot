@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Banknote, ChevronRight, Coins, Trophy, Users } from "lucide-react";
 import Image from "next/image";
 import type { DashboardResponse, MarketValuePoint } from "./types";
-import { get } from "./api";
+import { getCacheado } from "./api";
 import { millions } from "./format";
 import { ManagerSheet } from "./ManagerSheet";
 import { TrendChart } from "./TrendChart";
@@ -216,7 +216,7 @@ function useSquadHistory(leagueId: string | undefined, teamId: string | undefine
   useEffect(() => {
     if (!leagueId || !teamId) return;
     let cancelado = false;
-    get<ValueHistoryResponse>(
+    getCacheado<ValueHistoryResponse>(
       `/api/fantasy/leagues/${encodeURIComponent(leagueId)}/teams/${encodeURIComponent(teamId)}/value-history`,
     )
       .then((respuesta) => {

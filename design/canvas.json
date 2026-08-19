@@ -1,0 +1,24 @@
+{
+  "artboards": [
+    { "file": "Tipografia.dc.html", "title": "Decisión: tipografía", "x": 0, "y": 0, "w": 900, "h": 660 },
+    { "file": "Main.dc.html", "title": "Inicio", "x": 0, "y": 740, "w": 390, "h": 844 },
+    { "file": "Alertas.dc.html", "title": "Alertas", "x": 470, "y": 740, "w": 390, "h": 844 }
+  ],
+  "annotations": [
+    {
+      "id": "que-es-esto",
+      "x": 960,
+      "y": 0,
+      "w": 300,
+      "text": "Pasada visual con la MISMA estructura: nada cambia de sitio.\n\nLo que cambia es el acabado — tipografía de verdad, cifras tabulares, jerarquía del número frente a su unidad, y la franja de color de estado que la dirección visual ya pedía."
+    },
+    {
+      "id": "primero-la-letra",
+      "x": 960,
+      "y": 300,
+      "w": 300,
+      "text": "Empieza por el artboard de arriba: la tipografía es la única decisión abierta, y las dos pantallas de abajo están dibujadas con Manrope.\n\nDime cuál quieres y la aplico al código."
+    }
+  ],
+  "launch": { "view": "canvas" }
+}

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { BellRing, CircleEllipsis, House, LogOut, ShoppingBag, UsersRound } from "lucide-react";
-import { get, post } from "./api";
+import { get, olvidarCache, post } from "./api";
 import { AlertsView } from "./AlertsView";
 import { EconomyView } from "./EconomyView";
 import { ExportView } from "./ExportView";
@@ -30,6 +30,7 @@ import {
   type TeamsResponse,
 } from "./types";
 import { Card, ErrorBox, Spinner } from "./ui";
+import { AppInstalable } from "./AppInstalable";
 import { LigaProvider } from "./league-context";
 
 /**
@@ -124,6 +125,8 @@ export default function FantasyApp() {
         </button>
       </header>
 
+      <AppInstalable />
+
       {leagues.length > 1 && (
         <label className="block">
           <span className="mb-1 block text-sm font-medium">Liga</span>
@@ -187,7 +190,15 @@ function BottomNav({ section, onSelect }: { section: Section; onSelect: (section
  */
 function SectionContent({ section, leagueId, onNavigate }: { section: Section; leagueId: string; onNavigate: (section: Section) => void }) {
   const [reloadToken, setReloadToken] = useState(0);
-  const reload = useCallback(() => setReloadToken((value) => value + 1), []);
+  /*
+   * Esto se dispara tras pujar o pagar una cláusula, o sea justo cuando la liga
+   * ha cambiado. Se tira lo guardado antes de remontar: si no, la ficha del
+   * rival al que le acabas de fichar seguiría enseñándotelo en su plantilla.
+   */
+  const reload = useCallback(() => {
+    olvidarCache();
+    setReloadToken((value) => value + 1);
+  }, []);
 
   if (section === "exportar") return <ExportView leagueId={leagueId} />;
   // El calendario no depende de la liga y se paginan jornadas dentro: carga solo.

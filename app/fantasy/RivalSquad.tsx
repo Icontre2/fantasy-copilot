@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { get } from "./api";
+import { getCacheado } from "./api";
 import { Pitch } from "./Pitch";
 import { SquadValueHistory } from "./SquadValueHistory";
 import type { Player, PlayerWithProbability } from "./types";
@@ -25,11 +25,23 @@ export type RivalLineup = {
  * el segundo sitio solo podía tenerla copiándola, y dos copias del mismo panel
  * dejan de enseñar lo mismo en cuanto una de las dos se toca.
  *
- * `players` es opcional a propósito. Quien ya tiene la plantilla —la pantalla de
- * Liga la recibe entera— la pasa y el histórico arranca sin esperar a nadie;
- * quien no la tiene —Inicio solo conoce el `teamId` de cada rival— la deja
- * fuera y se saca del once, que trae titulares y banquillo, o sea la plantilla
- * completa. Así ninguna de las dos paga una descarga que no necesita.
+ * `players` es opcional. Quien ya tiene la plantilla —la pantalla de Liga la
+ * recibe entera— la pasa; quien no la tiene —Inicio solo conoce el `teamId` de
+ * cada rival— la deja fuera y se saca del once, que trae titulares y banquillo,
+ * o sea la plantilla completa.
+ *
+ * ── Las dos descargas van A LA VEZ, y eso no es un detalle ───────────────────
+ * Las dos son lentas: el once cruza las alineaciones probables de una docena de
+ * clubes, y el histórico baja la cotización de unos veinticuatro jugadores.
+ * Encadenarlas hacía esperar la SUMA de las dos, y era exactamente lo que
+ * pasaba: `SquadValueHistory` solo se montaba cuando ya había plantilla, y sin
+ * `players` la plantilla salía del once. Medido en el navegador con retardos
+ * realistas: 4,4 s de espera para abrir la ficha de un rival.
+ *
+ * La descarga del histórico NO necesita la lista —el servidor deduce los
+ * jugadores del `teamId`—, así que ahora se monta desde el primer instante con
+ * `players` a `null` y la lista se rellena cuando llega el once. La espera pasa
+ * a ser la de la más lenta, no la de las dos.
  */
 export function RivalSquad({
   leagueId,
@@ -56,7 +68,7 @@ export function RivalSquad({
    */
   useEffect(() => {
     let cancelado = false;
-    get<RivalLineup>(`/api/fantasy/leagues/${encodeURIComponent(leagueId)}/teams/${encodeURIComponent(teamId)}/lineup`)
+    getCacheado<RivalLineup>(`/api/fantasy/leagues/${encodeURIComponent(leagueId)}/teams/${encodeURIComponent(teamId)}/lineup`)
       .then((respuesta) => { if (!cancelado) setData(respuesta); })
       .catch((caught: unknown) => {
         if (!cancelado) setError(caught instanceof Error ? caught.message : "No se pudo calcular su once.");
@@ -94,17 +106,15 @@ export function RivalSquad({
         )}
       </div>
 
-      {plantilla && (
-        <div className="mt-3">
-          <SquadValueHistory
-            leagueId={leagueId}
-            teamId={teamId}
-            players={plantilla}
-            title={`Plantilla de ${managerName}`}
-            onPlayer={onPlayer}
-          />
-        </div>
-      )}
+      <div className="mt-3">
+        <SquadValueHistory
+          leagueId={leagueId}
+          teamId={teamId}
+          players={plantilla}
+          title={`Plantilla de ${managerName}`}
+          onPlayer={onPlayer}
+        />
+      </div>
     </>
   );
 }
