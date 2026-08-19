@@ -54,16 +54,34 @@ function hayQueExplicarComoInstalarla(): boolean {
  *     una pestaña más. El aviso solo aparece en iOS, solo dentro del navegador
  *     y solo mientras NO esté ya instalada.
  */
-export function AppInstalable() {
-  const procede = useSyncExternalStore(sinSuscripcion, hayQueExplicarComoInstalarla, enElServidor);
-  const [cerrado, setCerrado] = useState(false);
-
+/**
+ * Registra el service worker que da la pantalla de "sin conexión".
+ *
+ * Es un hook y no parte del aviso de abajo porque las dos cosas ocurren en
+ * momentos distintos: el aviso solo tiene sentido cuando ya estás usando la app
+ * —antes de entrar no hay nada que valga la pena poner en la pantalla de
+ * inicio—, pero el service worker tiene que estar SIEMPRE.
+ *
+ * Estaban juntos, y eso dejaba un hueco real: quien instalara la app y la
+ * abriera sin cobertura antes de haber entrado nunca seguía viendo el error de
+ * Safari, porque el worker no se había llegado a registrar. Comprobado en el
+ * navegador: sin sesión no se registraba ninguno.
+ *
+ * Se llama desde arriba del todo del componente principal, antes de que decida
+ * si pinta el acceso o la app: así corre en las dos ramas.
+ */
+export function useServiceWorkerDeApp() {
   useEffect(() => {
     if (!("serviceWorker" in navigator)) return;
     // Un fallo aquí no puede tumbar la app: sin service worker sigue
     // funcionando entera, solo que sin pantalla de "sin conexión".
     navigator.serviceWorker.register("/sw-app.js", { scope: "/" }).catch(() => undefined);
   }, []);
+}
+
+export function AppInstalable() {
+  const procede = useSyncExternalStore(sinSuscripcion, hayQueExplicarComoInstalarla, enElServidor);
+  const [cerrado, setCerrado] = useState(false);
 
   if (!procede || cerrado) return null;
 
