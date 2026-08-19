@@ -179,12 +179,41 @@ export async function getCalendar(weekNumber: number): Promise<Match[]> {
  * y medio: las alertas se quedaban sin tendencia ni dias estimados y la ficha
  * dibujaba una curva de la temporada anterior.
  */
+/**
+ * Cotizacion diaria de un jugador, guardada un rato en memoria del proceso.
+ *
+ * ── Por que hace falta ───────────────────────────────────────────────────────
+ * Esta es la lectura que mas se repite de toda la app: la pantalla de Inicio
+ * pide el historico de los ~24 jugadores de tu plantilla, y la ficha de cada
+ * rival otros ~24. Sin guardar nada, cada visita de cada persona son dos docenas
+ * largas de peticiones a LALIGA por el MISMO dato. Con una liga de amigos
+ * mirando a la vez eso se multiplica por cabeza, y el final de ese camino es un
+ * 429 que estropea la app a todos.
+ *
+ * ── Por que se puede guardar sin riesgo ──────────────────────────────────────
+ * Aqui NO hay datos de nadie. La serie va indexada por `playerId` y no depende
+ * de quien pregunta: la cotizacion de un jugador es la misma para toda la liga y
+ * para cualquier otra. Es el mismo caso que `catalogoEnMemoria` de aqui arriba,
+ * y por eso se resuelve igual. Lo que si es de cada uno —tu plantilla, tu caja,
+ * tu liga— pasa por `getLeagueSnapshot`, que NO se guarda nunca.
+ *
+ * El plazo es corto de sobra: LALIGA publica un punto al dia, asi que en diez
+ * minutos no cambia nada. Un fallo no se guarda; si no, un tropiezo de red
+ * dejaria a ese jugador sin historico durante todo el plazo.
+ */
+const HISTORICO_TTL_MS = 10 * 60_000;
+const historicosEnMemoria = new Map<string, { at: number; puntos: MarketValuePoint[] }>();
+
 export async function getMarketValueHistory(playerId: string): Promise<MarketValuePoint[]> {
+  const guardado = historicosEnMemoria.get(playerId);
+  if (guardado && Date.now() - guardado.at < HISTORICO_TTL_MS) return guardado.puntos;
+
   const history = await seasonFetch(
     `${CMP}/player/${encodeURIComponent(playerId)}/market-value`,
     apiMarketValueHistorySchema,
   );
   const mapped = mapMarketValueHistory(history);
+  historicosEnMemoria.set(playerId, { at: Date.now(), puntos: mapped });
   console.info('[laliga/player-history] complete', {
     playerId,
     points: mapped.length,
