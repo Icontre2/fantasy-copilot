@@ -87,16 +87,25 @@ function modoDeSesion(entorno: EntornoDeSesion): Omit<DiagnosticoDeSesion, 'clav
   }
 
   if (!supabase) {
+    /*
+     * Esto decia «dura 24 h y despues toca volver a entrar», y dejo de ser
+     * verdad en cuanto la cookie empezo a renovarse sola con su propio refresh
+     * token. Seguia saliendo en la pantalla de acceso, en amarillo, contandole a
+     * cada visitante un problema que ya no existia.
+     *
+     * Sigue habiendo una diferencia real con tener base de datos —no hay donde
+     * guardar avisos push ni historico— pero la sesion ya no es el problema, y
+     * por eso ya no se marca como degradada.
+     */
     return {
       modo: 'SOLO_COOKIE',
-      duracion: 'hasta 24 h',
-      degradado: true,
-      titulo: 'Sesión guardada solo en el navegador',
+      duracion: 'mientras uses la app',
+      degradado: false,
+      titulo: 'Sesión guardada en tu navegador',
       explicacion:
-        'Sin base de datos no hay dónde guardar la sesión renovada, así que dura lo que dure ' +
-        'el permiso de LALIGA: unas 24 horas. Después toca volver a entrar.',
-      arreglo:
-        'Configura SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY para que la sesión se renueve sola y dure 30 días.',
+        'La sesión se renueva sola cada vez que abres la app, así que no hay que volver a entrar ' +
+        'a diario. Solo la pide otra vez si pasas muchos días sin abrirla.',
+      arreglo: null,
     };
   }
 

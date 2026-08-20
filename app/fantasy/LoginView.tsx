@@ -4,6 +4,7 @@ import { useState } from "react";
 import { post } from "./api";
 import type { DiagnosticoDeSesion, Manager, Proveedor } from "./types";
 import { ErrorBox } from "./ui";
+import { VistaPrevia } from "./VistaPrevia";
 import { Clock, ExternalLink, KeyRound, LockKeyhole, Mail, ShieldCheck } from "lucide-react";
 
 /**
@@ -91,9 +92,21 @@ export function LoginView({
       <div className="bg-[linear-gradient(145deg,#17121f,#32175d)] p-6 text-white">
         <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[#7c3aed] text-lg font-black text-white">LL</span>
         <p className="mt-6 text-xs font-semibold uppercase tracking-[.16em] text-white/45">LigaLab</p>
-        <h1 className="mt-1 text-3xl font-bold tracking-[-.04em]">Tu liga, más clara.</h1>
-        <p className="mt-2 text-sm leading-5 text-white/60">Consulta cajas, plantillas, alertas y mercado desde un único sitio.</p>
+        <h1 className="mt-1 text-3xl font-bold tracking-[-.04em]">Nadie te fiche por sorpresa.</h1>
+        <p className="mt-2 text-sm leading-5 text-white/60">
+          Cuánto le falta a cada jugador para ponerse a tiro de cláusula, y cuánto dinero tiene cada rival de tu
+          liga.
+        </p>
       </div>
+
+      {/*
+        Enseñar antes de pedir.
+
+        A quien ya se ha identificado no se le repite: ya sabe qué es esto y lo
+        único que quiere es entrar. Y quien vuelve tiene los botones de acceso
+        justo debajo, a un dedo.
+      */}
+      {!social?.identificado && <VistaPrevia />}
 
       {/*
         Este bloque identifica al usuario EN ESTA WEB mediante Supabase. No
@@ -280,7 +293,15 @@ export function LoginView({
               {sesion.titulo} · durará {sesion.duracion}
             </p>
             <p className="mt-1.5">{sesion.explicacion}</p>
-            {sesion.arreglo && <p className="mt-1.5 text-amber-200/80">{sesion.arreglo}</p>}
+            {/*
+              `sesion.arreglo` NO se pinta aquí a propósito. Son nombres de
+              variables de entorno: instrucciones para quien monta el despliegue,
+              no para quien abre la app a mirar su liga. Salían en amarillo en la
+              primera pantalla que ve alguien que llega por un enlace, y lo único
+              que consiguen ahí es que parezca que la app está rota.
+              Siguen disponibles en `/api/fantasy/auth/session` para quien las
+              necesita.
+            */}
           </div>
         )}
 
