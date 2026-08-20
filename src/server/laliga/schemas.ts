@@ -26,48 +26,37 @@ export const apiPlayerSchema = z.object({
   image: z.string(),
   teamId: z.string(),
   lastSeasonPoints: numeric.optional(),
-  /*
-   * Puntos por jornada. Se acepta CUALQUIER lista porque hoy llega vacia en los
-   * 731 jugadores —no se ha cerrado ninguna jornada— y no se puede comprobar su
-   * forma real. Quien la interpreta es `week-points.ts`, que lee lo que
-   * reconoce y descarta lo que no. Declararla estricta aqui la tiraria entera el
-   * dia que LALIGA la rellene con un campo de mas.
-   */
   weekPoints: z.array(z.unknown()).optional(),
 });
 
 export const apiPlayersSchema = z.array(apiPlayerSchema);
 
-// --- Endpoints publicos (sin token) -----------------------------------------
-
-/** GET /api/v3/player/{id}/market-value — serie diaria de cotizacion. */
 export const apiMarketValuePointSchema = z.object({
   marketValue: numeric,
   date: z.string(),
-  /**
-   * Llega SIEMPRE a 0 en el historico (comprobado en el repo de referencia
-   * sobre 719 puntos de varios jugadores). No es competencia por el jugador:
-   * no se expone al dominio para que nadie lo confunda con una senal.
-   */
   bids: numeric.optional(),
 });
 
 export const apiMarketValueHistorySchema = z.array(apiMarketValuePointSchema);
 
-// --- Endpoints privados (requieren Bearer de sesion) ------------------------
-
+/**
+ * Manager de liga. `passthrough()` es intencionado: LALIGA ha usado variantes
+ * de campo para la foto de perfil según endpoint/version. Si se eliminan los
+ * campos desconocidos aquí, el mapper nunca puede recuperar la foto real de los
+ * rivales aunque venga en la respuesta.
+ */
 export const apiManagerSchema = z.object({
   id: z.union([z.string(), z.number()]).transform(String),
   managerName: z.string(),
   avatar: z.string().optional(),
-});
+}).passthrough();
 
 /** GET /api/v4/user/me */
 export const apiUserSchema = z.object({
   id: z.union([z.string(), z.number()]).transform(String),
   managerName: z.string(),
   avatar: z.string().optional(),
-});
+}).passthrough();
 
 /** GET /api/v1/competition/{c}/leagues */
 export const apiLeagueSchema = z.object({
@@ -83,11 +72,6 @@ export const apiLeagueSchema = z.object({
 
 export const apiLeaguesSchema = z.array(apiLeagueSchema);
 
-/**
- * `playerMaster`: el jugador anidado que devuelven los endpoints privados
- * (plantillas y mercado). `positionId` llega como numero aqui y como string en
- * el catalogo publico.
- */
 export const apiPlayerMasterSchema = z.object({
   id: z.string(),
   name: z.string().optional(),
@@ -100,41 +84,18 @@ export const apiPlayerMasterSchema = z.object({
   lastSeasonPoints: numeric.nullable().optional(),
   images: z.object({ transparent: z.record(z.string(), z.string()).optional() }).partial().optional(),
   team: z.object({ id: z.string(), name: z.string(), slug: z.string().optional() }).partial().optional(),
-  /**
-   * El equipo llega de DOS formas segun el endpoint: anidado en `team` o plano
-   * en `teamId`. El catalogo publico (`/api/v5/players`) usa la plana — 792
-   * jugadores, ninguno con `team` — y aqui solo se leia la anidada, asi que el
-   * jugador se quedaba sin equipo. Se aceptan las dos y se resuelve en el mapper.
-   */
   teamId: z.union([z.string(), z.number()]).transform(String).optional(),
 });
 
-/** Jugador dentro de la plantilla de un participante. */
 export const apiTeamPlayerSchema = z.object({
-  /**
-   * Clausula de rescision. Opcional porque la API no la publica en todos los
-   * casos; cuando falta, la alerta de clausula de ese jugador **no se calcula**
-   * en vez de asumir un valor.
-   */
   buyoutClause: numeric.optional(),
   isShielded: z.boolean().optional(),
-  /**
-   * Fecha en la que se levanta el blindaje.
-   *
-   * Se lee si viene y no se rellena si no viene: hasta ahora el esquema ni
-   * siquiera la miraba, asi que aunque LALIGA la enviara, Zod la descartaba y la
-   * app no podia decir nunca cuantos dias faltan. Si de verdad no llega, la
-   * pantalla sigue diciendo "sin fecha publicada" — que es la verdad, no un
-   * hueco que haya que rellenar con una cuenta inventada.
-   */
   buyoutClauseLockedEndTime: z.string().optional(),
   playerMaster: apiPlayerMasterSchema,
 });
 
-/** GET /api/v1/competition/{c}/leagues/{id}/teams/{teamId} */
 export const apiLeagueTeamSchema = z.object({
   id: z.union([z.string(), z.number()]).transform(String),
-  /** Caja oficial; en la práctica LALIGA solo la devuelve para el manager conectado. */
   teamMoney: numeric.nullable().optional(),
   teamValue: numeric.nullable().optional(),
   teamPoints: numeric.nullable().optional(),
@@ -142,10 +103,8 @@ export const apiLeagueTeamSchema = z.object({
   players: z.array(apiTeamPlayerSchema),
 });
 
-/** La variante plural devuelve todas las plantillas de la liga de una vez. */
 export const apiLeagueTeamsSchema = z.array(apiLeagueTeamSchema);
 
-/** Fila de GET /api/v1/competition/{c}/leagues/{id}/standing */
 export const apiStandingRowSchema = z.object({
   position: numeric,
   previousPosition: numeric,
@@ -158,27 +117,19 @@ export const apiStandingRowSchema = z.object({
   }),
 });
 
-/** El standing puede llegar como array o envuelto en `elements`. */
 export const apiStandingSchema = z.union([
   z.array(apiStandingRowSchema),
   z.object({ elements: z.array(apiStandingRowSchema) }),
 ]);
 
-/**
- * Puja propia sobre un item del mercado. Solo se ve LA TUYA: LALIGA no publica
- * las pujas de los demas ni en vivo, asi que no existe ningun campo de
- * "puja actual" ni "mejor postor" que leer.
- */
 const apiOwnBidSchema = z.object({
   id: z.union([z.string(), z.number()]).transform(String),
   money: numeric,
   status: z.string().optional(),
 });
 
-/** GET /api/v1/competition/{c}/league/{id}/market */
 export const apiMarketItemSchema = z.object({
   id: z.union([z.string(), z.number()]).transform(String),
-  /** Discriminador de quien vende (manager vs sistema). */
   discr: z.string(),
   salePrice: numeric,
   expirationDate: z.string().optional(),
@@ -189,7 +140,6 @@ export const apiMarketItemSchema = z.object({
 
 export const apiMarketSchema = z.array(apiMarketItemSchema);
 
-/** GET /api/v1/competition/{c}/week/current */
 export const apiWeekSchema = z.object({
   isLive: z.boolean(),
   weekNumber: numeric,
@@ -198,14 +148,6 @@ export const apiWeekSchema = z.object({
   closingWeekDate: z.string().optional(),
 });
 
-/**
- * GET /api/v1/competition/{c}/calendar?weekNumber=N — los diez partidos de una
- * jornada, con su hora de inicio.
- *
- * `matchState` no esta documentado y por eso NO se traduce a un estado con
- * nombre: se decide "jugado" o "por jugar" mirando si hay marcador, que es un
- * hecho, en vez de inventarle un significado a un numero.
- */
 export const apiMatchSchema = z.object({
   id: z.union([z.string(), z.number()]).transform(String),
   matchDate: z.string(),
@@ -218,7 +160,6 @@ export const apiMatchSchema = z.object({
 export const apiCalendarSchema = z.array(apiMatchSchema);
 
 export type ApiMatch = z.infer<typeof apiMatchSchema>;
-
 export type ApiManagerLike = z.infer<typeof apiManagerSchema>;
 export type ApiPlayer = z.infer<typeof apiPlayerSchema>;
 export type ApiUser = z.infer<typeof apiUserSchema>;
@@ -231,17 +172,6 @@ export type ApiPlayerMaster = z.infer<typeof apiPlayerMasterSchema>;
 export type ApiMarketValuePoint = z.infer<typeof apiMarketValuePointSchema>;
 export type ApiWeek = z.infer<typeof apiWeekSchema>;
 
-/**
- * GET /api/v1/competition/{c}/leagues/{id}/activity/{page}
- *
- * El libro de operaciones de la liga. Verificado contra una liga real: trae el
- * importe EXACTO, no una estimacion. `activityTypeId` no esta documentado; su
- * significado se dedujo cruzando entradas con la app oficial (ver
- * `economy/activity.ts`).
- *
- * Los campos opcionales lo son de verdad: `amount` falta en los tipos que no
- * mueven dinero y `user2Id` solo aparece en traspasos entre managers.
- */
 export const apiActivityEntrySchema = z.object({
   id: z.union([z.string(), z.number()]).transform(String),
   activityTypeId: numeric,
