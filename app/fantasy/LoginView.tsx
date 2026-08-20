@@ -108,8 +108,17 @@ export function LoginView({
               <BotonProveedor key={proveedor} proveedor={proveedor} />
             ))}
           </div>
+          {/*
+            El aviso cambia según lo que este despliegue puede cumplir de verdad.
+
+            Con almacén de enlaces, entrar con Google te ahorra la contraseña de
+            LALIGA a partir de la segunda vez, que es TODA la gracia del botón.
+            Sin él, `motivo` explica que el enlace no se recuerda: el botón
+            sigue ahí —lo pidió el despliegue— pero no promete un ahorro que no
+            va a dar. Prometerlo y no cumplirlo es peor que no ofrecerlo.
+          */}
           <p className="mt-3 text-center text-[11px] leading-4 text-neutral-500">
-            Esto te identifica en LigaLab. Para enlazar LALIGA Fantasy hace falta una sesión válida del juego.
+            {social.motivo ?? "Esto te identifica en LigaLab. Para enlazar LALIGA Fantasy hace falta una sesión válida del juego."}
           </p>
           <p className="mt-4 text-center text-[11px] font-semibold uppercase tracking-[.14em] text-neutral-600">
             o con tu cuenta de LALIGA

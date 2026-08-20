@@ -4,6 +4,7 @@ import { getMyProfile } from "@/src/server/laliga/read";
 import { buildSessionCookies, createSession } from "@/src/server/laliga/session";
 import { guardarEnlace, hayAlmacenDeEnlaces } from "@/src/server/auth/links";
 import { identidadDePeticion } from "@/src/server/auth/identity";
+import { registrarAcceso, registrarFallo, registrarIntento } from "@/src/server/observability/login-metrics";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,7 @@ export async function POST(request: Request) {
     return privateJson({ error: "Hacen falta email y contrasena." }, 400);
   }
 
+  registrarIntento("password");
   try {
     const tokens = await passwordLogin(email, password);
     const manager = await getMyProfile(tokens.accessToken);
@@ -46,8 +48,15 @@ export async function POST(request: Request) {
       await guardarEnlace(identidad, tokens, email).catch(() => undefined);
     }
 
+    registrarAcceso("password");
     return privateJsonWithCookies({ manager }, buildSessionCookies(sessionId));
   } catch (error) {
+    /*
+     * Aqui es donde se ve si la gente rebota por tener una cuenta social de
+     * LALIGA. Solo se apunta el codigo de B2C, nunca el correo ni el texto
+     * crudo del error, que puede llevarlo dentro.
+     */
+    registrarFallo("password", error);
     return errorJson(error);
   }
 }

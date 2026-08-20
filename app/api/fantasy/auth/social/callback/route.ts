@@ -2,6 +2,7 @@ import { canjearCodigo, configAuth } from "@/src/server/auth/supabase-oauth";
 import { COOKIE_INTENTO, cookieDeError, cookieDeUsuario, leerCookie, limpiarIntento } from "@/src/server/auth/cookies";
 import { caducado, desempaquetar, mismoState } from "@/src/server/auth/pkce";
 import { firmarIdentidad } from "@/src/server/auth/identity";
+import { registrarAcceso, registrarFallo } from "@/src/server/observability/login-metrics";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +26,7 @@ export async function GET(request: Request) {
   const inicio = new URL("/", url.origin).toString();
 
   const fallo = (motivo: string) => {
+    registrarFallo("social", motivo);
     const headers = new Headers({ Location: inicio, "Cache-Control": "no-store" });
     headers.append("Set-Cookie", limpiarIntento());
     headers.append("Set-Cookie", cookieDeError(motivo));
@@ -76,5 +78,6 @@ export async function GET(request: Request) {
   const headers = new Headers({ Location: inicio, "Cache-Control": "no-store" });
   headers.append("Set-Cookie", limpiarIntento());
   headers.append("Set-Cookie", cookieDeUsuario(firmada));
+  registrarAcceso("social");
   return new Response(null, { status: 302, headers });
 }

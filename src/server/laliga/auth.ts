@@ -1,5 +1,5 @@
 import { AUTH_CONFIG } from './config';
-import { mensajeDeLogin } from './auth-errors.ts';
+import { codigoB2C, mensajeDeLogin } from './auth-errors.ts';
 import { LaligaError } from './errors';
 
 /**
@@ -66,7 +66,12 @@ async function postToken(policy: string, body: Record<string, string>): Promise<
 
   if (!response.ok || payload.error) {
     const detail = payload.error_description?.split('\n')[0] ?? payload.error ?? `HTTP ${response.status}`;
-    throw new LaligaError('unauthorized', mensajeDeLogin(detail), 'auth', 401);
+    /*
+     * El codigo crudo viaja aparte del mensaje: el mensaje se traduce aqui y
+     * ahi el codigo se pierde, pero el registro de accesos lo necesita para
+     * poder contar cuantos rebotan por tener cuenta social.
+     */
+    throw new LaligaError('unauthorized', mensajeDeLogin(detail), 'auth', 401, codigoB2C(detail));
   }
 
   return payload;

@@ -73,8 +73,26 @@ Verificado con `curl` el 2026-08-19:
 | --- | --- | --- |
 | **Avisos push** | `/api/fantasy/push/status` → `{"disponible": false}` | Claves VAPID + sesión persistente |
 | **Cron diario de alertas** | `/api/cron/alerts` → **501 `CRON_SECRET no está configurado`** | `CRON_SECRET` en Vercel |
-| **Entrar con Google / Apple / Facebook** | `/social/start?provider=google` → **501 «no está configurado»** | Variables de Supabase + proveedores en su panel |
+| **Entrar con Google** | ⚠️ **A medias** (ver abajo) | `SUPABASE_SERVICE_ROLE_KEY` |
+| **Entrar con Apple / Facebook** | No aparecen: no están encendidos | Activarlos en Supabase → Providers |
 | **Sesión persistente de 30 días** | `modo: SOLO_COOKIE` — dura ~24 h | `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` + `SESSION_ENCRYPTION_KEY` |
+
+### El caso raro de «Entrar con Google» — importa para el mensaje
+
+Reverificado el 2026-08-20: `social.proveedores` ya devuelve `["google"]` y
+`/social/start?provider=google` responde **302**, o sea que el botón sale y el
+flujo arranca. Pero falta el almacén de enlaces, así que:
+
+1. Entras con Google → LigaLab sabe **quién eres**.
+2. Sigues teniendo que conectar LALIGA con email y contraseña.
+3. **Ese enlace no se guarda.** La próxima vez, otra vez.
+
+Es decir: **hoy el botón de Google no le ahorra nada a nadie**, y a quien tiene la
+cuenta de LALIGA creada con Google —el caso que venía a resolver— le sigue
+dejando fuera, porque esa cuenta no tiene contraseña que introducir en el paso 2.
+
+La pantalla de acceso ya lo dice en vez de prometer lo que no cumple. **Pero no se
+puede anunciar «entra con Google» como ventaja hasta que exista el almacén.**
 
 > ⚠️ **«Te avisa sola» NO se puede anunciar todavía.** Es la combinación de push +
 > cron, y las dos están muertas. Ya se coló esta afirmación en una página de
@@ -96,7 +114,7 @@ presente.
 | **Tarjetas compartibles** («mi plantilla vale X») | Es el bucle viral. Hoy no hay nada que compartir desde el producto | Medio |
 | **Lesiones y sanciones** | Lo tienen los competidores; es una laguna evidente | Medio-alto, hace falta fuente |
 | **Simulador de subida de cláusula** | LALIGA deja subirla hasta el 400% y cuesta dinero. Decisión recurrente sin herramienta | Bajo-medio |
-| **Analytics de producto** | Hoy **no se mide nada**. Sin esto, el punto 16 del brief no se puede ejecutar | Bajo |
+| **Analytics de producto** | Ya se mide el acceso; falta activación, retención y uso | Bajo |
 | **Waitlist / captura de correo** | No existe. Sin esto no hay pre-lanzamiento | Bajo |
 | **Multi-plataforma** (Biwenger, Mister, Comunio) | Los competidores cubren varias; LigaLab solo LALIGA Fantasy | Alto |
 
@@ -129,7 +147,10 @@ cambian el HTML o lo bloquean, esa función cae.
 5. **La curva de plantilla mira hacia atrás con la plantilla de hoy**: un fichaje
    reciente aparece como si siempre hubiera estado. Se dice en pantalla.
 6. **La caja ajena es estimación** salvo que LALIGA la publique.
-7. **No hay analítica.** No sabemos cuánta gente entra ni qué usa.
+7. **Analítica mínima, solo del acceso.** Desde el 2026-08-20 se registra en el
+   servidor cuántos intentan entrar, cuántos lo logran y con qué código falla
+   (sin correo, sin IP, sin identificadores). Del resto de la app **no se mide
+   nada todavía**.
 8. **Sin política de privacidad ni términos.** Con usuarios reales ya dentro, es
    una laguna legal, no solo una tarea pendiente.
 
@@ -164,7 +185,8 @@ no atacando el suyo.
 ## 7. Lo que NO podemos decir
 
 - ❌ «Te avisa sola» / «alertas automáticas» → apagado en producción.
-- ❌ «Entra con Google» → no configurado.
+- ❌ «Entra con Google» como VENTAJA → el botón sale, pero no recuerda tu cuenta
+  de LALIGA, así que no ahorra ningún paso todavía.
 - ❌ «Sabemos el dinero exacto de tus rivales» → es **estimación**, y se dice.
 - ❌ «Te decimos a quién fichar» → el producto se niega por diseño.
 - ❌ «Predecimos puntos / valores» → prohibido por la regla del proyecto.

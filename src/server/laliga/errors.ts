@@ -12,13 +12,33 @@ export class LaligaError extends Error {
   readonly kind: LaligaErrorKind;
   readonly status: number;
   readonly endpoint: string;
+  /**
+   * Codigo del catalogo de Azure B2C (`AADB2C90225`), cuando lo hay.
+   *
+   * Existe porque `message` se traduce a lenguaje humano en el momento de
+   * lanzarlo, y ahi el codigo se pierde. Sin guardarlo aparte, el registro de
+   * accesos no podia distinguir «contraseña mal» de «cuenta social sin
+   * contraseña» — justamente el numero que hace falta para decidir si merece la
+   * pena arreglar el acceso social.
+   *
+   * NO se enseña al usuario ni viaja en la respuesta: es una constante del
+   * catalogo de Microsoft, no un dato de nadie.
+   */
+  readonly codigoProveedor: string | null;
 
-  constructor(kind: LaligaErrorKind, message: string, endpoint: string, status?: number) {
+  constructor(
+    kind: LaligaErrorKind,
+    message: string,
+    endpoint: string,
+    status?: number,
+    codigoProveedor?: string | null,
+  ) {
     super(message);
     this.name = 'LaligaError';
     this.kind = kind;
     this.endpoint = endpoint;
     this.status = status ?? defaultStatus(kind);
+    this.codigoProveedor = codigoProveedor ?? null;
   }
 }
 

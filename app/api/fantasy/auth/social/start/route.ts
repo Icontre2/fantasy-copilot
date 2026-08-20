@@ -3,6 +3,7 @@ import { proveedorValido, NOMBRES } from "@/src/server/auth/providers";
 import { cookieDeIntento } from "@/src/server/auth/cookies";
 import { empaquetar, nuevoIntento } from "@/src/server/auth/pkce";
 import { privateJson } from "@/src/server/http/responses";
+import { registrarIntento } from "@/src/server/observability/login-metrics";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +35,7 @@ export async function GET(request: Request) {
     );
   }
 
+  registrarIntento("social");
   const intento = nuevoIntento(Date.now());
   return new Response(null, {
     status: 302,
