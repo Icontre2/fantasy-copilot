@@ -57,15 +57,8 @@ export function AlertsView({ data, onChanged }: { data: AlertsResponse; onChange
       <div className="mt-3"><PushToggle leagueId={data.leagueId} /></div>
     </section>
     <label className="flex min-h-12 items-center gap-2 rounded-2xl glass px-4 text-neutral-500"><Search size={18}/><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar jugador, equipo o manager…" className="w-full bg-transparent text-sm text-white outline-none placeholder:text-neutral-600"/></label>
-    {/* En rejilla y no en scroll lateral: asi no queda ningun filtro cortado por el borde. */}
     <div className="flex flex-wrap gap-2" aria-label="Filtrar alertas">{FILTERS.map((option) => <button key={option.id} type="button" onClick={() => setFilter(option.id)} aria-pressed={filter === option.id} className={`min-h-11 grow rounded-2xl px-3 text-sm font-bold ${filter === option.id ? "bg-[#7c3aed] text-white" : "glass text-neutral-500"}`}>{option.label}</button>)}</div>
     {message && <p className="rounded-2xl glass p-4 text-sm text-neutral-200" role="status">{message}</p>}
-    {/*
-      El orden lo decide el servidor (`buildClauseAlerts`) y aqui solo se filtra,
-      que conserva el orden. Se dice en pantalla porque un orden que no se
-      anuncia se lee como si no hubiera ninguno, y este no es el obvio: manda
-      cuando se puede fichar, no lo grave que sea la alerta.
-    */}
     {visible.length > 0 && <p className="px-1 text-[11px] leading-4 text-neutral-500">Primero las que puedes pagar ya; después, las bloqueadas de menos a más tiempo para abrirse.</p>}
     {visible.length === 0 ? <Empty>Ningún jugador cumple este criterio ahora mismo.</Empty> : <div className="space-y-3">{visible.map((alert) => <AlertCard key={`${alert.owner.teamId}-${alert.player.id}`} alert={alert} mine={alert.owner.managerId === data.myManagerId} cash={data.myTeamMoney} busy={busy === alert.player.id} onSelect={setSelected} onBuyout={buyout}/>)}</div>}
     <p className="rounded-2xl glass px-4 py-3 text-xs leading-5 text-neutral-500">{data.playersWithoutClause} sin cláusula publicada · {data.skippedForBudget} fuera del límite de consultas{data.historyFailures > 0 ? ` · ${data.historyFailures} sin histórico` : ""}</p>
@@ -76,58 +69,24 @@ export function AlertsView({ data, onChanged }: { data: AlertsResponse; onChange
 function AlertCard({ alert, mine, cash, busy, onSelect, onBuyout }: { alert: ClauseAlert; mine: boolean; cash: number | null; busy: boolean; onSelect: (player: Player) => void; onBuyout: (alert: ClauseAlert) => void }) {
   const cannotAfford = cash !== null && cash < alert.official.buyoutClause;
   const disabled = mine || alert.official.isShielded || cannotAfford || busy;
-  return <article className="rounded-[26px] glass p-4">
+  const clauseProgress = Math.max(0, Math.min(100, alert.calculated.valueToClauseRatio * 100));
+  return <article className="rounded-[26px] border border-white/8 bg-[#0d0d10] p-4 shadow-[0_12px_36px_rgba(0,0,0,.22)]">
     <button type="button" onClick={() => onSelect(alert.player)} className="flex w-full items-center gap-3 text-left"><PlayerImage player={alert.player} size={52}/><div className="min-w-0 flex-1"><p className="truncate font-bold text-white">{alert.player.name}</p><p className="truncate text-xs text-neutral-500">{alert.player.position} · {alert.player.team} · {alert.owner.managerName}</p></div><span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold ${LEVEL_STYLE[alert.level]}`}>{alert.level === "INFORMATIVA" ? "INFO" : alert.level}</span></button>
     <div className="mt-4 grid grid-cols-2 gap-2"><Metric label="Valor" value={millions(alert.official.marketValue)}/><Metric label="Cláusula" value={millions(alert.official.buyoutClause)} accent/></div>
+    <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/8" aria-label={`Valor cubierto ${percent(alert.calculated.valueToClauseRatio)}`}><div className="h-full rounded-full bg-gradient-to-r from-rose-600 to-rose-400 shadow-[0_0_14px_rgba(244,63,94,.55)]" style={{ width: `${clauseProgress}%` }} /></div>
     <Diferencia gap={alert.calculated.gap}/>
     <div className="mt-2 grid grid-cols-3 gap-2"><CompactMetric icon={<ArrowUpRight size={13}/>} label="Subida/día" value={signedMillions(alert.calculated.dailyTrend)}/><CompactMetric label="Cubierta" value={percent(alert.calculated.valueToClauseRatio)}/><CompactMetric icon={<Clock3 size={13}/>} label="Estimación" value={alert.calculated.estimatedDays !== null ? days(alert.calculated.estimatedDays) : UNKNOWN}/></div>
-    {/*
-      Cuando no hay tendencia ni estimacion, la tarjeta dice POR QUE. Dejar dos
-      guiones sueltos deja al lector adivinando si es que el jugador no sube o
-      es que a la app le faltan datos, y son cosas muy distintas.
-    */}
     {motivoSinTendencia(alert) && <p className="mt-2 rounded-xl bg-white/[.03] px-3 py-2 text-[11px] leading-4 text-neutral-500">{motivoSinTendencia(alert)}</p>}
     <div className="mt-3 flex flex-wrap items-start justify-between gap-x-3 gap-y-1 text-xs"><span className={`flex min-w-0 items-start gap-1 leading-4 ${alert.official.isShielded ? "text-rose-400" : "text-emerald-400"}`}>{alert.official.isShielded ? <ShieldCheck className="mt-px shrink-0" size={14}/> : <ShieldOff className="mt-px shrink-0" size={14}/>} {alert.official.isShielded ? blindaje(alert) : "Desbloqueada ahora"}</span></div>
     {!mine && <button type="button" disabled={disabled} onClick={() => onBuyout(alert)} className="mt-3 min-h-11 w-full rounded-2xl bg-[#7c3aed] px-4 text-sm font-bold text-white disabled:bg-white/5 disabled:text-neutral-600">{busy ? "Confirmando…" : alert.official.isShielded ? "Cláusula bloqueada" : cannotAfford ? "Caja insuficiente" : `Pagar ${millions(alert.official.buyoutClause)}`}</button>}
   </article>;
 }
-/**
- * Lo que separa el valor de la cláusula, que es LA cifra de esta pantalla.
- *
- * Es la resta de las dos cajas de arriba y va en rojo porque es el aviso: es lo
- * que le queda a ese jugador para ponerse al alcance de cualquiera. Antes iba
- * en gris, en una esquina, del mismo tamaño que el resto — la cifra que da
- * sentido a la tarjeta escondida entre las que la acompañan.
- *
- * Y cuando el valor YA pasó la cláusula se dice tal cual. Antes se recortaba
- * con `Math.max(0, gap)` y salía «Faltan 0 €», que no es que falte poco: es que
- * no falta nada y además sobra. Ese es justo el caso más urgente de la
- * pantalla, y era el peor explicado.
- */
+
 function Diferencia({ gap }: { gap: number }) {
-  if (gap <= 0) {
-    return (
-      <p className="mt-2 rounded-xl bg-rose-500/20 px-3 py-2 text-center text-xs font-bold leading-4 text-rose-200 ring-1 ring-rose-500/40">
-        El valor ya supera la cláusula en {millions(-gap)}
-      </p>
-    );
-  }
-  return (
-    <p className="mt-2 flex items-baseline justify-center gap-1.5 rounded-xl bg-rose-500/10 px-3 py-2 text-center leading-4 ring-1 ring-rose-500/25">
-      <span className="text-[11px] text-rose-300/80">Faltan</span>
-      <span className="text-sm font-bold tabular-nums text-rose-400">{millions(gap)}</span>
-      <span className="text-[11px] text-rose-300/80">para la cláusula</span>
-    </p>
-  );
+  if (gap <= 0) return <p className="mt-2 rounded-xl bg-rose-500/20 px-3 py-2 text-center text-xs font-bold leading-4 text-rose-200 ring-1 ring-rose-500/40">El valor ya supera la cláusula en {millions(-gap)}</p>;
+  return <p className="mt-2 flex items-baseline justify-center gap-1.5 rounded-xl bg-rose-500/10 px-3 py-2 text-center leading-4 ring-1 ring-rose-500/25"><span className="text-[11px] text-rose-300/80">Faltan</span><span className="text-sm font-bold tabular-nums text-rose-400">{millions(gap)}</span><span className="text-[11px] text-rose-300/80">para la cláusula</span></p>;
 }
 
-/**
- * Cuanto le queda al blindaje.
- *
- * Si LALIGA publica la fecha, se dice el plazo Y la fecha. Si no la publica, se
- * dice eso mismo: no se calcula un plazo tipico ni se asume la duracion de
- * ningun blindaje anterior.
- */
 function blindaje(alert: ClauseAlert): string {
   const { daysUntilUnshielded: dias, shieldedUntil } = alert.official;
   if (dias === null || shieldedUntil === null) return "Bloqueada · LALIGA no publica hasta cuándo";
@@ -135,12 +94,6 @@ function blindaje(alert: ClauseAlert): string {
   return `Bloqueada hasta ${shortDateTime(shieldedUntil)} · quedan ${days(dias)}`;
 }
 
-/**
- * Por que esta alerta no trae subida diaria ni estimacion de dias.
- *
- * Valor y clausula siguen siendo oficiales y de hoy; lo que falta es la parte
- * calculada. `null` cuando si hay tendencia y no hay nada que explicar.
- */
 function motivoSinTendencia(alert: ClauseAlert): string | null {
   const { missingReason, historyAgeDays } = alert.calculated;
   if (!missingReason) return null;
