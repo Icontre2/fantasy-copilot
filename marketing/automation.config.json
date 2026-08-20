@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "mode": "human_approval_required",
+  "brand": {
+    "appIcon": "replaceable",
+    "wordmark": "replaceable",
+    "marketingIdentity": "red-black-white",
+    "productUiMustRemainUnchanged": true
+  },
+  "radar": {
+    "daily": true,
+    "targetOpportunities": 15,
+    "minimumScore": 60,
+    "primaryInsightsPerDay": 1
+  },
+  "production": {
+    "platforms": ["tiktok", "instagram_reels", "youtube_shorts"],
+    "masterAspectRatio": "9:16",
+    "masterResolution": "1080x1920",
+    "requireRealProductScreenshots": true,
+    "allowFabricatedProductUi": false
+  },
+  "publishing": {
+    "automatic": false,
+    "requireHumanApproval": true
+  },
+  "measurement": {
+    "checkpointsHours": [24, 72, 168],
+    "weeklyGrowthReview": true
+  }
+}
