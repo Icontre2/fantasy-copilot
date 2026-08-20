@@ -137,6 +137,10 @@ hay una variable de entorno por proveedor**: la app le pregunta a Supabase cuál
 están encendidos, así que activar uno hace aparecer su botón sin tocar código ni
 desplegar.
 
+Los pasos concretos de los dos, con el error de la URL de retorno que más tiempo
+cuesta, están en
+[`ENCENDER_APPLE_Y_FACEBOOK.md`](./ENCENDER_APPLE_Y_FACEBOOK.md).
+
 ## Lo que este acceso hace, y lo que NO hace
 
 Esto es lo que más confusión genera, así que conviene leerlo antes de montarlo.
