@@ -5,16 +5,6 @@ import { millions, shortDate, signedMillions, UNKNOWN } from "./format";
 import type { EconomyResponse, ManagerEconomy } from "./types";
 import { DataNotes, Empty } from "./ui";
 
-/**
- * Economía: de dónde sale el dinero de cada manager.
- *
- * Todos parten de los mismos 100 M€, así que la caja se explica entera con las
- * operaciones que publica LALIGA. La cifra que manda sigue siendo la oficial
- * cuando existe; la reconstruida está para EXPLICARLA, no para sustituirla.
- *
- * La diferencia entre ambas se enseña siempre. Es la parte que el historial
- * no explica (por ejemplo premios diarios), y esconderla seria falso.
- */
 export function EconomyView({ data }: { data: EconomyResponse }) {
   const [abierto, setAbierto] = useState<string | null>(null);
 
@@ -35,14 +25,6 @@ export function EconomyView({ data }: { data: EconomyResponse }) {
             : "LALIGA no ha devuelto operaciones de esta liga."}
         </p>
 
-        {/*
-          Tarjetas, no tabla.
-
-          Eran seis columnas en 390 px: cabian tres y el resto quedaba detras de
-          un scroll horizontal que en un movil no se ve. La misma informacion en
-          tarjeta se lee entera de un vistazo, que es lo que pide
-          docs/DIRECCION_VISUAL.md.
-        */}
         <ul className="mt-4 space-y-2">
           {data.economies.map((economy) => {
             const abiertoAqui = abierto === economy.managerId;
@@ -79,10 +61,16 @@ export function EconomyView({ data }: { data: EconomyResponse }) {
                       </span>
                     </span>
                   </div>
-                  <div className="mt-2 grid grid-cols-4 gap-2 text-[11px]">
+
+                  <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-5 text-[11px]">
                     <Dato label="Compras" value={millions(economy.compras)} tone="rose" />
                     <Dato label="Ventas" value={millions(economy.ventas)} tone="emerald" />
                     <Dato label="Puntos" value={millions(economy.bonusPuntos)} />
+                    <Dato
+                      label="Cláusulas est."
+                      value={economy.gastoClausulasEstimado > 0 ? `−${millions(economy.gastoClausulasEstimado)}` : millions(0)}
+                      tone={economy.gastoClausulasEstimado > 0 ? "rose" : undefined}
+                    />
                     <Dato
                       label="Dif."
                       value={economy.diferencia === null ? UNKNOWN : signedMillions(economy.diferencia)}
@@ -90,11 +78,6 @@ export function EconomyView({ data }: { data: EconomyResponse }) {
                   </div>
                 </button>
 
-                {/*
-                  El libro se abre AQUI, debajo del manager que has tocado. Antes
-                  salia al final de la pantalla y en un movil parecia que el
-                  toque no habia hecho nada.
-                */}
                 {abiertoAqui && <LibroCard economy={economy} saldoInicial={data.saldoInicial} />}
               </li>
             );
@@ -102,8 +85,8 @@ export function EconomyView({ data }: { data: EconomyResponse }) {
         </ul>
 
         <p className="mt-3 text-xs leading-4 text-white/45">
-          Toca un manager para ver su libro. La caja aproximada puede ser negativa, no incluye el valor
-          del equipo y nunca hereda el ajuste calculado para otro manager.
+          Toca un manager para ver su libro. El gasto de cláusulas es una estimación separada de los
+          fichajes y se descuenta de la caja reconstruida. El valor de la plantilla no cuenta como caja.
         </p>
       </section>
 
@@ -126,7 +109,6 @@ function LibroCard({ economy, saldoInicial }: { economy: ManagerEconomy; saldoIn
     <section className="glass-soft mt-2 rounded-[22px] p-4 text-white">
       <h3 className="mb-3 text-[15px] font-bold tracking-tight">Libro de {economy.managerName}</h3>
 
-      {/* El cuadre completo, línea a línea, para poder auditar cada euro. */}
       <dl className="mb-4 space-y-1 text-sm">
         <Linea label="Saldo inicial" value={millions(saldoInicial)} />
         <Linea label="Compras" value={`−${millions(economy.compras)}`} tone="rose" />
@@ -136,7 +118,11 @@ function LibroCard({ economy, saldoInicial }: { economy: ManagerEconomy; saldoIn
           value={`+${millions(economy.bonusPuntos)}`}
           tone="emerald"
         />
-        {/* Mismo nombre que en la fila de arriba: dos rotulos para la misma cifra confunden. */}
+        <Linea
+          label="Subida de cláusulas (est.)"
+          value={`−${millions(economy.gastoClausulasEstimado)}`}
+          tone={economy.gastoClausulasEstimado > 0 ? "rose" : undefined}
+        />
         <Linea label="Saldo de operaciones" value={signedMillions(economy.flujoConocido)} strong />
         <Linea label="Caja reconstruida" value={millions(economy.cajaReconstruida)} />
 
@@ -151,11 +137,41 @@ function LibroCard({ economy, saldoInicial }: { economy: ManagerEconomy; saldoIn
           </>
         ) : (
           <p className="pt-2 text-xs text-neutral-500">
-            LALIGA no publica la caja de otros managers. La reconstrucción usa el historial completo,
-            pero puede diferir por recompensas diarias u otros movimientos no publicados.
+            LALIGA no publica la caja de otros managers. La reconstrucción usa operaciones, puntos y una
+            estimación del dinero invertido en blindar cláusulas.
           </p>
         )}
       </dl>
+
+      {economy.clauseInvestments.length > 0 && (
+        <div className="mb-4 rounded-2xl border border-rose-500/15 bg-rose-500/[.05] p-3">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-xs font-bold text-rose-200">Blindaje de cláusulas estimado</p>
+            <span className="text-xs font-bold tabular-nums text-rose-300">
+              −{millions(economy.gastoClausulasEstimado)}
+            </span>
+          </div>
+          <p className="mt-1 text-[10px] leading-4 text-neutral-500">
+            Regla 1:2: subir 2 M€ de cláusula cuesta 1 M€ de caja. Solo contamos la parte que supera
+            el suelo automático o el último precio de adquisición conocido.
+          </p>
+          <ul className="mt-3 space-y-2">
+            {economy.clauseInvestments.map((item) => (
+              <li key={item.playerId} className="flex items-start justify-between gap-3 text-xs">
+                <span className="min-w-0">
+                  <strong className="block truncate text-neutral-200">{item.playerName}</strong>
+                  <span className="block text-[10px] text-neutral-500">
+                    Cláusula {millions(item.buyoutClause)} · base {millions(item.baselineClause)}
+                  </span>
+                </span>
+                <span className="shrink-0 tabular-nums font-semibold text-rose-300">
+                  −{millions(item.estimatedSpend)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {economy.recompensasQueCuadrarian !== null && (
         <p className="mb-4 rounded-2xl border border-[#7c3aed]/30 bg-[#7c3aed]/10 p-3 text-xs text-[#c4b5fd]">
