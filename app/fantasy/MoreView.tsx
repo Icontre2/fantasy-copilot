@@ -14,7 +14,7 @@ const ITEMS: Array<{ id: Section; label: string; description: string; icon: Reac
   { id: "exportar", label: "Exportar", description: "Plantillas y mercado CSV", icon: <Download size={19}/> },
 ];
 
-export function MoreView({ onSelect }: { onSelect: (section: Section) => void }) {
+export function MoreView({ onSelect }: { onSelect: (section: Section) => void; social?: unknown }) {
   const [loggingOut, setLoggingOut] = useState(false);
   const [logoutError, setLogoutError] = useState<string | null>(null);
 
