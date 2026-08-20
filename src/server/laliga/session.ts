@@ -82,11 +82,7 @@ export function diagnosticoDeSesion(): DiagnosticoDeSesion {
 
 export async function createSession(tokens: TokenSet): Promise<string> {
   // Modo cookie: el "identificador" ES la sesion cifrada. No se guarda nada.
-  if (usingCookieSessions()) {
-    return usingPortableCookieSessions()
-      ? encodePortableTokenSet(tokens)
-      : encryptTokenSet(tokens);
-  }
+  if (usingCookieSessions()) return empaquetarSesion(tokens);
 
   const id = randomUUID();
   const now = new Date();
@@ -206,6 +202,29 @@ export async function getValidAccessToken(sessionId: string | undefined): Promis
 }
 
 /**
+ * Los tokens de LALIGA que hay detras de una sesion, tal cual.
+ *
+ * `getValidAccessToken` devuelve solo el access token, que es lo que necesita
+ * quien va a llamar a LALIGA. Aqui hace falta el juego entero —incluido el
+ * refresh token— para poder GUARDARLO en el enlace con Google: sin el, el enlace
+ * duraria un dia y no serviria de nada.
+ *
+ * No renueva: devuelve lo que hay, caducado o no, y decide quien llama.
+ */
+export async function tokenSetDeSesion(sessionId: string | undefined): Promise<TokenSet | null> {
+  if (!sessionId) return null;
+  const row = await readSession(sessionId);
+  if (!row) return null;
+  try {
+    return usingPortableCookieSessions()
+      ? decodePortableTokenSet(row.encrypted_tokens)
+      : decryptTokenSet(row.encrypted_tokens);
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Cuanto antes del vencimiento conviene renovar.
  *
  * Doce horas: con la app abriendose a diario, siempre se renueva antes de
@@ -213,6 +232,28 @@ export async function getValidAccessToken(sessionId: string | undefined): Promis
  * nuevo a LALIGA en cada visita sin necesidad.
  */
 const MARGEN_DE_RENOVACION_MS = 12 * 60 * 60 * 1000;
+
+/**
+ * Los mismos tokens si todavia sirven; renovados si les queda poco o ya
+ * caducaron; `null` si LALIGA rechaza el refresh y toca entrar de verdad.
+ *
+ * Es la unica regla temporal del sistema, en un solo sitio: la usan tanto la
+ * renovacion de la cookie como el enlace con Google, y antes cada una llevaba su
+ * copia.
+ */
+export async function tokensVigentes(tokens: TokenSet): Promise<TokenSet | null> {
+  if (Date.now() + MARGEN_DE_RENOVACION_MS < tokens.expiresAt) return tokens;
+  try {
+    return await refreshTokens(tokens.refreshToken);
+  } catch {
+    return null;
+  }
+}
+
+/** La sesion cifrada tal y como debe viajar en la cookie de este despliegue. */
+export function empaquetarSesion(tokens: TokenSet): string {
+  return usingPortableCookieSessions() ? encodePortableTokenSet(tokens) : encryptTokenSet(tokens);
+}
 
 /**
  * Renueva una sesion que vive DENTRO de la cookie.
@@ -250,17 +291,9 @@ export async function renovarSesionDeCookie(
   // Todavia le queda cuerda de sobra: no se molesta a LALIGA.
   if (Date.now() + MARGEN_DE_RENOVACION_MS < tokens.expiresAt) return null;
 
-  try {
-    const frescos = await refreshTokens(tokens.refreshToken);
-    return {
-      accessToken: frescos.accessToken,
-      sesion: usingPortableCookieSessions()
-        ? encodePortableTokenSet(frescos)
-        : encryptTokenSet(frescos),
-    };
-  } catch {
-    return null;
-  }
+  const frescos = await tokensVigentes(tokens);
+  if (!frescos) return null;
+  return { accessToken: frescos.accessToken, sesion: empaquetarSesion(frescos) };
 }
 
 // --- Cookie -----------------------------------------------------------------

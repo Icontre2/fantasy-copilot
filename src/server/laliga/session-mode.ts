@@ -32,7 +32,29 @@ export type DiagnosticoDeSesion = {
   explicacion: string;
   /** Que hacer para arreglarlo, o `null` si no hay nada que arreglar. */
   arreglo: string | null;
+  /**
+   * De donde sale la clave con la que se cifra, SIEMPRE, aunque el modo se haya
+   * decidido antes por otra cosa.
+   *
+   * Existe porque el diagnostico mentia por omision: sin Supabase salia
+   * `SOLO_COOKIE` y ahi se acababa el analisis, asi que no habia forma de saber
+   * desde fuera si faltaba tambien la clave de cifrado. Y esa clave es justo la
+   * que decide si el enlace con Google puede recordarse.
+   */
+  clave: OrigenDeClave;
 };
+
+/**
+ * `explicita` = `SESSION_ENCRYPTION_KEY`, fija entre despliegues.
+ * `vercel` = derivada de `VERCEL_OIDC_TOKEN`, que rota.
+ * `ninguna` = no hay; en produccion no se puede guardar nada cifrado.
+ */
+export type OrigenDeClave = 'explicita' | 'vercel' | 'ninguna';
+
+function origenDeClave(entorno: EntornoDeSesion): OrigenDeClave {
+  if (entorno.claveExplicita) return 'explicita';
+  return entorno.oidc ? 'vercel' : 'ninguna';
+}
 
 /**
  * El diagnostico del entorno dado.
@@ -45,6 +67,10 @@ export type DiagnosticoDeSesion = {
  * login que reaparece.
  */
 export function diagnosticarSesion(entorno: EntornoDeSesion): DiagnosticoDeSesion {
+  return { ...modoDeSesion(entorno), clave: origenDeClave(entorno) };
+}
+
+function modoDeSesion(entorno: EntornoDeSesion): Omit<DiagnosticoDeSesion, 'clave'> {
   const { supabase, claveExplicita, oidc, produccion } = entorno;
 
   if (!produccion && !claveExplicita) {

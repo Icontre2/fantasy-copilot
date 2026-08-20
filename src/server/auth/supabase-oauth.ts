@@ -21,10 +21,12 @@ import { activosDe, type Proveedor } from './providers.ts';
  * abriria un segundo camino a la autenticacion, y dos caminos es justo lo que no
  * queremos.
  *
- * De la sesion de Supabase solo interesa QUIEN eres: su `user.id` y tu correo.
- * Ni el access token ni el refresh token de Supabase se guardan, porque esta app
- * no le pide nada mas a Supabase en tu nombre. Lo que se guarda es el enlace con
- * LALIGA, que es otra cosa (ver `links.ts`).
+ * De la sesion de Supabase interesan dos cosas: QUIEN eres (`user.id` y correo) y
+ * el JWT del usuario, que se usa una sola vez —dentro de la propia peticion de
+ * vuelta— para leer o escribir TU fila de enlaces con las reglas de la tabla
+ * puestas. Ni ese token ni el de refresco se guardan en ningun sitio ni llegan al
+ * navegador. Lo que si se guarda es el enlace con LALIGA, que es otra cosa (ver
+ * `links.ts`).
  */
 
 /** Cuanto se recuerda que proveedores estan activos. */
@@ -117,6 +119,20 @@ export async function proveedoresActivos(config: ConfigSupabaseAuth): Promise<Pr
 export type Identificado = { id: string; email: string | null };
 
 /**
+ * Lo que se saca del canje: quien eres y el token con el que Supabase te
+ * reconoce.
+ *
+ * El `accessToken` es el JWT del USUARIO, no una clave de administrador. Sirve
+ * para una sola cosa y dura una hora: hablar con la base de datos EN SU NOMBRE,
+ * de modo que las reglas de la tabla (RLS) le dejen tocar su fila y ninguna otra.
+ * Es lo que permite recordar el enlace con LALIGA sin `service_role`.
+ *
+ * No se guarda en ningun sitio ni viaja al navegador: se usa dentro de la misma
+ * peticion en la que se obtiene y se descarta con ella.
+ */
+export type Canje = { usuario: Identificado; accessToken: string };
+
+/**
  * Canjea el codigo por la identidad de quien acaba de entrar.
  *
  * Devuelve el motivo en castellano en vez de lanzar, para que la ruta pueda
@@ -126,7 +142,7 @@ export async function canjearCodigo(
   config: ConfigSupabaseAuth,
   codigo: string,
   verifier: string,
-): Promise<{ usuario: Identificado } | { error: string }> {
+): Promise<{ canje: Canje } | { error: string }> {
   let respuesta: Response;
   try {
     respuesta = await fetch(`${config.url}/auth/v1/token?grant_type=pkce`, {
@@ -140,13 +156,24 @@ export async function canjearCodigo(
   }
 
   const cuerpo = (await respuesta.json().catch(() => null)) as
-    | { user?: { id?: string; email?: string | null }; msg?: string; error_description?: string; error?: string }
+    | {
+        user?: { id?: string; email?: string | null };
+        access_token?: string;
+        msg?: string;
+        error_description?: string;
+        error?: string;
+      }
     | null;
 
-  if (!respuesta.ok || !cuerpo?.user?.id) {
+  if (!respuesta.ok || !cuerpo?.user?.id || !cuerpo.access_token) {
     const detalle = cuerpo?.error_description ?? cuerpo?.msg ?? cuerpo?.error ?? `HTTP ${respuesta.status}`;
     return { error: `No se pudo completar el acceso: ${detalle}` };
   }
 
-  return { usuario: { id: cuerpo.user.id, email: cuerpo.user.email ?? null } };
+  return {
+    canje: {
+      usuario: { id: cuerpo.user.id, email: cuerpo.user.email ?? null },
+      accessToken: cuerpo.access_token,
+    },
+  };
 }
