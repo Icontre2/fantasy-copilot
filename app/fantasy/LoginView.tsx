@@ -283,6 +283,16 @@ export function LoginView({
             {sesion.arreglo && <p className="mt-1.5 text-amber-200/80">{sesion.arreglo}</p>}
           </div>
         )}
+
+        {/* Antes de escribir una contraseña conviene poder leer qué se hace con
+            ella. Por eso el enlace va aquí y no escondido dentro de la app. */}
+        <p className="text-center text-[11px] leading-4 text-neutral-500">
+          <a href="/privacidad" className="underline underline-offset-2 hover:text-neutral-300">
+            Qué datos maneja LigaLab
+          </a>
+          {" · "}
+          Herramienta independiente, no afiliada a LALIGA.
+        </p>
       </form>
     </section>
   );
