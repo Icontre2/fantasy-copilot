@@ -30,12 +30,20 @@ test("sin clave y sin token, tampoco se puede guardar", () => {
   assert.equal(d.degradado, true);
 });
 
-test("sin base de datos la sesion vive en la cookie y dura un dia", () => {
+/**
+ * Esto decia «dura 24 h y despues toca volver a entrar», y dejo de ser verdad en
+ * cuanto la cookie empezo a renovarse sola con su propio refresh token. Seguia
+ * saliendo en la pantalla de acceso, en amarillo, contandole a cada visitante un
+ * problema que ya no existia — y encima con el nombre de dos variables de
+ * entorno, a alguien que solo queria mirar su liga.
+ */
+test("sin base de datos la sesion se renueva sola y ya no es un aviso", () => {
   const d = diagnosticarSesion({ ...BIEN, supabase: false });
   assert.equal(d.modo, "SOLO_COOKIE");
-  assert.equal(d.degradado, true);
-  assert.match(d.duracion, /24 h/);
-  assert.match(d.arreglo ?? "", /SUPABASE_URL/);
+  assert.equal(d.degradado, false, "ya no hay nada que avisar sobre la duracion");
+  assert.equal(d.arreglo, null, "no se le enseñan variables de entorno a un usuario");
+  assert.match(d.explicacion, /renueva sola/);
+  assert.equal(/24 h|24 horas/.test(d.duracion + d.explicacion), false, "ya no caduca cada dia");
 });
 
 /**
