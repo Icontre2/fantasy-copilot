@@ -9,12 +9,13 @@ export const maxDuration = 60;
 /**
  * GET /api/fantasy/leagues/{leagueId}/economy
  *
- * Contabilidad de la liga reconstruida desde el saldo inicial con las
- * operaciones que LALIGA publica, con su importe exacto.
+ * Reconstruye la caja con:
+ *   saldo inicial + ventas - compras + puntos - inversión estimada en cláusulas.
  *
- * Ya no necesita base de datos: antes había que guardar fotos de la liga para
- * poder inferir los importes comparándolas. Ahora los importes vienen
- * publicados, así que basta con leer.
+ * Compras/ventas salen del historial exacto publicado por LALIGA. La inversión
+ * en subir cláusulas se estima desde la plantilla actual y se etiqueta siempre
+ * como tal, porque LALIGA no publica de forma fiable ese movimiento económico
+ * como una operación separada en el historial.
  */
 export async function GET(request: Request, { params }: { params: Promise<{ leagueId: string }> }) {
   const auth = await requireSession(request);
@@ -34,10 +35,13 @@ export async function GET(request: Request, { params }: { params: Promise<{ leag
         managerId: team.manager.id,
         managerName: team.manager.name,
         puntos: snapshot.standing.find((row) => row.teamId === team.teamId)?.points ?? team.teamPoints ?? 0,
-        // LALIGA solo publica la caja del manager conectado. Para el resto va
-        // `null`, y la diferencia de conciliacion queda sin calcular en vez de
-        // compararse contra un cero inventado.
         cajaOficial: team.teamMoney ?? null,
+        clausePlayers: team.players.map((player) => ({
+          id: player.id,
+          name: player.name,
+          marketValue: player.marketValue,
+          buyoutClause: player.buyoutClause,
+        })),
       })),
       activity,
       playerNames: new Map(catalog.map((player) => [player.id, player.name])),
@@ -48,21 +52,20 @@ export async function GET(request: Request, { params }: { params: Promise<{ leag
     return privateJson({
       leagueId,
       saldoInicial: SALDO_INICIAL,
-      /** Primera operación tras recorrer todas las páginas del historial. */
       actividadDesde: fechas[0] ?? null,
       actividadHasta: fechas.at(-1) ?? null,
       operaciones: activity.length,
-      economies: economies.sort((a, b) => b.flujoConocido - a.flujoConocido),
+      economies: economies.sort((a, b) => b.cajaReconstruida - a.cajaReconstruida),
       dataNotes: [
-        `Todos los managers empezaron con ${(SALDO_INICIAL / 1_000_000).toFixed(0)} M€. Si falta caja oficial, se reconstruye por manager con sus operaciones y puntos; nunca se traslada el ajuste de otra persona.`,
+        `Todos los managers empezaron con ${(SALDO_INICIAL / 1_000_000).toFixed(0)} M€. Si falta caja oficial, se reconstruye por manager con sus operaciones, puntos y gasto estimado en blindar cláusulas.`,
         "Los importes de compras y ventas los PUBLICA LALIGA en la actividad de la liga: son exactos, no estimados.",
+        "Subir una cláusula consume presupuesto en proporción 1:2: cada 1 M€ gastado aumenta 2 M€ la cláusula. Ese coste sí se descuenta de la caja reconstruida.",
+        "El gasto en cláusulas se etiqueta como ESTIMADO: se toma solo la parte de la cláusula actual que supera el mayor entre la cláusula automática esperable y el último precio de adquisición conocido. Así se evita atribuir a blindaje una cláusula alta que pueda venir del propio fichaje.",
         fechas[0]
           ? `Historial paginado completo: ${activity.length} entradas desde el ${fechas[0].slice(0, 10)}. Se recorren /activity/0, /1, /2… hasta la primera página vacía.`
           : "LALIGA no ha devuelto ninguna operación de esta liga.",
-        "La app intenta obtener la caja oficial en la lista y también equipo a equipo. Si ambas rutas la omiten, calcula 100 M + ventas − compras + puntos; el resultado puede ser negativo.",
-        "El valor de la plantilla nunca se usa para calcular la caja ni el flujo.",
-        "La diferencia es lo que el historial no explica, principalmente recompensas diarias reclamadas u otros movimientos que LALIGA no publique. Se muestra siempre.",
-        "Solo se sugiere «días de recompensa» cuando la diferencia es positiva y múltiplo exacto de 100.000 €. En cualquier otro caso queda sin explicar.",
+        "El valor de la plantilla nunca se usa como caja. Solo se usa el valor individual del jugador para estimar el suelo automático de su cláusula.",
+        "La diferencia frente a la caja oficial sigue mostrándose: puede recoger recompensas diarias, movimientos antiguos o desviación de la estimación de blindaje.",
       ],
     });
   } catch (error) {
