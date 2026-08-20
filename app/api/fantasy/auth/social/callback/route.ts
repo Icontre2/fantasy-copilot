@@ -174,9 +174,11 @@ async function resolverEnlace(
    */
   const clave = await claveDeEnlace(credencial);
   if (!clave) {
-    return sesionActual
-      ? { problema: "No se ha podido preparar el cifrado del enlace. Vuelve a intentarlo desde «Más»." }
-      : {};
+    return {
+      problema: sesionActual
+        ? "No se ha podido preparar el cifrado del enlace. Vuelve a intentarlo desde «Más»."
+        : "Te hemos identificado con Google, pero no se ha podido comprobar si tu cuenta de LALIGA está enlazada. Entra abajo con tu email y contraseña.",
+    };
   }
 
   if (sesionActual) {
@@ -196,7 +198,23 @@ async function resolverEnlace(
   }
 
   const enlace = await leerEnlace(credencial, identidad, clave).catch(() => null);
-  if (!enlace) return {}; // Primera vez: toca conectar LALIGA. La pantalla ya lo dice.
+  if (!enlace) {
+    /*
+     * Aquí es donde el botón se quedaba MUDO.
+     *
+     * Le das a «Entrar con Google», das la vuelta entera por Google, y vuelves a
+     * la misma pantalla sin una palabra. Desde fuera es indistinguible de que no
+     * funcione nada, y eso es exactamente lo que parecía.
+     *
+     * No es un error —la identificación ha ido bien— pero sí es un final del
+     * camino que hay que contar, porque queda un paso y no es evidente cuál.
+     */
+    return {
+      bien:
+        "Te hemos identificado con Google. Solo falta conectar tu cuenta de LALIGA una vez: " +
+        "escribe abajo tu email y contraseña del juego y, a partir de ahí, entras con Google y ya está.",
+    };
+  }
 
   const vigentes = await tokensVigentes(enlace.tokens);
   if (!vigentes) {
