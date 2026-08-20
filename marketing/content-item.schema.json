@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "LigaLab Marketing Content Item",
+  "type": "object",
+  "required": ["id", "date", "status", "problem", "feature", "hook", "score", "platforms"],
+  "properties": {
+    "id": {"type": "string", "pattern": "^LL-[0-9]{4}-[0-9]{3,}$"},
+    "date": {"type": "string", "format": "date"},
+    "status": {"enum": ["idea", "brief", "generated", "qa_failed", "awaiting_approval", "approved", "rejected", "published"]},
+    "problem": {"type": "string"},
+    "whyNow": {"type": "string"},
+    "feature": {"type": "string"},
+    "hook": {"type": "string"},
+    "score": {"type": "number", "minimum": 0, "maximum": 100},
+    "verifiedFacts": {"type": "array", "items": {"type": "string"}},
+    "sourceNotes": {"type": "array", "items": {"type": "string"}},
+    "platforms": {
+      "type": "array",
+      "items": {"enum": ["tiktok", "instagram_reels", "youtube_shorts", "instagram_carousel", "x", "stories"]},
+      "minItems": 1
+    },
+    "assets": {
+      "type": "object",
+      "properties": {
+        "realScreenshots": {"type": "array", "items": {"type": "string"}},
+        "generatedImages": {"type": "array", "items": {"type": "string"}},
+        "videoMaster": {"type": ["string", "null"]}
+      }
+    },
+    "qa": {
+      "type": "object",
+      "properties": {
+        "status": {"enum": ["pending", "pass", "fail"]},
+        "notes": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "approval": {
+      "type": "object",
+      "properties": {
+        "approved": {"type": "boolean"},
+        "approvedAt": {"type": ["string", "null"]}
+      }
+    },
+    "performance": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}
