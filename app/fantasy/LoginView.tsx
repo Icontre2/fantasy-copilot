@@ -23,6 +23,7 @@ export function LoginView({
   sesion,
   social,
   errorDeAcceso,
+  avisoDeAcceso,
 }: {
   onLogin: (manager: Manager) => void;
   /** Cuánto va a durar la sesión. Solo se avisa si va a durar poco. */
@@ -31,6 +32,13 @@ export function LoginView({
   social?: { proveedores: Proveedor[]; identificado: boolean; motivo?: string | null } | null;
   /** Por qué falló el último acceso con proveedor, si falló. */
   errorDeAcceso?: string | null;
+  /**
+   * Qué ha pasado cuando el acceso con proveedor SÍ ha ido bien pero todavía
+   * queda un paso. Sin esto el botón se quedaba mudo: dabas la vuelta entera por
+   * Google y volvías a esta misma pantalla sin una palabra, que desde fuera es
+   * igual que si no funcionara.
+   */
+  avisoDeAcceso?: string | null;
 }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -100,13 +108,31 @@ export function LoginView({
       </div>
 
       {/*
+        Lo que acaba de pasar al volver del proveedor, ARRIBA DEL TODO.
+
+        Va aquí y no dentro del formulario porque es la respuesta a la acción que
+        el usuario acaba de hacer: le ha dado a «Entrar con Google», ha dado la
+        vuelta entera, y esto es lo primero que tiene que leer al aterrizar. En
+        medio del formulario llegaría tarde.
+      */}
+      {avisoDeAcceso && (
+        <p
+          className="flex gap-2 border-b border-white/8 bg-emerald-500/10 p-4 text-[12px] leading-4 text-emerald-200"
+          role="status"
+        >
+          <ShieldCheck size={16} className="mt-px shrink-0" />
+          <span>{avisoDeAcceso}</span>
+        </p>
+      )}
+
+      {/*
         Enseñar antes de pedir.
 
         A quien ya se ha identificado no se le repite: ya sabe qué es esto y lo
         único que quiere es entrar. Y quien vuelve tiene los botones de acceso
         justo debajo, a un dedo.
       */}
-      {!social?.identificado && <VistaPrevia />}
+      {!social?.identificado && !avisoDeAcceso && <VistaPrevia />}
 
       {/*
         Este bloque identifica al usuario EN ESTA WEB mediante Supabase. No

@@ -117,7 +117,17 @@ export default function FantasyApp() {
   }
 
   if (!manager) {
-    return <Shell><LoginView onLogin={setManager} sesion={sesion} social={social} errorDeAcceso={errorDeAcceso} /></Shell>;
+    return (
+      <Shell>
+        <LoginView
+          onLogin={setManager}
+          sesion={sesion}
+          social={social}
+          errorDeAcceso={errorDeAcceso}
+          avisoDeAcceso={avisoDeAcceso}
+        />
+      </Shell>
+    );
   }
 
   return (
