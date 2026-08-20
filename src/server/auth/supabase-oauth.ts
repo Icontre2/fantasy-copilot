@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { desafioDe, type IntentoDeLogin } from './pkce.ts';
 import { activosDe, type Proveedor } from './providers.ts';
 
@@ -72,6 +73,67 @@ export function redirectUri(): string {
       ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
       : 'http://localhost:3000');
   return `${base.replace(/\/$/, '')}/api/fantasy/auth/social/callback`;
+}
+
+/**
+ * Quien hay detras de un token de Supabase, preguntandoselo a Supabase.
+ *
+ * ── Por que existe ──────────────────────────────────────────────────────────
+ * La cookie que dice «quien eres» se firmaba con una clave del servidor. Sin esa
+ * clave —que es el caso real del despliegue— no se firmaba nada, la cookie no se
+ * ponia, y la app no volvia a saber quien eras nunca. De ahi que hubiera que ir
+ * a un menu escondido a enlazar la cuenta a mano.
+ *
+ * Un token de Supabase no necesita ninguna clave nuestra: lo firma Supabase y
+ * Supabase dice si vale. Ademas responde a la pregunta correcta —«¿sigue siendo
+ * valido AHORA?»— y no solo «¿lo firmamos nosotros alguna vez?».
+ *
+ * Se cachea un par de minutos porque esto se consulta en cada carga de la app y
+ * el token no cambia de dueño entre dos peticiones seguidas. La clave del cache
+ * es un hash del token: el token en si no se queda en memoria.
+ */
+const VALIDEZ_DE_CACHE_MS = 2 * 60 * 1000;
+const usuariosVistos = ((globalThis as { __llfUsuarios?: Map<string, { visto: number; usuario: Identificado | null }> })
+  .__llfUsuarios ??= new Map());
+
+export async function usuarioDeToken(
+  config: ConfigSupabaseAuth,
+  accessToken: string,
+): Promise<Identificado | null> {
+  const huella = createHash('sha256').update(accessToken).digest('base64url');
+  const cacheado = usuariosVistos.get(huella);
+  if (cacheado && Date.now() - cacheado.visto < VALIDEZ_DE_CACHE_MS) return cacheado.usuario;
+
+  let usuario: Identificado | null = null;
+  try {
+    const respuesta = await fetch(`${config.url}/auth/v1/user`, {
+      headers: { apikey: config.apiKey, Authorization: `Bearer ${accessToken}` },
+      cache: 'no-store',
+      signal: AbortSignal.timeout(8000),
+    });
+    if (respuesta.ok) {
+      const cuerpo = (await respuesta.json().catch(() => null)) as
+        | { id?: string; email?: string | null }
+        | null;
+      if (cuerpo?.id) usuario = { id: cuerpo.id, email: cuerpo.email ?? null };
+    }
+  } catch {
+    /*
+     * Un fallo de red NO se cachea: si se guardara `null`, un corte de dos
+     * segundos dejaria al usuario sin identidad durante los dos minutos
+     * siguientes.
+     */
+    return null;
+  }
+
+  usuariosVistos.set(huella, { visto: Date.now(), usuario });
+  if (usuariosVistos.size > 500) {
+    // Poda simple: esto es un cache, no un almacen.
+    for (const [clave, valor] of usuariosVistos) {
+      if (Date.now() - valor.visto > VALIDEZ_DE_CACHE_MS) usuariosVistos.delete(clave);
+    }
+  }
+  return usuario;
 }
 
 /** La URL a la que se manda al usuario para identificarse con ese proveedor. */

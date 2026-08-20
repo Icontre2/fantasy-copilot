@@ -1,38 +1,58 @@
 import { leerCookie, COOKIE_USUARIO } from './cookies.ts';
-import { firmar, verificar } from './identity-cookie.ts';
+import { configAuth, usuarioDeToken } from './supabase-oauth.ts';
+import { identidadDeUsuario } from './links.ts';
 
 /**
  * Quien es el que hace esta peticion, si es que entro con Google.
  *
- * El secreto de firma sale del mismo sitio que el de cifrado de sesiones. Se lee
- * aqui y no en `identity-cookie.ts` para que aquello siga siendo puro y
- * testeable sin entorno.
+ * ── Lo que habia antes, y por que no funcionaba ─────────────────────────────
+ * La cookie llevaba la identidad FIRMADA POR NOSOTROS con una clave del
+ * servidor. En un despliegue con clave, bien. Sin ella —que es el caso real—
+ * `firmarIdentidad` devolvia `null`, la cookie no se ponia, y la app no volvia a
+ * saber quien eras. Consecuencias, todas invisibles desde fuera:
+ *
+ *   - `social.identificado` era siempre `false`, asi que la pantalla nunca
+ *     llegaba a decir «ya te has identificado, ahora conecta LALIGA».
+ *   - Al conectar LALIGA con la contraseña no habia forma de saber a quien
+ *     asociar el enlace, asi que no se guardaba. Habia que ir a un menu a
+ *     enlazar a mano, cosa que nadie iba a descubrir.
+ *
+ * ── Lo que lleva ahora ──────────────────────────────────────────────────────
+ * El access token de Supabase, tal cual, en una cookie `httpOnly`. No hace falta
+ * ninguna clave nuestra: lo firma Supabase, y a Supabase se le pregunta si vale.
+ * Que la cookie sea `httpOnly` impide que lo lea JavaScript del navegador, pero
+ * no que alguien fabrique la peticion a mano — por eso SIEMPRE se verifica, y
+ * nunca se cree lo que dice la cookie por si misma.
+ *
+ * Dura una hora, que es lo que dura el token. Es de sobra para lo que tiene que
+ * cubrir: entrar con Google y, acto seguido, conectar LALIGA.
  */
 
-function secretoDeFirma(): string | null {
-  const explicito = process.env.SESSION_ENCRYPTION_KEY?.trim();
-  if (explicito) return explicito;
-  const vercel = process.env.VERCEL_OIDC_TOKEN?.trim();
-  if (vercel) return vercel;
-  /*
-   * En local sin clave se usa una fija de desarrollo. No protege nada real —no
-   * hay nada real que proteger en local— y evita que cada reinicio cierre la
-   * sesion mientras se prueba el flujo.
-   */
-  return process.env.NODE_ENV === 'production' ? null : 'clave-de-desarrollo-solo-para-local-no-secreta';
-}
+export type Identidad = {
+  /** `supabase:<uuid>`, la forma que espera la tabla de enlaces. */
+  identidad: string;
+  /** El `uuid` a secas, que es lo que entiende la base al derivar la clave. */
+  uuid: string;
+  /** El token con el que hablar con la base EN NOMBRE de esta persona. */
+  accessToken: string;
+  email: string | null;
+};
 
-/** La identidad firmada en la cookie, o `null` si no hay o no es de fiar. */
-export function identidadDePeticion(request: Request): string | null {
-  const secreto = secretoDeFirma();
-  if (!secreto) return null;
-  const cookie = leerCookie(request, COOKIE_USUARIO);
-  if (!cookie) return null;
-  return verificar(cookie, secreto);
-}
+/** Quien hace esta peticion, verificado contra Supabase. `null` si nadie. */
+export async function identidadDePeticion(request: Request): Promise<Identidad | null> {
+  const token = leerCookie(request, COOKIE_USUARIO);
+  if (!token) return null;
 
-/** El valor a poner en la cookie para esa identidad. `null` si no hay secreto. */
-export function firmarIdentidad(identidad: string): string | null {
-  const secreto = secretoDeFirma();
-  return secreto ? firmar(identidad, secreto) : null;
+  const config = configAuth();
+  if (!config) return null;
+
+  const usuario = await usuarioDeToken(config, token);
+  if (!usuario) return null;
+
+  return {
+    identidad: identidadDeUsuario(usuario.id),
+    uuid: usuario.id,
+    accessToken: token,
+    email: usuario.email,
+  };
 }

@@ -8,7 +8,6 @@ import {
   limpiarIntento,
 } from "@/src/server/auth/cookies";
 import { caducado, desempaquetar, mismoState } from "@/src/server/auth/pkce";
-import { firmarIdentidad } from "@/src/server/auth/identity";
 import {
   claveDeEnlace,
   credencialAdmin,
@@ -115,14 +114,17 @@ export async function GET(request: Request) {
   headers.append("Set-Cookie", limpiarIntento());
 
   /*
-   * La cookie de identidad es un extra, no un requisito. Antes, si faltaba la
-   * clave de firma, el acceso entero se caía con un mensaje técnico — y es justo
-   * el despliegue donde más falta hace que Google funcione. Ahora, sin clave, el
-   * acceso sigue adelante: lo único que se pierde es el atajo de `access.ts`,
-   * que además solo aplica con clave administrativa.
+   * La cookie de identidad lleva el token de Supabase tal cual.
+   *
+   * Antes llevaba la identidad firmada con una clave del servidor, y sin esa
+   * clave —el caso real de este despliegue— no se ponía nada: la app no volvía a
+   * saber quién eras, así que al conectar LALIGA no había a quién asociar el
+   * enlace. De ahí que hubiera que ir a un menú a enlazar a mano.
+   *
+   * El token no hace falta firmarlo: ya viene firmado por Supabase, y a Supabase
+   * se le pregunta si vale cada vez que se usa. Ver `identity.ts`.
    */
-  const firmada = firmarIdentidad(identidad);
-  if (firmada) headers.append("Set-Cookie", cookieDeUsuario(firmada));
+  headers.append("Set-Cookie", cookieDeUsuario(canje.accessToken));
 
   /*
    * Menos privilegio primero: con el JWT del propio usuario, la base solo le

@@ -2,9 +2,10 @@ import { errorJson, privateJson, privateJsonWithCookies } from "@/src/server/htt
 import { passwordLogin } from "@/src/server/laliga/auth";
 import { getMyProfile } from "@/src/server/laliga/read";
 import { buildSessionCookies, createSession } from "@/src/server/laliga/session";
-import { claveDeEnlace, credencialAdmin, guardarEnlace, uuidDeIdentidad } from "@/src/server/auth/links";
+import { claveDeEnlace, credencialAdmin, credencialDeUsuario, guardarEnlace } from "@/src/server/auth/links";
 import { identidadDePeticion } from "@/src/server/auth/identity";
 import { registrarAcceso, registrarFallo, registrarIntento } from "@/src/server/observability/login-metrics";
+import type { TokenSet } from "@/src/server/laliga/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -37,25 +38,19 @@ export async function POST(request: Request) {
     /*
      * Si ya habias entrado con Google, esta contraseña sirve ademas para dejar
      * conectada tu cuenta de LALIGA: se guarda el enlace y ya no vuelve a
-     * pedirse. Es justo el paso que convierte "entrar con Google" en algo util.
+     * pedirse. Es justo el paso que convierte "entrar con Google" en algo util,
+     * y es AQUI donde tiene que pasar: es el momento en el que el usuario acaba
+     * de hacerlo, sin menus escondidos de por medio.
      *
-     * Aqui solo se puede con clave administrativa: en esta peticion no hay
-     * ningun token de Supabase con el que escribir en nombre del usuario. Sin
-     * ella el enlace se guarda igual, pero al volver del proveedor —que es donde
-     * si tenemos ese token— en vez de aqui.
+     * Antes no se podia porque la peticion no traia ningun token de Supabase.
+     * Ahora la cookie de identidad lleva el del propio usuario, verificado
+     * contra Supabase, y con el se escribe SU fila y ninguna otra.
      *
      * Si falla el guardado NO se tumba el login: acabas de identificarte bien y
      * mereces entrar. Lo unico que pasa es que la proxima vez habra que
-     * reconectar, y eso la pantalla ya lo sabe decir.
+     * reconectar.
      */
-    const identidad = identidadDePeticion(request);
-    const credencial = credencialAdmin();
-    const quien = identidad ? uuidDeIdentidad(identidad) : null;
-    if (identidad && credencial && quien) {
-      await claveDeEnlace(credencial, quien)
-        .then((clave) => (clave ? guardarEnlace(credencial, identidad, tokens, email, clave) : undefined))
-        .catch(() => undefined);
-    }
+    await guardarEnlaceSiProcede(request, tokens, email);
 
     registrarAcceso("password");
     return privateJsonWithCookies({ manager }, buildSessionCookies(sessionId));
@@ -67,5 +62,37 @@ export async function POST(request: Request) {
      */
     registrarFallo("password", error);
     return errorJson(error);
+  }
+}
+
+/**
+ * Deja la cuenta de LALIGA enlazada con la identidad social, si la hay.
+ *
+ * No lanza nunca: quien acaba de escribir bien su contraseña entra, pase lo que
+ * pase con el enlace. Lo peor que ocurre es que la próxima vez toque repetirlo.
+ *
+ * Se prefiere la credencial del propio usuario a la administrativa: hace lo
+ * mismo y solo alcanza su fila.
+ */
+async function guardarEnlaceSiProcede(request: Request, tokens: TokenSet, email: string): Promise<void> {
+  try {
+    const quien = await identidadDePeticion(request);
+    if (!quien) return;
+
+    const credencial = credencialDeUsuario(quien.accessToken) ?? credencialAdmin();
+    if (!credencial) return;
+
+    /*
+     * Se dice de quién es la clave incluso yendo con la credencial del propio
+     * usuario: para él es redundante —la base ya lo sabe— pero es lo único que
+     * hace funcionar el respaldo administrativo, donde no hay nadie delante. La
+     * base rechaza pedir la de otro, así que decirlo no abre ninguna puerta.
+     */
+    const clave = await claveDeEnlace(credencial, quien.uuid);
+    if (!clave) return;
+
+    await guardarEnlace(credencial, quien.identidad, tokens, email, clave);
+  } catch {
+    return;
   }
 }
