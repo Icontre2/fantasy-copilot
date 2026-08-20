@@ -38,6 +38,16 @@ export const COOKIE_AVISO = 'llf_auth_aviso';
 export const DIAS_30 = 30 * 24 * 60 * 60;
 const MINUTOS_10 = 10 * 60;
 
+/**
+ * Lo que dura la cookie de identidad: lo mismo que el token que lleva dentro.
+ *
+ * Antes eran 30 dias, porque lo que llevaba era una afirmacion firmada por
+ * nosotros que no caducaba. Ahora lleva el token de Supabase, que dura una hora;
+ * guardarlo mas tiempo solo serviria para tener una cookie muerta en el
+ * navegador y una llamada de verificacion tirada a la basura en cada carga.
+ */
+const UNA_HORA = 60 * 60;
+
 function atributos(maxAge: number): string {
   const secure = process.env.NODE_ENV === 'production' ? ' Secure;' : '';
   return `Path=/; HttpOnly; SameSite=Lax;${secure} Max-Age=${maxAge}`;
@@ -53,7 +63,7 @@ export function limpiarIntento(): string {
 }
 
 export function cookieDeUsuario(valor: string): string {
-  return `${COOKIE_USUARIO}=${encodeURIComponent(valor)}; ${atributos(DIAS_30)}`;
+  return `${COOKIE_USUARIO}=${encodeURIComponent(valor)}; ${atributos(UNA_HORA)}`;
 }
 
 export function limpiarUsuario(): string {

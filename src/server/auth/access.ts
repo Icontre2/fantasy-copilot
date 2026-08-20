@@ -1,6 +1,6 @@
 import { refreshTokens } from '@/src/server/laliga/auth';
 import { getValidAccessToken, readSessionId } from '@/src/server/laliga/session';
-import { actualizarTokens, claveDeEnlace, credencialAdmin, leerEnlace, uuidDeIdentidad } from './links.ts';
+import { actualizarTokens, claveDeEnlace, credencialAdmin, credencialDeUsuario, leerEnlace } from './links.ts';
 import { identidadDePeticion } from './identity.ts';
 
 /**
@@ -22,21 +22,21 @@ export async function accessTokenDe(request: Request): Promise<string | null> {
   if (clasico) return clasico;
 
   /*
-   * Aqui NO hay JWT del usuario: esto es una llamada normal de la app, no la
-   * vuelta desde Google. Asi que este atajo solo existe con clave
-   * administrativa. Sin ella no se pierde nada: al volver del proveedor se crea
-   * una sesion de LALIGA de las de siempre, y esa es la que responde arriba.
+   * La cookie de identidad lleva el token del propio usuario, asi que este
+   * atajo ya no necesita clave administrativa: con ese token se alcanza SU fila
+   * y ninguna otra. La administrativa queda de respaldo para el caso en que la
+   * cookie haya caducado pero el despliegue si la tenga.
    */
-  const identidad = identidadDePeticion(request);
-  const credencial = credencialAdmin();
-  if (!identidad || !credencial) return null;
-
-  const quien = uuidDeIdentidad(identidad);
+  const quien = await identidadDePeticion(request);
   if (!quien) return null;
-  const clave = await claveDeEnlace(credencial, quien);
+
+  const credencial = credencialDeUsuario(quien.accessToken) ?? credencialAdmin();
+  if (!credencial) return null;
+
+  const clave = await claveDeEnlace(credencial, quien.uuid);
   if (!clave) return null;
 
-  const enlace = await leerEnlace(credencial, identidad, clave);
+  const enlace = await leerEnlace(credencial, quien.identidad, clave);
   if (!enlace) return null;
 
   if (Date.now() < enlace.tokens.expiresAt) return enlace.tokens.accessToken;
@@ -49,7 +49,7 @@ export async function accessTokenDe(request: Request): Promise<string | null> {
    */
   try {
     const frescos = await refreshTokens(enlace.tokens.refreshToken);
-    await actualizarTokens(credencial, identidad, frescos, clave);
+    await actualizarTokens(credencial, quien.identidad, frescos, clave);
     return frescos.accessToken;
   } catch {
     return null;

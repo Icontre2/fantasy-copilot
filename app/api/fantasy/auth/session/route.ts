@@ -37,7 +37,7 @@ export async function GET(request: Request) {
   const proveedores = config ? await proveedoresActivos(config) : [];
   const social = {
     proveedores,
-    identificado: identidadDePeticion(request) !== null,
+    identificado: (await identidadDePeticion(request)) !== null,
     motivo: motivoSinProveedores(config !== null, proveedores.length),
   };
 
