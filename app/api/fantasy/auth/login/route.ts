@@ -2,7 +2,7 @@ import { errorJson, privateJson, privateJsonWithCookies } from "@/src/server/htt
 import { passwordLogin } from "@/src/server/laliga/auth";
 import { getMyProfile } from "@/src/server/laliga/read";
 import { buildSessionCookies, createSession } from "@/src/server/laliga/session";
-import { credencialAdmin, guardarEnlace, seGuardanEnlaces } from "@/src/server/auth/links";
+import { claveDeEnlace, credencialAdmin, guardarEnlace, uuidDeIdentidad } from "@/src/server/auth/links";
 import { identidadDePeticion } from "@/src/server/auth/identity";
 import { registrarAcceso, registrarFallo, registrarIntento } from "@/src/server/observability/login-metrics";
 
@@ -50,8 +50,11 @@ export async function POST(request: Request) {
      */
     const identidad = identidadDePeticion(request);
     const credencial = credencialAdmin();
-    if (identidad && credencial && seGuardanEnlaces()) {
-      await guardarEnlace(credencial, identidad, tokens, email).catch(() => undefined);
+    const quien = identidad ? uuidDeIdentidad(identidad) : null;
+    if (identidad && credencial && quien) {
+      await claveDeEnlace(credencial, quien)
+        .then((clave) => (clave ? guardarEnlace(credencial, identidad, tokens, email, clave) : undefined))
+        .catch(() => undefined);
     }
 
     registrarAcceso("password");

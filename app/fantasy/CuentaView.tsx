@@ -66,8 +66,12 @@ export function CuentaView({ social }: { social: EstadoSocial | null }) {
         <p className="mt-3 flex gap-2 text-[11px] leading-4 text-neutral-500">
           <ShieldCheck size={14} className="mt-px shrink-0 text-emerald-400" />
           <span>
-            Lo que se guarda es el permiso de LALIGA, cifrado, y solo tú puedes leerlo. Tu contraseña no se guarda
-            nunca, ni aquí ni en ningún otro sitio.
+            Lo que se guarda es el permiso de LALIGA, cifrado con una clave distinta para cada persona, y solo tu
+            cuenta alcanza esa fila. Tu contraseña no se guarda nunca, ni aquí ni en ningún otro sitio.{" "}
+            <a href="/privacidad" className="underline underline-offset-2">
+              Más detalle
+            </a>
+            .
           </span>
         </p>
       </div>

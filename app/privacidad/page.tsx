@@ -83,9 +83,10 @@ export default function Privacidad() {
         />
         <Parrafo>
           Lo que se guarda <strong className="text-white">en la base de datos</strong> —el enlace con tu cuenta de
-          LALIGA, si lo activas— va cifrado con AES-256-GCM: ni con acceso directo a la fila se puede leer un
-          permiso. La app se niega a guardarlo si no dispone de una clave de cifrado estable, en vez de guardarlo
-          en claro.
+          LALIGA, si lo activas— va cifrado con AES-256-GCM y con{" "}
+          <strong className="text-white">una clave distinta para cada persona</strong>: ni con acceso directo a la
+          fila se lee un permiso, y reventar una no ayuda con las demás. Si la app no consigue esa clave, no
+          guarda nada, en vez de guardarlo en claro.
         </Parrafo>
       </Seccion>
 

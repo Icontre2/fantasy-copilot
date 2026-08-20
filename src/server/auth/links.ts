@@ -76,24 +76,57 @@ export function hayAlmacenDeEnlaces(): boolean {
 }
 
 /**
- * Si en este despliegue tiene sentido GUARDAR un enlace.
+ * Con que se cifra el enlace de esta persona.
  *
- * Puro para poder probarlo. La regla: hace falta una clave de cifrado que NO
- * cambie entre despliegues. Con la de Vercel —que rota— la fila quedaria
- * ilegible en el siguiente despliegue y el usuario veria "ya conectaste LALIGA"
- * sin poder entrar, que es peor que no haber guardado nada. En local no aplica:
- * alli la clave muere con el proceso y eso ya se sabe.
+ * ── Por que no basta con `SESSION_ENCRYPTION_KEY` ────────────────────────────
+ * Hace falta una clave que NO cambie entre despliegues: si cambia, la fila queda
+ * ilegible y el usuario ve "ya conectaste LALIGA" sin poder entrar, que es peor
+ * que no haber guardado nada. La variable de Vercel sirve, pero si no esta
+ * puesta la alternativa era no guardar NADA, y entonces "entrar con Google" no
+ * ahorra nada a nadie. Es donde se quedaba atascado esto.
+ *
+ * Asi que la base de datos deriva una clave por persona a partir de una raiz que
+ * solo ella conoce (`clave_de_enlace()`). Es estable, distinta para cada uno, y
+ * solo la puede pedir quien ya ha entrado — y solo la suya.
+ *
+ * Y cuando ADEMAS hay `SESSION_ENCRYPTION_KEY`, se usan las dos: para descifrar
+ * una fila haria falta a la vez una copia de la base y la variable de Vercel.
+ * Cada mitad por su lado no sirve de nada.
+ *
+ * `null` si no hay forma de obtener clave. Entonces no se guarda nada, a
+ * proposito: guardar un token de LALIGA sin cifrar no es una opcion.
  */
-export function puedeGuardarEnlace(entorno: { claveExplicita: boolean; produccion: boolean }): boolean {
-  return entorno.claveExplicita || !entorno.produccion;
+export async function claveDeEnlace(credencial: Credencial, deQuien?: string): Promise<string | null> {
+  const derivada = await raizDerivada(credencial, deQuien);
+  if (!derivada) return null;
+  const explicita = process.env.SESSION_ENCRYPTION_KEY?.trim();
+  return explicita ? `${explicita}:${derivada}` : derivada;
 }
 
-/** La misma pregunta, leyendo el entorno de verdad. */
-export function seGuardanEnlaces(): boolean {
-  return puedeGuardarEnlace({
-    claveExplicita: Boolean(process.env.SESSION_ENCRYPTION_KEY?.trim()),
-    produccion: process.env.NODE_ENV === 'production',
-  });
+/**
+ * `deQuien` solo hace falta en el camino administrativo, donde no hay usuario
+ * delante. La base lo rechaza si lo manda cualquier otro, asi que no es una
+ * puerta: es el mismo permiso que ya tiene `service_role` para leer la tabla.
+ */
+async function raizDerivada(credencial: Credencial, deQuien?: string): Promise<string | null> {
+  try {
+    const respuesta = await pedir(credencial, 'rpc/clave_de_enlace', {
+      method: 'POST',
+      body: JSON.stringify(deQuien ? { quien: deQuien } : {}),
+    });
+    if (!respuesta.ok) return null;
+    const valor = (await respuesta.json().catch(() => null)) as unknown;
+    return typeof valor === 'string' && valor.length >= 32 ? valor : null;
+  } catch {
+    return null;
+  }
+}
+
+/** El `uuid` que hay detras de una identidad `supabase:…`, o `null`. */
+export function uuidDeIdentidad(identidad: string): string | null {
+  if (!identidad.startsWith(PREFIJO_SUPABASE)) return null;
+  const resto = identidad.slice(PREFIJO_SUPABASE.length);
+  return /^[0-9a-f-]{36}$/i.test(resto) ? resto : null;
 }
 
 async function pedir(
@@ -118,7 +151,11 @@ async function pedir(
 type Fila = { encrypted_tokens: string; laliga_email: string | null };
 
 /** El enlace de esa identidad, o `null` si todavia no ha conectado LALIGA. */
-export async function leerEnlace(credencial: Credencial, identidad: string): Promise<Enlace | null> {
+export async function leerEnlace(
+  credencial: Credencial,
+  identidad: string,
+  clave: string,
+): Promise<Enlace | null> {
   const respuesta = await pedir(
     credencial,
     `${TABLA}?id=eq.${encodeURIComponent(identidad)}&select=encrypted_tokens,laliga_email&limit=1`,
@@ -130,7 +167,7 @@ export async function leerEnlace(credencial: Credencial, identidad: string): Pro
   if (!fila) return null;
 
   try {
-    return { tokens: decryptTokenSet(fila.encrypted_tokens), email: fila.laliga_email };
+    return { tokens: decryptTokenSet(fila.encrypted_tokens, clave), email: fila.laliga_email };
   } catch {
     /*
      * Clave de cifrado rotada: la fila ya no es legible. Se borra en vez de
@@ -148,13 +185,14 @@ export async function guardarEnlace(
   identidad: string,
   tokens: TokenSet,
   email: string | null,
+  clave: string,
 ): Promise<void> {
   const respuesta = await pedir(credencial, `${TABLA}?on_conflict=id`, {
     method: 'POST',
     prefer: 'resolution=merge-duplicates,return=minimal',
     body: JSON.stringify({
       id: identidad,
-      encrypted_tokens: encryptTokenSet(tokens),
+      encrypted_tokens: encryptTokenSet(tokens, clave),
       laliga_email: email,
       updated_at: new Date().toISOString(),
     }),
@@ -169,12 +207,13 @@ export async function actualizarTokens(
   credencial: Credencial,
   identidad: string,
   tokens: TokenSet,
+  clave: string,
 ): Promise<void> {
   await pedir(credencial, `${TABLA}?id=eq.${encodeURIComponent(identidad)}`, {
     method: 'PATCH',
     prefer: 'return=minimal',
     body: JSON.stringify({
-      encrypted_tokens: encryptTokenSet(tokens),
+      encrypted_tokens: encryptTokenSet(tokens, clave),
       updated_at: new Date().toISOString(),
     }),
   });

@@ -1,6 +1,6 @@
 import { refreshTokens } from '@/src/server/laliga/auth';
 import { getValidAccessToken, readSessionId } from '@/src/server/laliga/session';
-import { actualizarTokens, credencialAdmin, leerEnlace } from './links.ts';
+import { actualizarTokens, claveDeEnlace, credencialAdmin, leerEnlace, uuidDeIdentidad } from './links.ts';
 import { identidadDePeticion } from './identity.ts';
 
 /**
@@ -31,7 +31,12 @@ export async function accessTokenDe(request: Request): Promise<string | null> {
   const credencial = credencialAdmin();
   if (!identidad || !credencial) return null;
 
-  const enlace = await leerEnlace(credencial, identidad);
+  const quien = uuidDeIdentidad(identidad);
+  if (!quien) return null;
+  const clave = await claveDeEnlace(credencial, quien);
+  if (!clave) return null;
+
+  const enlace = await leerEnlace(credencial, identidad, clave);
   if (!enlace) return null;
 
   if (Date.now() < enlace.tokens.expiresAt) return enlace.tokens.accessToken;
@@ -44,7 +49,7 @@ export async function accessTokenDe(request: Request): Promise<string | null> {
    */
   try {
     const frescos = await refreshTokens(enlace.tokens.refreshToken);
-    await actualizarTokens(credencial, identidad, frescos);
+    await actualizarTokens(credencial, identidad, frescos, clave);
     return frescos.accessToken;
   } catch {
     return null;
