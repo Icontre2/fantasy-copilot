@@ -73,26 +73,41 @@ Verificado con `curl` el 2026-08-19:
 | --- | --- | --- |
 | **Avisos push** | `/api/fantasy/push/status` → `{"disponible": false}` | Claves VAPID + sesión persistente |
 | **Cron diario de alertas** | `/api/cron/alerts` → **501 `CRON_SECRET no está configurado`** | `CRON_SECRET` en Vercel |
-| **Entrar con Google** | ⚠️ **A medias** (ver abajo) | `SUPABASE_SERVICE_ROLE_KEY` |
+| **Entrar con Google** | ⚠️ **Depende de una variable** (ver abajo) | `SESSION_ENCRYPTION_KEY` |
 | **Entrar con Apple / Facebook** | No aparecen: no están encendidos | Activarlos en Supabase → Providers |
 | **Sesión persistente de 30 días** | `modo: SOLO_COOKIE` — dura ~24 h | `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` + `SESSION_ENCRYPTION_KEY` |
 
 ### El caso raro de «Entrar con Google» — importa para el mensaje
 
-Reverificado el 2026-08-20: `social.proveedores` ya devuelve `["google"]` y
-`/social/start?provider=google` responde **302**, o sea que el botón sale y el
-flujo arranca. Pero falta el almacén de enlaces, así que:
+`social.proveedores` devuelve `["google"]` y `/social/start?provider=google`
+responde **302**: el botón sale y el flujo arranca.
+
+**Lo que cambió el 2026-08-20.** El enlace entre tu identidad y tu cuenta de
+LALIGA ya no necesita clave de administrador: se resuelve al volver del
+proveedor, con el token del propio usuario y las reglas de la tabla. Eso quita
+`SUPABASE_SERVICE_ROLE_KEY` de la lista de bloqueantes.
+
+**Lo que sigue bloqueando.** Hace falta `SESSION_ENCRYPTION_KEY` en Vercel: sin
+una clave que no cambie entre despliegues, el enlace se guardaría hoy y quedaría
+ilegible mañana. La app se niega a guardarlo en vez de fingir, y lo dice en
+pantalla.
+
+Mientras esa variable no esté:
 
 1. Entras con Google → LigaLab sabe **quién eres**.
 2. Sigues teniendo que conectar LALIGA con email y contraseña.
 3. **Ese enlace no se guarda.** La próxima vez, otra vez.
 
-Es decir: **hoy el botón de Google no le ahorra nada a nadie**, y a quien tiene la
-cuenta de LALIGA creada con Google —el caso que venía a resolver— le sigue
-dejando fuera, porque esa cuenta no tiene contraseña que introducir en el paso 2.
+Y a quien tiene la cuenta de LALIGA creada con Google —el caso que esto venía a
+resolver— le sigue dejando fuera, porque esa cuenta no tiene contraseña que
+introducir en el paso 2.
 
-La pantalla de acceso ya lo dice en vez de prometer lo que no cumple. **Pero no se
-puede anunciar «entra con Google» como ventaja hasta que exista el almacén.**
+> **Cómo saber en qué estado está, sin preguntar a nadie:** en
+> `/api/fantasy/auth/session`, `social.motivo === null` significa que funciona
+> entero. Si trae texto, dice exactamente qué falta.
+
+**No se puede anunciar «entra con Google» como ventaja hasta que ese campo salga
+`null` en producción.**
 
 > ⚠️ **«Te avisa sola» NO se puede anunciar todavía.** Es la combinación de push +
 > cron, y las dos están muertas. Ya se coló esta afirmación en una página de
@@ -185,7 +200,9 @@ no atacando el suyo.
 ## 7. Lo que NO podemos decir
 
 - ❌ «Te avisa sola» / «alertas automáticas» → apagado en producción.
-- ❌ «Entra con Google» como VENTAJA → el botón sale, pero no recuerda tu cuenta
+- ❌ «Entra con Google» como VENTAJA → el botón sale, pero hasta que
+  `social.motivo` salga `null` en producción no recuerda tu cuenta. Comprobarlo
+  antes de escribirlo en ningún sitio, no darlo por hecho porque esté el código.
   de LALIGA, así que no ahorra ningún paso todavía.
 - ❌ «Sabemos el dinero exacto de tus rivales» → es **estimación**, y se dice.
 - ❌ «Te decimos a quién fichar» → el producto se niega por diseño.
