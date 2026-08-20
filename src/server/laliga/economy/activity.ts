@@ -185,9 +185,9 @@ function estimateClauseInvestments(
     lastAcquisitionByPlayer.set(entry.playerId, Math.abs(entry.amount));
   }
 
-  return players.flatMap((player) => {
+  return players.flatMap((player): ClauseInvestment[] => {
     const clause = player.buyoutClause;
-    if (!Number.isSafeInteger(clause) || clause <= 0) return [];
+    if (typeof clause !== 'number' || !Number.isSafeInteger(clause) || clause <= 0) return [];
     if (!Number.isSafeInteger(player.marketValue) || player.marketValue <= 0) return [];
 
     const automatic = automaticClauseBaseline(player.marketValue);
