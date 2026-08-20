@@ -11,10 +11,10 @@
 
 ## El resumen en tres líneas
 
-Google **está encendido y el botón sale**. El código para enlazar tu cuenta de
-LALIGA con esa identidad ya no necesita clave de administrador: funciona con la
-clave publicable. Lo único que falta para que el acceso social sea útil de verdad
-es **una variable de entorno**: `SESSION_ENCRYPTION_KEY`.
+Google **está encendido y funciona entero**: identifica y recuerda tu cuenta de
+LALIGA, sin clave de administrador y sin ninguna variable de entorno nueva. Lo
+que falta es **encender Apple y Facebook en el panel de Supabase**, que requiere
+crear las apps OAuth en Apple Developer y en Meta.
 
 ## Cómo se comprueba, sin creerse nada
 
@@ -40,22 +40,29 @@ Lo que importa de la respuesta:
 - **`ninguna`** — no se puede guardar nada cifrado. El enlace social no se
   guarda, y la app lo dice en pantalla en vez de fingir que sí.
 
-## Lo que falta: una variable
+## Recomendada, aunque ya no bloquee: `SESSION_ENCRYPTION_KEY`
+
+Con `session.clave` en `ninguna`, la sesión de LALIGA viaja en la cookie **sin
+cifrar** — `HttpOnly` y `Secure`, así que ni JavaScript la lee ni va en claro por
+la red, pero sin cifrar. Con la variable puesta se cifra, y además hace falta a
+la vez una copia de la base de datos y la variable de Vercel para descifrar un
+enlace, en vez de solo lo primero.
 
 En **Vercel → el proyecto → Settings → Environment Variables**, entorno
 **Production**:
 
 | Variable | De dónde se saca | Para qué |
 | --- | --- | --- |
-| `SESSION_ENCRYPTION_KEY` | Generar: `openssl rand -base64 48` | Cifrar sesiones y enlaces con una clave que no cambie |
+| `SESSION_ENCRYPTION_KEY` | Generar: `openssl rand -base64 48` | Cifrar la sesión y añadir una segunda mitad a la clave del enlace |
 
 Tres avisos que cuestan tiempo si se pasan por alto:
 
 1. **Vercel no aplica variables nuevas a un despliegue ya hecho.** Hay que volver
    a desplegar después de guardarla.
-2. **No se rota a la ligera**: cambiarla invalida todas las sesiones guardadas y
-   todos los enlaces sociales existentes. Que es justo lo que debe pasar, pero
-   conviene saberlo.
+2. **Ponerla o quitarla invalida los enlaces ya guardados**, porque cambia la
+   clave con la que se cifraron. No se pierde nada grave: quien lo tuviera
+   enlazado vuelve a enlazar una vez. Pero conviene ponerla pronto y no tocarla
+   más.
 3. **Nada de esto lleva nunca el prefijo `NEXT_PUBLIC_`.**
 
 ### Opcionales, para otras funciones
@@ -92,12 +99,23 @@ La tabla lleva cuatro políticas de RLS que atan cada fila a su dueño
 usuario se alcanza su fila y ninguna otra. Y los tokens van cifrados en la
 aplicación, así que ni con acceso directo a la base se lee un token de LALIGA.
 
+**La clave de cifrado la deriva la propia base**
+(`supabase/migrations/20260820_clave_de_enlace.sql`): una función
+`security definer` que solo devuelve algo derivado de la identidad de quien
+llama. Es estable entre despliegues y distinta para cada persona, y por eso el
+acceso social ya no depende de ninguna variable de entorno. El compromiso, dicho
+en voz alta: la raíz de derivación vive en la misma base que las filas cifradas,
+así que quien se lleve una copia completa se lleva las dos mitades. Con
+`SESSION_ENCRYPTION_KEY` puesta se mezclan las dos claves y eso deja de ser
+cierto.
+
 | Pieza | Dónde |
 | --- | --- |
 | Ruta que manda al proveedor (PKCE) | `app/api/fantasy/auth/social/start/route.ts` |
 | Vuelta del proveedor, canje y enlace | `app/api/fantasy/auth/social/callback/route.ts` |
 | Cliente de Supabase Auth por HTTP | `src/server/auth/supabase-oauth.ts` |
 | Almacén de enlaces sobre PostgREST | `src/server/auth/links.ts` |
+| Clave de cifrado derivada en la base | `supabase/migrations/20260820_clave_de_enlace.sql` |
 | Botones en la pantalla de acceso | `app/fantasy/LoginView.tsx` |
 | Botón de vincular estando dentro | `app/fantasy/CuentaView.tsx` |
 

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { identidadDeUsuario, PREFIJO_SUPABASE, puedeGuardarEnlace } from "./links.ts";
+import { identidadDeUsuario, PREFIJO_SUPABASE, uuidDeIdentidad } from "./links.ts";
 
 /**
  * El identificador de fila y la política de la base tienen que decir LO MISMO.
@@ -29,19 +29,19 @@ test("la política de la base usa exactamente ese prefijo", () => {
 });
 
 /**
- * Cuándo tiene sentido guardar el enlace.
+ * El camino de vuelta: de la identidad al `uuid`.
  *
- * La regla no es «hay dónde guardar» sino «la clave con la que se cifra sigue
- * siendo la misma mañana». Con la de Vercel, que rota en cada despliegue, la
- * fila quedaría ilegible y el usuario vería «ya conectaste LALIGA» sin poder
- * entrar: peor que no haber guardado nada.
+ * Lo usa el atajo administrativo para poder pedirle a la base la clave de esa
+ * persona. Si aquí se colara cualquier cosa, se estaría mandando texto libre a
+ * una función de la base como si fuera un identificador.
  */
-test("en producción hace falta una clave fija", () => {
-  assert.equal(puedeGuardarEnlace({ claveExplicita: true, produccion: true }), true);
-  assert.equal(puedeGuardarEnlace({ claveExplicita: false, produccion: true }), false);
-});
-
-test("en local se guarda igual, aunque la clave muera con el proceso", () => {
-  assert.equal(puedeGuardarEnlace({ claveExplicita: false, produccion: false }), true);
-  assert.equal(puedeGuardarEnlace({ claveExplicita: true, produccion: false }), true);
+test("del identificador se saca el uuid, y solo si lo es", () => {
+  assert.equal(
+    uuidDeIdentidad("supabase:6b1f2c30-0000-4000-8000-000000000001"),
+    "6b1f2c30-0000-4000-8000-000000000001",
+  );
+  assert.equal(uuidDeIdentidad("google:1076915035"), null, "otro proveedor no es un uuid de Supabase");
+  assert.equal(uuidDeIdentidad("supabase:"), null);
+  assert.equal(uuidDeIdentidad("supabase:no-es-un-uuid"), null);
+  assert.equal(uuidDeIdentidad("supabase:'; drop table fantasy_links; --"), null);
 });

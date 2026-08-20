@@ -5,7 +5,6 @@ import { buildSessionCookies, diagnosticoDeSesion, readSessionId, renovarSesionD
 import { accessTokenDe } from "@/src/server/auth/access";
 import { identidadDePeticion } from "@/src/server/auth/identity";
 import { configAuth, proveedoresActivos } from "@/src/server/auth/supabase-oauth";
-import { seGuardanEnlaces } from "@/src/server/auth/links";
 
 export const dynamic = "force-dynamic";
 
@@ -35,12 +34,11 @@ export async function GET(request: Request) {
    * tu cuenta de LALIGA», que es el paso intermedio del flujo.
    */
   const config = configAuth();
-  const seRecuerda = seGuardanEnlaces();
   const proveedores = config ? await proveedoresActivos(config) : [];
   const social = {
     proveedores,
     identificado: identidadDePeticion(request) !== null,
-    motivo: motivoSinProveedores(config !== null, seRecuerda, proveedores.length),
+    motivo: motivoSinProveedores(config !== null, proveedores.length),
   };
 
   /*
@@ -110,19 +108,20 @@ export async function GET(request: Request) {
  * Qué le falta a este despliegue para poder ofrecer Google, Apple o Facebook.
  *
  * `null` cuando el acceso social funciona de verdad: te identifica Y recuerda tu
- * cuenta de LALIGA. Lo que decide eso último ya no es la clave administrativa
- * —el enlace se guarda al volver del proveedor, con el token del propio
- * usuario— sino que haya una clave de cifrado que no cambie entre despliegues.
+ * cuenta de LALIGA. Ya no depende de ninguna variable de entorno: ni de la clave
+ * administrativa —el enlace se guarda al volver del proveedor, con el token del
+ * propio usuario— ni de `SESSION_ENCRYPTION_KEY`, porque la clave de cifrado del
+ * enlace la deriva la propia base de datos.
+ *
+ * Lo único que queda es lo que no se puede resolver desde el código: que haya
+ * configuración pública de Supabase y algún proveedor encendido en su panel.
  */
-function motivoSinProveedores(hayConfig: boolean, seRecuerda: boolean, activos: number): string | null {
+function motivoSinProveedores(hayConfig: boolean, activos: number): string | null {
   if (!hayConfig) {
     return "Falta la configuración pública de Supabase para consultar los proveedores sociales.";
   }
   if (activos === 0) {
     return "Ninguno está encendido en Supabase → Authentication → Providers. Al activar uno, su botón aparece aquí solo, sin desplegar nada.";
-  }
-  if (!seRecuerda) {
-    return "Google, Apple y Facebook pueden identificarte, pero falta SESSION_ENCRYPTION_KEY: sin una clave fija, tu cuenta de LALIGA no se puede recordar entre accesos.";
   }
   return null;
 }

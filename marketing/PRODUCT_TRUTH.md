@@ -73,7 +73,7 @@ Verificado con `curl` el 2026-08-19:
 | --- | --- | --- |
 | **Avisos push** | `/api/fantasy/push/status` → `{"disponible": false}` | Claves VAPID + sesión persistente |
 | **Cron diario de alertas** | `/api/cron/alerts` → **501 `CRON_SECRET no está configurado`** | `CRON_SECRET` en Vercel |
-| **Entrar con Google** | ⚠️ **Depende de una variable** (ver abajo) | `SESSION_ENCRYPTION_KEY` |
+| **Entrar con Google** | ✅ **Funciona** — comprobar `social.motivo === null` antes de anunciarlo | Nada |
 | **Entrar con Apple / Facebook** | No aparecen: no están encendidos | Activarlos en Supabase → Providers |
 | **Sesión persistente de 30 días** | `modo: SOLO_COOKIE` — dura ~24 h | `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` + `SESSION_ENCRYPTION_KEY` |
 
@@ -82,32 +82,41 @@ Verificado con `curl` el 2026-08-19:
 `social.proveedores` devuelve `["google"]` y `/social/start?provider=google`
 responde **302**: el botón sale y el flujo arranca.
 
-**Lo que cambió el 2026-08-20.** El enlace entre tu identidad y tu cuenta de
-LALIGA ya no necesita clave de administrador: se resuelve al volver del
-proveedor, con el token del propio usuario y las reglas de la tabla. Eso quita
-`SUPABASE_SERVICE_ROLE_KEY` de la lista de bloqueantes.
+**Lo que cambió el 2026-08-20.** Dos bloqueos que parecían de configuración
+resultaron ser de diseño, y se han quitado los dos:
 
-**Lo que sigue bloqueando.** Hace falta `SESSION_ENCRYPTION_KEY` en Vercel: sin
-una clave que no cambie entre despliegues, el enlace se guardaría hoy y quedaría
-ilegible mañana. La app se niega a guardarlo en vez de fingir, y lo dice en
-pantalla.
+1. El enlace entre tu identidad y tu cuenta de LALIGA ya no necesita clave de
+   administrador: se resuelve al volver del proveedor, con el token del propio
+   usuario y las reglas de la tabla.
+2. La clave con la que se cifra ese enlace ya no sale de una variable de entorno:
+   la deriva la propia base de datos, distinta para cada persona y estable entre
+   despliegues.
 
-Mientras esa variable no esté:
+O sea que el acceso social **ya no depende de que nadie entre a un panel a pegar
+una variable**. Funciona con lo que hay.
 
-1. Entras con Google → LigaLab sabe **quién eres**.
-2. Sigues teniendo que conectar LALIGA con email y contraseña.
-3. **Ese enlace no se guarda.** La próxima vez, otra vez.
+**El flujo, tal cual queda:**
 
-Y a quien tiene la cuenta de LALIGA creada con Google —el caso que esto venía a
-resolver— le sigue dejando fuera, porque esa cuenta no tiene contraseña que
-introducir en el paso 2.
+1. Entras con Google → LigaLab sabe quién eres.
+2. Conectas LALIGA una vez, y desde **Más → Tu cuenta** la enlazas.
+3. A partir de ahí, entrar con Google te mete dentro sin contraseña.
+
+**El caso que sigue sin resolver** es el paso 2 para quien tiene la cuenta de
+LALIGA creada con Google: esa cuenta no tiene contraseña que introducir. Para
+esos está la vía de pegar la respuesta de token del login oficial, que la
+pantalla ya ofrece. Es funcional pero incómoda, y **no se puede anunciar como si
+fuera un botón**.
 
 > **Cómo saber en qué estado está, sin preguntar a nadie:** en
 > `/api/fantasy/auth/session`, `social.motivo === null` significa que funciona
-> entero. Si trae texto, dice exactamente qué falta.
+> entero. Si trae texto, dice exactamente qué falta. Comprobarlo antes de
+> escribir «entra con Google» en ningún sitio.
 
-**No se puede anunciar «entra con Google» como ventaja hasta que ese campo salga
-`null` en producción.**
+**Sigue mereciendo la pena poner `SESSION_ENCRYPTION_KEY`**, aunque ya no
+bloquee: hoy `session.clave` sale `ninguna`, y eso significa que la sesión viaja
+en la cookie **sin cifrar** (`HttpOnly` y `Secure`, pero sin cifrar). Con la
+variable puesta, además, para descifrar un enlace haría falta a la vez una copia
+de la base de datos y la variable de Vercel.
 
 > ⚠️ **«Te avisa sola» NO se puede anunciar todavía.** Es la combinación de push +
 > cron, y las dos están muertas. Ya se coló esta afirmación en una página de

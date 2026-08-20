@@ -10,12 +10,12 @@ import {
 import { caducado, desempaquetar, mismoState } from "@/src/server/auth/pkce";
 import { firmarIdentidad } from "@/src/server/auth/identity";
 import {
+  claveDeEnlace,
   credencialAdmin,
   credencialDeUsuario,
   guardarEnlace,
   identidadDeUsuario,
   leerEnlace,
-  seGuardanEnlaces,
   type Credencial,
 } from "@/src/server/auth/links";
 import {
@@ -167,15 +167,19 @@ async function resolverEnlace(
 ): Promise<Resultado> {
   const sesionActual = await tokenSetDeSesion(readSessionId(request)).catch(() => null);
 
+  /*
+   * La clave con la que se cifra la fila. La deriva la propia base de datos a
+   * partir de tu identidad, así que es estable entre despliegues sin necesidad
+   * de configurar nada. Si además hay `SESSION_ENCRYPTION_KEY`, entra también.
+   */
+  const clave = await claveDeEnlace(credencial);
+  if (!clave) {
+    return sesionActual
+      ? { problema: "No se ha podido preparar el cifrado del enlace. Vuelve a intentarlo desde «Más»." }
+      : {};
+  }
+
   if (sesionActual) {
-    if (!seGuardanEnlaces()) {
-      return {
-        problema:
-          "Ya estás identificado, pero este despliegue no puede recordar tu cuenta de LALIGA: " +
-          "falta SESSION_ENCRYPTION_KEY, y sin una clave fija el recuerdo se borraría en el " +
-          "siguiente despliegue.",
-      };
-    }
     const vigentes = await tokensVigentes(sesionActual);
     if (!vigentes) {
       return { problema: "Tu sesión de LALIGA ha caducado. Vuelve a conectarla para dejarla enlazada." };
@@ -184,14 +188,14 @@ async function resolverEnlace(
     try {
       // El correo lo guarda la ruta de contraseña, que es la que lo conoce. Aquí
       // solo tenemos el de Google, y meterlo en `laliga_email` sería mentir.
-      await guardarEnlace(credencial, identidad, vigentes, null);
+      await guardarEnlace(credencial, identidad, vigentes, null, clave);
     } catch {
       return { problema: "No se ha podido dejar enlazada tu cuenta de LALIGA. Vuelve a intentarlo desde «Más»." };
     }
     return { bien: "Cuenta enlazada. La próxima vez entra con Google y no te pedirá la contraseña de LALIGA." };
   }
 
-  const enlace = await leerEnlace(credencial, identidad).catch(() => null);
+  const enlace = await leerEnlace(credencial, identidad, clave).catch(() => null);
   if (!enlace) return {}; // Primera vez: toca conectar LALIGA. La pantalla ya lo dice.
 
   const vigentes = await tokensVigentes(enlace.tokens);
