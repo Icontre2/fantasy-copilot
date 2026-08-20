@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "LigaLab Content Package",
+  "type": "object",
+  "required": ["id", "date", "status", "opportunity", "hook", "feature", "formats", "qa"],
+  "properties": {
+    "id": {"type": "string", "pattern": "^LL-[0-9]{4}-[0-9]{3,}$"},
+    "date": {"type": "string", "format": "date"},
+    "status": {"enum": ["draft", "qa", "pending_approval", "approved", "rejected", "published"]},
+    "opportunity": {"type": "string"},
+    "score": {"type": "number", "minimum": 0, "maximum": 100},
+    "hook": {"type": "string"},
+    "feature": {"type": "string"},
+    "needs_capture": {"type": "boolean", "default": true},
+    "formats": {"type": "array", "items": {"enum": ["tiktok", "reel", "short", "carousel", "static", "story", "x"]}},
+    "seedance_prompt": {"type": "string"},
+    "image_prompt": {"type": "string"},
+    "captions": {"type": "object"},
+    "sources": {"type": "array", "items": {"type": "string"}},
+    "qa": {
+      "type": "object",
+      "required": ["brand", "product_truth", "facts", "human_approval"],
+      "properties": {
+        "brand": {"type": "boolean"},
+        "product_truth": {"type": "boolean"},
+        "facts": {"type": "boolean"},
+        "human_approval": {"type": "boolean", "const": false}
+      }
+    }
+  }
+}
