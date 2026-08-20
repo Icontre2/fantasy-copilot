@@ -193,12 +193,74 @@ export async function getValidAccessToken(sessionId: string | undefined): Promis
 
   if (Date.now() < tokens.expiresAt) return tokens.accessToken;
 
-  // Sin almacen no hay donde dejar el token renovado, asi que no se renueva:
-  // la sesion caduca y el usuario vuelve a entrar. Fingir lo contrario dejaria
-  // una cookie que ya no sirve.
+  /*
+   * En modo cookie esta funcion no puede renovar: devuelve un `string` y la
+   * sesion renovada hay que ESCRIBIRLA en la cookie de la respuesta, cosa que
+   * desde aqui no se puede hacer. Quien tenga acceso a la respuesta usa
+   * `renovarSesionDeCookie` (justo debajo); los demas ven la sesion caducada,
+   * que es la verdad hasta que alguien la renueve.
+   */
   if (usingCookieSessions()) return null;
 
   return refreshSession(sessionId, row.encrypted_tokens, tokens);
+}
+
+/**
+ * Cuanto antes del vencimiento conviene renovar.
+ *
+ * Doce horas: con la app abriendose a diario, siempre se renueva antes de
+ * caducar y la sesion no se acaba nunca. Mas margen seria pedirle un token
+ * nuevo a LALIGA en cada visita sin necesidad.
+ */
+const MARGEN_DE_RENOVACION_MS = 12 * 60 * 60 * 1000;
+
+/**
+ * Renueva una sesion que vive DENTRO de la cookie.
+ *
+ * ── Por que existe ──────────────────────────────────────────────────────────
+ * Sin base de datos, la sesion duraba lo que duraba el access token de LALIGA
+ * —unas 24 h— y despues tocaba volver a escribir la contraseña. Todos los dias.
+ * Es, de largo, lo que mas retencion se comia.
+ *
+ * Y no hacia falta: el REFRESH TOKEN viaja dentro de esa misma cookie, sin usar.
+ * El codigo decia «sin almacen no hay donde dejar el token renovado», pero si lo
+ * hay: **la cookie es el almacen**. Solo habia que volver a escribirla.
+ *
+ * Devuelve tambien la sesion cifrada porque quien llama TIENE que ponerla en la
+ * respuesta. Si no lo hace, se habra gastado un refresh token para nada y —si
+ * LALIGA lo rota— la cookie vieja se queda con uno ya usado.
+ *
+ * `null` cuando no hay nada que renovar, o cuando LALIGA rechaza el refresh
+ * (sesion revocada, contraseña cambiada): entonces toca entrar de verdad.
+ */
+export async function renovarSesionDeCookie(
+  sessionId: string | undefined,
+): Promise<{ accessToken: string; sesion: string } | null> {
+  if (!sessionId || !usingCookieSessions()) return null;
+
+  let tokens: TokenSet;
+  try {
+    tokens = usingPortableCookieSessions()
+      ? decodePortableTokenSet(sessionId)
+      : decryptTokenSet(sessionId);
+  } catch {
+    return null; // Clave rotada o cookie manipulada: no es recuperable.
+  }
+
+  // Todavia le queda cuerda de sobra: no se molesta a LALIGA.
+  if (Date.now() + MARGEN_DE_RENOVACION_MS < tokens.expiresAt) return null;
+
+  try {
+    const frescos = await refreshTokens(tokens.refreshToken);
+    return {
+      accessToken: frescos.accessToken,
+      sesion: usingPortableCookieSessions()
+        ? encodePortableTokenSet(frescos)
+        : encryptTokenSet(frescos),
+    };
+  } catch {
+    return null;
+  }
 }
 
 // --- Cookie -----------------------------------------------------------------

@@ -1,7 +1,7 @@
 import { errorJson, privateJson, privateJsonWithCookies } from "@/src/server/http/responses";
 import { COOKIE_ERROR, leerCookie, limpiarError } from "@/src/server/auth/cookies";
 import { getMyProfile } from "@/src/server/laliga/read";
-import { diagnosticoDeSesion } from "@/src/server/laliga/session";
+import { buildSessionCookies, diagnosticoDeSesion, readSessionId, renovarSesionDeCookie } from "@/src/server/laliga/session";
 import { accessTokenDe } from "@/src/server/auth/access";
 import { identidadDePeticion } from "@/src/server/auth/identity";
 import { configAuth, proveedoresActivos } from "@/src/server/auth/supabase-oauth";
@@ -53,11 +53,38 @@ export async function GET(request: Request) {
   // La cookie se borra en TODAS las salidas, incluida la de error: si solo se
   // borrara en la buena, un fallo de LALIGA dejaría el aviso del proveedor
   // pegado a la pantalla para siempre.
-  const responder = (cuerpo: Record<string, unknown>) =>
-    authError ? privateJsonWithCookies(cuerpo, limpiarError()) : privateJson(cuerpo);
+  /*
+   * Cookies que hay que devolver SI O SI cuando se ha renovado la sesion: en
+   * modo cookie la sesion renovada vive en la propia cookie, asi que no
+   * escribirla seria gastar un refresh token para nada.
+   */
+  const galletas: string[] = [];
+  const responder = (cuerpo: Record<string, unknown>) => {
+    const todas = [...galletas, ...(authError ? limpiarError() : [])];
+    return todas.length > 0 ? privateJsonWithCookies(cuerpo, todas) : privateJson(cuerpo);
+  };
 
   try {
-    const token = await accessTokenDe(request);
+    let token = await accessTokenDe(request);
+
+    /*
+     * Aqui es donde la sesion deja de morirse cada 24 horas.
+     *
+     * Esta ruta la llama la app en CADA carga, asi que es el sitio natural para
+     * renovar: si al token le queda poco —o ya ha caducado, pero el refresh
+     * token sigue vivo— se pide uno nuevo y se reescribe la cookie. Con la app
+     * abriendose a diario, la sesion no se acaba nunca.
+     *
+     * Se intenta tambien cuando `token` es null: un access token caducado no
+     * invalida el refresh token, que es justo el caso de «vuelvo al dia
+     * siguiente». Antes ahi se enseñaba la pantalla de acceso sin necesidad.
+     */
+    const renovada = await renovarSesionDeCookie(readSessionId(request));
+    if (renovada) {
+      token = renovada.accessToken;
+      galletas.push(...buildSessionCookies(renovada.sesion));
+    }
+
     if (!token) return responder({ authenticated: false, session, social, authError });
     return responder({ authenticated: true, manager: await getMyProfile(token), session, social, authError });
   } catch (error) {
