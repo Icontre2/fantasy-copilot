@@ -22,16 +22,6 @@ import type {
 } from './schemas';
 import { resolveTeamId, shortTeamName } from './player-team.ts';
 
-/**
- * Traduccion de la API de LALIGA al dominio de la app.
- *
- * Aqui no se calcula nada: no hay "forma estimada", ni proyecciones, ni
- * indicadores. Solo se cambia de forma un dato que ya venia de LALIGA. Todo lo
- * que la app calcula por su cuenta vive en `alerts/` y `economy/`, donde queda
- * separado y auditable.
- */
-
-/** `positionId` 5 son entrenadores: se filtran porque no son jugadores de campo. */
 const POSITION_BY_ID: Record<string, Position | 'ENT'> = {
   '1': 'POR',
   '2': 'DEF',
@@ -45,8 +35,61 @@ export function toPosition(positionId: string): Position | null {
   return mapped && mapped !== 'ENT' ? mapped : null;
 }
 
+function imageUrl(value: unknown): string {
+  if (typeof value === 'string') return value.trim();
+  if (!value || typeof value !== 'object') return '';
+
+  const object = value as Record<string, unknown>;
+  const preferredKeys = [
+    'url',
+    'src',
+    'avatar',
+    'image',
+    'profileImage',
+    'profilePicture',
+    'picture',
+    'original',
+    'large',
+    'medium',
+    'small',
+    '256x256',
+    '128x128',
+  ];
+
+  for (const key of preferredKeys) {
+    const found = imageUrl(object[key]);
+    if (found) return found;
+  }
+
+  return '';
+}
+
+function managerAvatar(api: ApiManagerLike | ApiUser): string {
+  const raw = api as unknown as Record<string, unknown>;
+  const candidates = [
+    raw.avatar,
+    raw.avatarUrl,
+    raw.image,
+    raw.imageUrl,
+    raw.profileImage,
+    raw.profileImageUrl,
+    raw.profilePicture,
+    raw.picture,
+    raw.photo,
+    raw.photoUrl,
+    raw.images,
+  ];
+
+  for (const candidate of candidates) {
+    const resolved = imageUrl(candidate);
+    if (resolved) return resolved;
+  }
+
+  return '';
+}
+
 export function mapManager(api: ApiManagerLike | ApiUser): Manager {
-  return { id: api.id, name: api.managerName, avatar: api.avatar ?? '' };
+  return { id: api.id, name: api.managerName, avatar: managerAvatar(api) };
 }
 
 export function mapLeague(api: ApiLeague): League {
@@ -71,14 +114,9 @@ export function mapStandingRow(api: ApiStandingRow): StandingRow {
   };
 }
 
-
 export function mapPlayerMaster(pm: ApiPlayerMaster): Player | null {
   const position = toPosition(pm.positionId);
   if (!position) return null;
-
-  // Anidado o plano, lo que venga. Sin esto el jugador se quedaba sin `teamId` y
-  // con el se cae en cadena la probabilidad de titularidad, que se busca por
-  // equipo. Ver `player-team.ts`.
   const teamId = resolveTeamId(pm.team?.id, pm.teamId);
 
   return {
@@ -99,8 +137,6 @@ export function mapPlayerMaster(pm: ApiPlayerMaster): Player | null {
 export function mapSquadPlayer(api: ApiTeamPlayer): SquadPlayer | null {
   const base = mapPlayerMaster(api.playerMaster);
   if (!base) return null;
-  // `buyoutClause` se propaga tal cual: si la API no la trae, queda undefined y
-  // aguas abajo se trata como "clausula desconocida", nunca como 0.
   return {
     ...base,
     buyoutClause: api.buyoutClause,
