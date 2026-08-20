@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { BellRing, CircleEllipsis, House, LogOut, ShoppingBag, UsersRound } from "lucide-react";
+import { BellRing, CircleEllipsis, House, LogOut, ShieldCheck, ShoppingBag, TriangleAlert, UsersRound } from "lucide-react";
 import { get, olvidarCache, post } from "./api";
 import { AlertsView } from "./AlertsView";
 import { EconomyView } from "./EconomyView";
@@ -15,6 +15,7 @@ import { LineupsView, type LineupsResponse } from "./LineupsView";
 import { DashboardView } from "./DashboardView";
 import { MySquadView } from "./MySquadView";
 import { MoreView } from "./MoreView";
+import type { EstadoSocial } from "./CuentaView";
 import {
   SECTIONS,
   type AlertsResponse,
@@ -55,6 +56,9 @@ export default function FantasyApp() {
   const [sesion, setSesion] = useState<DiagnosticoDeSesion | null>(null);
   const [social, setSocial] = useState<{ proveedores: Proveedor[]; identificado: boolean; motivo?: string | null } | null>(null);
   const [errorDeAcceso, setErrorDeAcceso] = useState<string | null>(null);
+  // Lo que ha salido BIEN al volver del proveedor. Enlazar la cuenta no cambia
+  // nada en pantalla, así que sin esta línea el usuario no sabría si funcionó.
+  const [avisoDeAcceso, setAvisoDeAcceso] = useState<string | null>(null);
 
   const [leagues, setLeagues] = useState<League[]>([]);
   const [leagueId, setLeagueId] = useState<string | null>(null);
@@ -69,12 +73,14 @@ export default function FantasyApp() {
       session?: DiagnosticoDeSesion;
       social?: { proveedores: Proveedor[]; identificado: boolean; motivo?: string | null };
       authError?: string | null;
+      authAviso?: string | null;
     }>("/api/fantasy/auth/session")
       .then((data) => {
         setManager(data.authenticated && data.manager ? data.manager : null);
         setSesion(data.session ?? null);
         setSocial(data.social ?? null);
         setErrorDeAcceso(data.authError ?? null);
+        setAvisoDeAcceso(data.authAviso ?? null);
       })
       .catch(() => setManager(null))
       .finally(() => setCheckingSession(false));
@@ -129,6 +135,26 @@ export default function FantasyApp() {
         </button>
       </header>
 
+      {avisoDeAcceso && (
+        <p
+          className="flex gap-2 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-[12px] leading-4 text-emerald-200"
+          role="status"
+        >
+          <ShieldCheck size={16} className="mt-px shrink-0" />
+          <span>{avisoDeAcceso}</span>
+        </p>
+      )}
+
+      {errorDeAcceso && (
+        <p
+          className="flex gap-2 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 text-[12px] leading-4 text-amber-200"
+          role="status"
+        >
+          <TriangleAlert size={16} className="mt-px shrink-0" />
+          <span>{errorDeAcceso}</span>
+        </p>
+      )}
+
       <AppInstalable />
 
       {leagues.length > 1 && (
@@ -154,7 +180,7 @@ export default function FantasyApp() {
         <ErrorBox message={leaguesError} />
       ) : leagueId ? (
         <LigaProvider leagueId={leagueId}>
-          <SectionContent section={section} leagueId={leagueId} onNavigate={setSection} />
+          <SectionContent section={section} leagueId={leagueId} onNavigate={setSection} social={social} />
         </LigaProvider>
       ) : (
         <Card>
@@ -192,7 +218,17 @@ function BottomNav({ section, onSelect }: { section: Section; onSelect: (section
  * datos ni error) sin necesidad de resetearlos dentro de un efecto. Subir
  * `reloadToken` fuerza el mismo remontaje para refrescar tras sincronizar.
  */
-function SectionContent({ section, leagueId, onNavigate }: { section: Section; leagueId: string; onNavigate: (section: Section) => void }) {
+function SectionContent({
+  section,
+  leagueId,
+  onNavigate,
+  social,
+}: {
+  section: Section;
+  leagueId: string;
+  onNavigate: (section: Section) => void;
+  social: EstadoSocial | null;
+}) {
   const [reloadToken, setReloadToken] = useState(0);
   /*
    * Esto se dispara tras pujar o pagar una cláusula, o sea justo cuando la liga
@@ -207,7 +243,7 @@ function SectionContent({ section, leagueId, onNavigate }: { section: Section; l
   if (section === "exportar") return <ExportView leagueId={leagueId} />;
   // El calendario no depende de la liga y se paginan jornadas dentro: carga solo.
   if (section === "jornadas") return <CalendarView />;
-  if (section === "mas") return <MoreView onSelect={onNavigate} />;
+  if (section === "mas") return <MoreView onSelect={onNavigate} social={social} />;
 
   return (
     <SectionData

@@ -25,6 +25,16 @@ export const COOKIE_USUARIO = 'llf_user';
  */
 export const COOKIE_ERROR = 'llf_auth_error';
 
+/**
+ * La otra mitad: lo que ha SALIDO BIEN al volver del proveedor.
+ *
+ * Hace falta porque enlazar la cuenta no cambia nada en pantalla —ya estabas
+ * dentro— y sin una linea que lo diga, el usuario no tiene forma de saber si ha
+ * funcionado. Mismo mecanismo de un solo uso que el error, y por las mismas
+ * razones.
+ */
+export const COOKIE_AVISO = 'llf_auth_aviso';
+
 export const DIAS_30 = 30 * 24 * 60 * 60;
 const MINUTOS_10 = 10 * 60;
 
@@ -57,6 +67,14 @@ export function cookieDeError(mensaje: string): string {
 
 export function limpiarError(): string {
   return `${COOKIE_ERROR}=; ${atributos(0)}`;
+}
+
+export function cookieDeAviso(mensaje: string): string {
+  return `${COOKIE_AVISO}=${encodeURIComponent(mensaje)}; ${atributos(60)}`;
+}
+
+export function limpiarAviso(): string {
+  return `${COOKIE_AVISO}=; ${atributos(0)}`;
 }
 
 /** Lee una cookie por nombre. Devuelve `undefined` si no está. */

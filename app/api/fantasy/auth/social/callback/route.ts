@@ -1,7 +1,31 @@
 import { canjearCodigo, configAuth } from "@/src/server/auth/supabase-oauth";
-import { COOKIE_INTENTO, cookieDeError, cookieDeUsuario, leerCookie, limpiarIntento } from "@/src/server/auth/cookies";
+import {
+  COOKIE_INTENTO,
+  cookieDeAviso,
+  cookieDeError,
+  cookieDeUsuario,
+  leerCookie,
+  limpiarIntento,
+} from "@/src/server/auth/cookies";
 import { caducado, desempaquetar, mismoState } from "@/src/server/auth/pkce";
 import { firmarIdentidad } from "@/src/server/auth/identity";
+import {
+  credencialAdmin,
+  credencialDeUsuario,
+  guardarEnlace,
+  identidadDeUsuario,
+  leerEnlace,
+  seGuardanEnlaces,
+  type Credencial,
+} from "@/src/server/auth/links";
+import {
+  buildSessionCookies,
+  createSession,
+  readSessionId,
+  tokenSetDeSesion,
+  tokensVigentes,
+} from "@/src/server/laliga/session";
+import { registrarAcceso, registrarFallo } from "@/src/server/observability/login-metrics";
 
 export const dynamic = "force-dynamic";
 
@@ -19,12 +43,27 @@ export const dynamic = "force-dynamic";
  * El motivo del fallo viaja en una cookie de un minuto, no en la dirección: si
  * fuera en la dirección se quedaría ahí, y recargar volvería a enseñar un error
  * que ya no es cierto.
+ *
+ * ── Por qué el enlace con LALIGA se resuelve AQUÍ ────────────────────────────
+ * Esta es la única petición de toda la app en la que tenemos a la vez las dos
+ * mitades: quién eres para Google y —si ya habías entrado— tu sesión de LALIGA.
+ * Antes el enlace se intentaba guardar al entrar con la contraseña, y en ese
+ * momento no hay ningún token de Supabase con el que poder escribir en la base
+ * sin clave administrativa. Por eso hacía falta `service_role`, por eso no
+ * estaba puesta, y por eso «entrar con Google» acababa pidiendo la contraseña
+ * igual.
+ *
+ * Haciéndolo aquí basta con la clave publicable y las reglas de la tabla:
+ *
+ *   - Vienes CON sesión de LALIGA  → se guarda el enlace. Esto es «vincular».
+ *   - Vienes SIN sesión de LALIGA  → se lee el enlace y se te abre la sesión.
  */
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const inicio = new URL("/", url.origin).toString();
 
   const fallo = (motivo: string) => {
+    registrarFallo("social", motivo);
     const headers = new Headers({ Location: inicio, "Cache-Control": "no-store" });
     headers.append("Set-Cookie", limpiarIntento());
     headers.append("Set-Cookie", cookieDeError(motivo));
@@ -67,14 +106,102 @@ export async function GET(request: Request) {
   const codigo = url.searchParams.get("code");
   if (!codigo) return fallo("El proveedor no ha devuelto ningún código de acceso.");
 
-  const canje = await canjearCodigo(config, codigo, intento.verifier);
-  if ("error" in canje) return fallo(canje.error);
+  const resultado = await canjearCodigo(config, codigo, intento.verifier);
+  if ("error" in resultado) return fallo(resultado.error);
+  const { canje } = resultado;
 
-  const firmada = firmarIdentidad(`supabase:${canje.usuario.id}`);
-  if (!firmada) return fallo("Falta la clave de firma del servidor (SESSION_ENCRYPTION_KEY).");
-
+  const identidad = identidadDeUsuario(canje.usuario.id);
   const headers = new Headers({ Location: inicio, "Cache-Control": "no-store" });
   headers.append("Set-Cookie", limpiarIntento());
-  headers.append("Set-Cookie", cookieDeUsuario(firmada));
+
+  /*
+   * La cookie de identidad es un extra, no un requisito. Antes, si faltaba la
+   * clave de firma, el acceso entero se caía con un mensaje técnico — y es justo
+   * el despliegue donde más falta hace que Google funcione. Ahora, sin clave, el
+   * acceso sigue adelante: lo único que se pierde es el atajo de `access.ts`,
+   * que además solo aplica con clave administrativa.
+   */
+  const firmada = firmarIdentidad(identidad);
+  if (firmada) headers.append("Set-Cookie", cookieDeUsuario(firmada));
+
+  /*
+   * Menos privilegio primero: con el JWT del propio usuario, la base solo le
+   * deja tocar su fila. La clave administrativa es el respaldo para despliegues
+   * que aún no tengan las políticas aplicadas.
+   */
+  const credencial = credencialDeUsuario(canje.accessToken) ?? credencialAdmin();
+
+  if (credencial) {
+    const resultadoDelEnlace = await resolverEnlace(request, credencial, identidad, headers);
+    if (resultadoDelEnlace.problema) {
+      headers.append("Set-Cookie", cookieDeError(resultadoDelEnlace.problema));
+    } else if (resultadoDelEnlace.bien) {
+      headers.append("Set-Cookie", cookieDeAviso(resultadoDelEnlace.bien));
+    }
+  }
+
+  registrarAcceso("social");
   return new Response(null, { status: 302, headers });
+}
+
+/**
+ * Lo que hay que contarle al usuario al volver. Las dos mitades pueden estar
+ * vacías: la primera vez que entras con Google no hay nada que enlazar todavía y
+ * tampoco nada que celebrar.
+ */
+type Resultado = { bien?: string; problema?: string };
+
+/**
+ * Guarda o restaura el enlace, y añade a la respuesta las cookies que hagan
+ * falta.
+ *
+ * Ningún fallo de aquí tumba el acceso: identificarse con Google ha funcionado y
+ * eso ya vale. Lo peor que puede pasar es que haya que conectar LALIGA a mano,
+ * que es exactamente lo que pasaba siempre antes.
+ */
+async function resolverEnlace(
+  request: Request,
+  credencial: Credencial,
+  identidad: string,
+  headers: Headers,
+): Promise<Resultado> {
+  const sesionActual = await tokenSetDeSesion(readSessionId(request)).catch(() => null);
+
+  if (sesionActual) {
+    if (!seGuardanEnlaces()) {
+      return {
+        problema:
+          "Ya estás identificado, pero este despliegue no puede recordar tu cuenta de LALIGA: " +
+          "falta SESSION_ENCRYPTION_KEY, y sin una clave fija el recuerdo se borraría en el " +
+          "siguiente despliegue.",
+      };
+    }
+    const vigentes = await tokensVigentes(sesionActual);
+    if (!vigentes) {
+      return { problema: "Tu sesión de LALIGA ha caducado. Vuelve a conectarla para dejarla enlazada." };
+    }
+
+    try {
+      // El correo lo guarda la ruta de contraseña, que es la que lo conoce. Aquí
+      // solo tenemos el de Google, y meterlo en `laliga_email` sería mentir.
+      await guardarEnlace(credencial, identidad, vigentes, null);
+    } catch {
+      return { problema: "No se ha podido dejar enlazada tu cuenta de LALIGA. Vuelve a intentarlo desde «Más»." };
+    }
+    return { bien: "Cuenta enlazada. La próxima vez entra con Google y no te pedirá la contraseña de LALIGA." };
+  }
+
+  const enlace = await leerEnlace(credencial, identidad).catch(() => null);
+  if (!enlace) return {}; // Primera vez: toca conectar LALIGA. La pantalla ya lo dice.
+
+  const vigentes = await tokensVigentes(enlace.tokens);
+  if (!vigentes) {
+    return { problema: "Tu cuenta de LALIGA estaba enlazada, pero el permiso ha caducado. Conéctala otra vez." };
+  }
+
+  // Aquí es donde «entrar con Google» pasa de identificarte a meterte dentro.
+  for (const cookie of buildSessionCookies(await createSession(vigentes))) {
+    headers.append("Set-Cookie", cookie);
+  }
+  return { bien: "Has entrado con Google, sin escribir ninguna contraseña." };
 }

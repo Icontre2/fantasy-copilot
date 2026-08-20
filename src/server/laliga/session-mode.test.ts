@@ -38,6 +38,30 @@ test("sin base de datos la sesion vive en la cookie y dura un dia", () => {
   assert.match(d.arreglo ?? "", /SUPABASE_URL/);
 });
 
+/**
+ * El diagnostico mentia por omision.
+ *
+ * Sin Supabase salia `SOLO_COOKIE` y ahi se acababa: no habia forma de saber
+ * desde fuera si ademas faltaba la clave de cifrado. Y esa clave es justo la
+ * que decide si el enlace con Google puede recordarse, asi que en el despliegue
+ * real —sin Supabase— la pregunta importante era invisible.
+ */
+test("el origen de la clave se dice siempre, aunque el modo se decida antes", () => {
+  assert.equal(diagnosticarSesion({ ...BIEN, supabase: false }).clave, "explicita");
+  assert.equal(
+    diagnosticarSesion({ supabase: false, claveExplicita: false, oidc: true, produccion: true }).clave,
+    "vercel",
+  );
+  assert.equal(
+    diagnosticarSesion({ supabase: false, claveExplicita: false, oidc: false, produccion: true }).clave,
+    "ninguna",
+  );
+});
+
+test("una clave explicita gana al token de Vercel", () => {
+  assert.equal(diagnosticarSesion({ ...BIEN, oidc: true }).clave, "explicita");
+});
+
 test("la falta de base de datos manda sobre la de clave: sin sitio donde guardar, la clave da igual", () => {
   const d = diagnosticarSesion({ supabase: false, claveExplicita: false, oidc: true, produccion: true });
   assert.equal(d.modo, "SOLO_COOKIE");

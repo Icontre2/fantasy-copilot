@@ -1,6 +1,6 @@
 import { refreshTokens } from '@/src/server/laliga/auth';
 import { getValidAccessToken, readSessionId } from '@/src/server/laliga/session';
-import { actualizarTokens, hayAlmacenDeEnlaces, leerEnlace } from './links.ts';
+import { actualizarTokens, credencialAdmin, leerEnlace } from './links.ts';
 import { identidadDePeticion } from './identity.ts';
 
 /**
@@ -21,10 +21,17 @@ export async function accessTokenDe(request: Request): Promise<string | null> {
   const clasico = await getValidAccessToken(readSessionId(request));
   if (clasico) return clasico;
 
+  /*
+   * Aqui NO hay JWT del usuario: esto es una llamada normal de la app, no la
+   * vuelta desde Google. Asi que este atajo solo existe con clave
+   * administrativa. Sin ella no se pierde nada: al volver del proveedor se crea
+   * una sesion de LALIGA de las de siempre, y esa es la que responde arriba.
+   */
   const identidad = identidadDePeticion(request);
-  if (!identidad || !hayAlmacenDeEnlaces()) return null;
+  const credencial = credencialAdmin();
+  if (!identidad || !credencial) return null;
 
-  const enlace = await leerEnlace(identidad);
+  const enlace = await leerEnlace(credencial, identidad);
   if (!enlace) return null;
 
   if (Date.now() < enlace.tokens.expiresAt) return enlace.tokens.accessToken;
@@ -37,17 +44,9 @@ export async function accessTokenDe(request: Request): Promise<string | null> {
    */
   try {
     const frescos = await refreshTokens(enlace.tokens.refreshToken);
-    await actualizarTokens(identidad, frescos);
+    await actualizarTokens(credencial, identidad, frescos);
     return frescos.accessToken;
   } catch {
     return null;
   }
-}
-
-/** Si esta persona ya conectó LALIGA, con qué correo. `null` si no. */
-export async function enlaceDe(request: Request): Promise<{ identidad: string; email: string | null } | null> {
-  const identidad = identidadDePeticion(request);
-  if (!identidad || !hayAlmacenDeEnlaces()) return null;
-  const enlace = await leerEnlace(identidad);
-  return enlace ? { identidad, email: enlace.email } : null;
 }

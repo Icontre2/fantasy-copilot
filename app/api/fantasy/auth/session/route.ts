@@ -1,11 +1,11 @@
 import { errorJson, privateJson, privateJsonWithCookies } from "@/src/server/http/responses";
-import { COOKIE_ERROR, leerCookie, limpiarError } from "@/src/server/auth/cookies";
+import { COOKIE_AVISO, COOKIE_ERROR, leerCookie, limpiarAviso, limpiarError } from "@/src/server/auth/cookies";
 import { getMyProfile } from "@/src/server/laliga/read";
-import { diagnosticoDeSesion } from "@/src/server/laliga/session";
+import { buildSessionCookies, diagnosticoDeSesion, readSessionId, renovarSesionDeCookie } from "@/src/server/laliga/session";
 import { accessTokenDe } from "@/src/server/auth/access";
 import { identidadDePeticion } from "@/src/server/auth/identity";
 import { configAuth, proveedoresActivos } from "@/src/server/auth/supabase-oauth";
-import { hayAlmacenDeEnlaces } from "@/src/server/auth/links";
+import { seGuardanEnlaces } from "@/src/server/auth/links";
 
 export const dynamic = "force-dynamic";
 
@@ -35,12 +35,12 @@ export async function GET(request: Request) {
    * tu cuenta de LALIGA», que es el paso intermedio del flujo.
    */
   const config = configAuth();
-  const hayEnlaces = hayAlmacenDeEnlaces();
+  const seRecuerda = seGuardanEnlaces();
   const proveedores = config ? await proveedoresActivos(config) : [];
   const social = {
     proveedores,
     identificado: identidadDePeticion(request) !== null,
-    motivo: motivoSinProveedores(config !== null, hayEnlaces, proveedores.length),
+    motivo: motivoSinProveedores(config !== null, seRecuerda, proveedores.length),
   };
 
   /*
@@ -49,17 +49,58 @@ export async function GET(request: Request) {
    * enseñar un error que ya pasó.
    */
   const authError = leerCookie(request, COOKIE_ERROR) ?? null;
+  // Y lo que ha salido BIEN, por el mismo camino: enlazar la cuenta no cambia
+  // nada en pantalla, así que sin esto no habría forma de saber si funcionó.
+  const authAviso = leerCookie(request, COOKIE_AVISO) ?? null;
 
   // La cookie se borra en TODAS las salidas, incluida la de error: si solo se
   // borrara en la buena, un fallo de LALIGA dejaría el aviso del proveedor
   // pegado a la pantalla para siempre.
-  const responder = (cuerpo: Record<string, unknown>) =>
-    authError ? privateJsonWithCookies(cuerpo, limpiarError()) : privateJson(cuerpo);
+  /*
+   * Cookies que hay que devolver SI O SI cuando se ha renovado la sesion: en
+   * modo cookie la sesion renovada vive en la propia cookie, asi que no
+   * escribirla seria gastar un refresh token para nada.
+   */
+  const galletas: string[] = [];
+  const responder = (cuerpo: Record<string, unknown>) => {
+    const todas = [
+      ...galletas,
+      ...(authError ? [limpiarError()] : []),
+      ...(authAviso ? [limpiarAviso()] : []),
+    ];
+    return todas.length > 0 ? privateJsonWithCookies(cuerpo, todas) : privateJson(cuerpo);
+  };
 
   try {
-    const token = await accessTokenDe(request);
-    if (!token) return responder({ authenticated: false, session, social, authError });
-    return responder({ authenticated: true, manager: await getMyProfile(token), session, social, authError });
+    let token = await accessTokenDe(request);
+
+    /*
+     * Aqui es donde la sesion deja de morirse cada 24 horas.
+     *
+     * Esta ruta la llama la app en CADA carga, asi que es el sitio natural para
+     * renovar: si al token le queda poco —o ya ha caducado, pero el refresh
+     * token sigue vivo— se pide uno nuevo y se reescribe la cookie. Con la app
+     * abriendose a diario, la sesion no se acaba nunca.
+     *
+     * Se intenta tambien cuando `token` es null: un access token caducado no
+     * invalida el refresh token, que es justo el caso de «vuelvo al dia
+     * siguiente». Antes ahi se enseñaba la pantalla de acceso sin necesidad.
+     */
+    const renovada = await renovarSesionDeCookie(readSessionId(request));
+    if (renovada) {
+      token = renovada.accessToken;
+      galletas.push(...buildSessionCookies(renovada.sesion));
+    }
+
+    if (!token) return responder({ authenticated: false, session, social, authError, authAviso });
+    return responder({
+      authenticated: true,
+      manager: await getMyProfile(token),
+      session,
+      social,
+      authError,
+      authAviso,
+    });
   } catch (error) {
     return errorJson(error);
   }
@@ -68,20 +109,20 @@ export async function GET(request: Request) {
 /**
  * Qué le falta a este despliegue para poder ofrecer Google, Apple o Facebook.
  *
- * `null` cuando los botones pueden ofrecerse. La falta de almacenamiento de
- * enlaces no bloquea la identidad social: solo significa que, después, el
- * usuario tendrá que conectar LALIGA y ese vínculo no sobrevivirá como acceso
- * social automático hasta configurar almacenamiento persistente.
+ * `null` cuando el acceso social funciona de verdad: te identifica Y recuerda tu
+ * cuenta de LALIGA. Lo que decide eso último ya no es la clave administrativa
+ * —el enlace se guarda al volver del proveedor, con el token del propio
+ * usuario— sino que haya una clave de cifrado que no cambie entre despliegues.
  */
-function motivoSinProveedores(hayConfig: boolean, hayEnlaces: boolean, activos: number): string | null {
+function motivoSinProveedores(hayConfig: boolean, seRecuerda: boolean, activos: number): string | null {
   if (!hayConfig) {
     return "Falta la configuración pública de Supabase para consultar los proveedores sociales.";
   }
   if (activos === 0) {
     return "Ninguno está encendido en Supabase → Authentication → Providers. Al activar uno, su botón aparece aquí solo, sin desplegar nada.";
   }
-  if (!hayEnlaces) {
-    return "Google, Apple y Facebook pueden identificarte, pero falta almacenamiento persistente para recordar automáticamente tu cuenta de LALIGA entre accesos.";
+  if (!seRecuerda) {
+    return "Google, Apple y Facebook pueden identificarte, pero falta SESSION_ENCRYPTION_KEY: sin una clave fija, tu cuenta de LALIGA no se puede recordar entre accesos.";
   }
   return null;
 }
