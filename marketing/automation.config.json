@@ -1,0 +1,24 @@
+{
+  "version": 2,
+  "daily": {
+    "radarCandidateLimit": 20,
+    "creativeCandidateLimit": 3,
+    "defaultCreativeCount": 1,
+    "minimumScoreForCreative": 70
+  },
+  "tokenPolicy": {
+    "cheapStages": ["fantasy-radar", "scoring"],
+    "expensiveStages": ["strategist", "copywriter", "creative-director", "video-director", "brand-reviewer"],
+    "rule": "Never run expensive stages for more than the top 3 Radar opportunities."
+  },
+  "states": ["radar", "draft", "brand_review", "fact_review", "pending_approval", "approved", "rejected", "generated", "published"],
+  "humanApprovalRequiredBefore": ["generated", "published"],
+  "publishersEnabled": false,
+  "generation": {
+    "imageProvider": "replaceable",
+    "videoProvider": "seedance",
+    "realProductCapturesOnly": true
+  },
+  "platforms": ["tiktok", "instagram_reels", "youtube_shorts"],
+  "feedbackWindowsHours": [24, 72, 168]
+}
