@@ -1,6 +1,6 @@
-import { AUTH_CONFIG } from './config';
+import { AUTH_CONFIG } from './config.ts';
 import { codigoB2C, mensajeDeLogin } from './auth-errors.ts';
-import { LaligaError } from './errors';
+import { LaligaError } from './errors.ts';
 
 /**
  * Login contra el Azure AD B2C de LALIGA.
