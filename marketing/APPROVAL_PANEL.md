@@ -9,9 +9,10 @@ y explícitamente fuera de este sprint.
 ## Qué hace
 
 1. Lee `marketing/generated/<fecha>/<contentId>/package.json` — el fichero que
-   escribe `scripts/marketing/prepare-agent-queue.mjs` — y lo enseña en una
-   cola ordenada: pendiente de aprobar primero, bloqueado después, el resto
-   por fecha.
+   escribe `scripts/marketing/prepare-agent-queue.mjs` y rellena
+   `npm run marketing:generate` (ver `marketing/AGENT_RUNTIME.md` para cómo se
+   genera ese contenido) — y lo enseña en una cola ordenada: pendiente de
+   aprobar primero, bloqueado después, el resto por fecha.
 2. Al abrir una pieza, enseña **todo** lo que hay que ver para decidir: el
    insight, el hook y sus alternativas, el guion, la estructura de escenas
    (con qué planos son captura real y de qué pantalla), los prompts de imagen
