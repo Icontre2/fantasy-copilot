@@ -33,6 +33,7 @@ el cron diario de alertas y el acceso social. **No se pueden anunciar.**
 | Saber qué hacer las próximas 12 semanas | `90_DAY_PLAN.md` |
 | Publicar algo mañana | `CONTENT_CALENDAR_30D.md` |
 | Entender cómo se produce | `CONTENT_ENGINE.md` |
+| Aprobar o rechazar una pieza | **`APPROVAL_PANEL.md`** · panel en `/marketing` |
 
 ## Índice
 
@@ -43,6 +44,7 @@ marketing/
 ├── STRATEGY.md                   bloqueos, usuario, posicionamiento, riesgos
 ├── 90_DAY_PLAN.md                12 semanas priorizadas
 ├── CONTENT_ENGINE.md             1 insight → 6 piezas
+├── APPROVAL_PANEL.md             panel privado /marketing: cómo funciona
 ├── CONTENT_CALENDAR_30D.md       30 días concretos
 ├── SEEDANCE_PIPELINE.md          vídeo · APIs verificadas
 ├── IMAGE_PIPELINE.md             carruseles y tarjetas
