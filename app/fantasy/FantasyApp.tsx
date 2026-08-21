@@ -106,7 +106,7 @@ export default function FantasyApp() {
           </div>
         </div>
         <button type="button" onClick={() => setSection("mas")} aria-label="Abrir perfil" className="relative grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-full border border-[#8b5cf6]/45 bg-[#7c3aed]/15 text-sm font-black text-[#ddd6fe] shadow-[0_0_22px_rgba(124,58,237,.3)]">
-          {manager.avatar ? <Image src={manager.avatar} alt="" fill sizes="44px" unoptimized className="object-cover" /> : manager.name.slice(0, 1).toUpperCase()}
+          <AvatarPropio url={manager.avatar} inicial={manager.name.slice(0, 1).toUpperCase()} />
         </button>
       </header>
 
@@ -135,6 +135,22 @@ export default function FantasyApp() {
       <BottomNav section={section} onSelect={setSection} />
     </Shell>
   );
+}
+
+/**
+ * El avatar de la cabecera, con la inicial de respaldo si la foto no carga.
+ *
+ * `mapManager` adivina el campo de la foto probando varios nombres posibles
+ * —LALIGA no documenta cuál usa cada endpoint— sin verificarlo contra una
+ * respuesta real. Si la URL que adivina no sirve, `next/image` sin más se
+ * queda con el hueco roto en el sitio más visible de toda la app: tu propia
+ * cabecera. `onError` cae a la inicial, que es lo que ya se enseña cuando no
+ * hay foto ninguna.
+ */
+function AvatarPropio({ url, inicial }: { url?: string; inicial: string }) {
+  const [fallo, setFallo] = useState(false);
+  if (!url || fallo) return inicial;
+  return <Image src={url} alt="" fill sizes="44px" unoptimized className="object-cover" onError={() => setFallo(true)} />;
 }
 
 function Shell({ children, login = false }: { children: React.ReactNode; login?: boolean }) {

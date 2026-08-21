@@ -52,14 +52,7 @@ export function LeagueView({ data, leagueId }: { data: TeamsResponse; leagueId: 
                   <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-black ${row.position <= 3 ? "bg-amber-400 text-black" : "bg-white/[.06] text-neutral-300"}`}>
                     {row.position}
                   </span>
-                  <span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full border border-white/10 bg-[#1b1b20]">
-                    {row.manager.avatar ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={row.manager.avatar} alt="" className="h-full w-full object-cover" />
-                    ) : (
-                      <span className="grid h-full w-full place-items-center text-sm font-black text-[#c4b5fd]">{initials}</span>
-                    )}
-                  </span>
+                  <Avatar url={row.manager.avatar} initials={initials} />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-bold text-white">{row.manager.name}</span>
                     <span className="mt-0.5 block text-xs text-neutral-500">{row.points} pts</span>
@@ -69,7 +62,18 @@ export function LeagueView({ data, leagueId }: { data: TeamsResponse; leagueId: 
 
                 <div className="mt-4 grid grid-cols-3 gap-2">
                   <Dato label="Valor equipo" value={millions(team?.teamValue)} />
-                  <Dato label="Caja" value={millions(team?.teamMoney)} positive={team?.teamMoney !== undefined} />
+                  {/*
+                    `positive` es sobre el SIGNO del número, no sobre si se
+                    conoce. Antes comprobaba `!== undefined`, así que una caja
+                    en negativo —o a cero— salía en verde igual, como si fuera
+                    buena noticia. Es justo la mentira visual que esta pantalla
+                    evita en todo lo demás.
+                  */}
+                  <Dato
+                    label="Caja"
+                    value={millions(team?.teamMoney)}
+                    positive={team?.teamMoney !== undefined && team.teamMoney > 0}
+                  />
                   <Dato label="Jugadores" value={team ? String(team.players.length) : UNKNOWN} />
                 </div>
               </button>
@@ -91,6 +95,30 @@ export function LeagueView({ data, leagueId }: { data: TeamsResponse; leagueId: 
 
       {selectedPlayer && <PlayerDetails player={selectedPlayer} onClose={() => setSelectedPlayer(null)} />}
     </div>
+  );
+}
+
+/**
+ * La foto de un manager, con las iniciales de respaldo.
+ *
+ * `mapManager` prueba varios nombres de campo posibles para encontrar la foto,
+ * porque LALIGA no documenta cuál usa cada endpoint — no está verificado contra
+ * una respuesta real. Si la URL que adivina no sirve, un `<img>` a secas se
+ * queda con el icono roto del navegador. Con `onError` se cae a las iniciales,
+ * que es exactamente lo que se enseña cuando no hay foto ninguna.
+ */
+function Avatar({ url, initials }: { url?: string; initials: string }) {
+  const [fallo, setFallo] = useState(false);
+  const mostrarFoto = Boolean(url) && !fallo;
+  return (
+    <span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full border border-white/10 bg-[#1b1b20]">
+      {mostrarFoto ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={url} alt="" className="h-full w-full object-cover" onError={() => setFallo(true)} />
+      ) : (
+        <span className="grid h-full w-full place-items-center text-sm font-black text-[#c4b5fd]">{initials}</span>
+      )}
+    </span>
   );
 }
 
