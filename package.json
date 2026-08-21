@@ -11,7 +11,8 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-strip-types --test \"app/**/*.test.ts\" \"src/**/*.test.ts\""
+    "test": "node --experimental-strip-types --test \"app/**/*.test.ts\" \"src/**/*.test.ts\"",
+    "marketing:queue": "node scripts/marketing/prepare-agent-queue.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.110.8",
