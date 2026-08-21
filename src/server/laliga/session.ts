@@ -1,13 +1,15 @@
 import { randomUUID } from 'node:crypto';
-import { hasSupabaseAdmin, supabaseAdmin } from '@/src/server/storage/supabase-admin';
-import { refreshTokens, type TokenSet } from './auth';
+// Ruta relativa a proposito: el alias `@/` solo existe al compilar, asi que un
+// import de VALOR con alias no se puede ejecutar desde una prueba de node.
+import { hasSupabaseAdmin, supabaseAdmin } from '../storage/supabase-admin.ts';
+import { refreshTokens, type TokenSet } from './auth.ts';
 import {
   decodePortableTokenSet,
   decryptTokenSet,
   encodePortableTokenSet,
   encryptTokenSet,
   hasConfiguredEncryptionSecret,
-} from './token-crypto';
+} from './token-crypto.ts';
 
 /**
  * Sesion del conector privado.

@@ -8,22 +8,8 @@ import {
   limpiarIntento,
 } from "@/src/server/auth/cookies";
 import { caducado, desempaquetar, mismoState } from "@/src/server/auth/pkce";
-import {
-  claveDeEnlace,
-  credencialAdmin,
-  credencialDeUsuario,
-  guardarEnlace,
-  identidadDeUsuario,
-  leerEnlace,
-  type Credencial,
-} from "@/src/server/auth/links";
-import {
-  buildSessionCookies,
-  createSession,
-  readSessionId,
-  tokenSetDeSesion,
-  tokensVigentes,
-} from "@/src/server/laliga/session";
+import { credencialAdmin, credencialDeUsuario, identidadDeUsuario } from "@/src/server/auth/links";
+import { resolverEnlace } from "@/src/server/auth/social-callback";
 import { registrarAcceso, registrarFallo } from "@/src/server/observability/login-metrics";
 
 export const dynamic = "force-dynamic";
@@ -56,6 +42,10 @@ export const dynamic = "force-dynamic";
  *
  *   - Vienes CON sesión de LALIGA  → se guarda el enlace. Esto es «vincular».
  *   - Vienes SIN sesión de LALIGA  → se lee el enlace y se te abre la sesión.
+ *
+ * La lógica de esa parte vive en `social-callback.ts`, separada de esta ruta:
+ * es lo que la hace probable con `node --test` sin pasar por el compilador de
+ * Next, que es quien resuelve el alias `@/` de aquí arriba.
  */
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -144,88 +134,4 @@ export async function GET(request: Request) {
 
   registrarAcceso("social");
   return new Response(null, { status: 302, headers });
-}
-
-/**
- * Lo que hay que contarle al usuario al volver. Las dos mitades pueden estar
- * vacías: la primera vez que entras con Google no hay nada que enlazar todavía y
- * tampoco nada que celebrar.
- */
-type Resultado = { bien?: string; problema?: string };
-
-/**
- * Guarda o restaura el enlace, y añade a la respuesta las cookies que hagan
- * falta.
- *
- * Ningún fallo de aquí tumba el acceso: identificarse con Google ha funcionado y
- * eso ya vale. Lo peor que puede pasar es que haya que conectar LALIGA a mano,
- * que es exactamente lo que pasaba siempre antes.
- */
-async function resolverEnlace(
-  request: Request,
-  credencial: Credencial,
-  identidad: string,
-  headers: Headers,
-): Promise<Resultado> {
-  const sesionActual = await tokenSetDeSesion(readSessionId(request)).catch(() => null);
-
-  /*
-   * La clave con la que se cifra la fila. La deriva la propia base de datos a
-   * partir de tu identidad, así que es estable entre despliegues sin necesidad
-   * de configurar nada. Si además hay `SESSION_ENCRYPTION_KEY`, entra también.
-   */
-  const clave = await claveDeEnlace(credencial);
-  if (!clave) {
-    return {
-      problema: sesionActual
-        ? "No se ha podido preparar el cifrado del enlace. Vuelve a intentarlo desde «Más»."
-        : "Te hemos identificado con Google, pero no se ha podido comprobar si tu cuenta de LALIGA está enlazada. Entra abajo con tu email y contraseña.",
-    };
-  }
-
-  if (sesionActual) {
-    const vigentes = await tokensVigentes(sesionActual);
-    if (!vigentes) {
-      return { problema: "Tu sesión de LALIGA ha caducado. Vuelve a conectarla para dejarla enlazada." };
-    }
-
-    try {
-      // El correo lo guarda la ruta de contraseña, que es la que lo conoce. Aquí
-      // solo tenemos el de Google, y meterlo en `laliga_email` sería mentir.
-      await guardarEnlace(credencial, identidad, vigentes, null, clave);
-    } catch {
-      return { problema: "No se ha podido dejar enlazada tu cuenta de LALIGA. Vuelve a intentarlo desde «Más»." };
-    }
-    return { bien: "Cuenta enlazada. La próxima vez entra con Google y no te pedirá la contraseña de LALIGA." };
-  }
-
-  const enlace = await leerEnlace(credencial, identidad, clave).catch(() => null);
-  if (!enlace) {
-    /*
-     * Aquí es donde el botón se quedaba MUDO.
-     *
-     * Le das a «Entrar con Google», das la vuelta entera por Google, y vuelves a
-     * la misma pantalla sin una palabra. Desde fuera es indistinguible de que no
-     * funcione nada, y eso es exactamente lo que parecía.
-     *
-     * No es un error —la identificación ha ido bien— pero sí es un final del
-     * camino que hay que contar, porque queda un paso y no es evidente cuál.
-     */
-    return {
-      bien:
-        "Te hemos identificado con Google. Solo falta conectar tu cuenta de LALIGA una vez: " +
-        "escribe abajo tu email y contraseña del juego y, a partir de ahí, entras con Google y ya está.",
-    };
-  }
-
-  const vigentes = await tokensVigentes(enlace.tokens);
-  if (!vigentes) {
-    return { problema: "Tu cuenta de LALIGA estaba enlazada, pero el permiso ha caducado. Conéctala otra vez." };
-  }
-
-  // Aquí es donde «entrar con Google» pasa de identificarte a meterte dentro.
-  for (const cookie of buildSessionCookies(await createSession(vigentes))) {
-    headers.append("Set-Cookie", cookie);
-  }
-  return { bien: "Has entrado con Google, sin escribir ninguna contraseña." };
 }
