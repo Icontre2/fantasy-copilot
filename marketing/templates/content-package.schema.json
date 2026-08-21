@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "LigaLab Content Package",
+  "type": "object",
+  "required": ["id", "date", "insight", "product_truth", "needs_capture", "status", "formats", "qa"],
+  "properties": {
+    "id": {"type": "string", "pattern": "^LL-[0-9]{4}-[0-9]{3}$"},
+    "date": {"type": "string", "format": "date"},
+    "insight": {"type": "string"},
+    "hook": {"type": "string"},
+    "product_truth": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "needs_capture": {"type": "boolean"},
+    "capture_request": {"type": ["string", "null"]},
+    "formats": {"type": "array", "items": {"enum": ["tiktok", "reel", "short", "carousel", "x", "threads", "story"]}, "minItems": 1},
+    "status": {"enum": ["draft", "brand_review", "fact_review", "pending_approval", "blocked"]},
+    "qa": {
+      "type": "object",
+      "required": ["brand_pass", "product_truth_pass", "facts_pass"],
+      "properties": {
+        "brand_pass": {"type": "boolean"},
+        "product_truth_pass": {"type": "boolean"},
+        "facts_pass": {"type": "boolean"},
+        "notes": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  },
+  "additionalProperties": true
+}
