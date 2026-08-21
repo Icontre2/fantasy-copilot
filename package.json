@@ -12,7 +12,8 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-strip-types --test \"app/**/*.test.ts\" \"src/**/*.test.ts\"",
-    "marketing:queue": "node scripts/marketing/prepare-agent-queue.mjs"
+    "marketing:queue": "node scripts/marketing/prepare-agent-queue.mjs",
+    "marketing:approve": "node scripts/marketing/set-approval.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.110.8",
