@@ -12,10 +12,13 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-strip-types --test \"app/**/*.test.ts\" \"src/**/*.test.ts\"",
+    "marketing:radar": "node --experimental-strip-types scripts/marketing/run-radar.ts",
     "marketing:queue": "node scripts/marketing/prepare-agent-queue.mjs",
+    "marketing:generate": "node --experimental-strip-types scripts/marketing/run-creative.ts",
     "marketing:approve": "node scripts/marketing/set-approval.mjs"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.120.0",
     "@supabase/supabase-js": "2.110.8",
     "cheerio": "1.1.2",
     "drizzle-orm": "0.45.2",
