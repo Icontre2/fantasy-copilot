@@ -57,6 +57,34 @@ código, y `src/server/marketing/no-publish.test.ts` falla si alguien lo añade.
 - **Si el Reviewer se cae, no se aprueba.** El estado es `review_pending`. Una
   caída no es un permiso.
 
+## Un solo fichero por agente
+
+Estos `.md` son ahora la **única** definición de cada agente. Antes vivían
+duplicados en `agents/` (los prompts que carga la pipeline `marketing:generate`)
+y aquí; esa carpeta ya no existe.
+
+Se puede unificar porque la misión, las reglas y las prohibiciones son las
+mismas se invoque a quien se invoque. Lo que **no** es lo mismo es el contrato
+de salida:
+
+| Invocado como | Devuelve | Lo valida |
+| --- | --- | --- |
+| Subagente de Claude Code | el contrato del documento maestro (`best_hook`, `spoken_script`, `ctas`…) | `src/server/marketing/agents/contracts.ts` |
+| Etapa de `marketing:generate` | los campos de `PaqueteCrudo` (`hook`, `script`, `cta`…) | `src/server/marketing/pipeline/stages.ts` |
+
+Por eso la pipeline carga solo la parte de ROL: `soloElRol` (en
+`src/server/marketing/pipeline/docs.ts`) corta en `## Devuelves` y descarta el
+frontmatter. Si cargara el fichero entero, cada etapa recibiría dos
+especificaciones de salida contradictorias.
+
+**Consecuencia práctica al editar estos ficheros:** todo lo que escribas encima
+de `## Devuelves` lo van a leer las dos rutas, así que no nombres ahí campos de
+un contrato concreto. Los nombres de campo van en `## Devuelves`.
+
+Los dos prompts que no son subagentes viven en `marketing/prompts/`:
+`fantasy-radar.md` (lo carga `marketing:radar`) y `growth-agent.md` (sin etapa
+ejecutable todavía).
+
 ## Dónde vive cada cosa
 
 Los `.md` de esta carpeta son lo que lee Claude. Las reglas que se pueden
@@ -73,6 +101,8 @@ puede comprobar:
 - `src/server/marketing/agents/agents-reales.test.ts` — comprueba estos siete
   ficheros: frontmatter válido, permisos mínimos y que toda ruta que citan
   existe de verdad en el repositorio.
+- `src/server/marketing/pipeline/docs.test.ts` — comprueba que el corte por
+  `## Devuelves` no se lleva por delante el rol ni deja pasar el contrato.
 
 ## Lo que estos agentes NO hacen todavía
 

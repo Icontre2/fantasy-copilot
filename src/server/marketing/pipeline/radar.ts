@@ -9,7 +9,7 @@ import { leerDocs } from './docs.ts';
 import { pedirJSON } from './json.ts';
 
 /**
- * Etapa 1 — Fantasy Radar (`agents/fantasy-radar.md`).
+ * Etapa 1 — Fantasy Radar (`marketing/prompts/fantasy-radar.md`).
  *
  * La única etapa "barata" de la pipeline y, a la vez, la única con
  * herramienta de búsqueda: todo lo que dice tiene que poder verificarse con
@@ -34,7 +34,7 @@ function idDeOportunidad(fecha: string, indice: number): string {
 }
 
 export type OpcionesRadar = {
-  /** Dónde viven los documentos estáticos (`agents/`, `brand/`, `marketing/*.md`) — casi siempre el propio repo. */
+  /** Dónde viven los documentos estáticos (`marketing/prompts/`, `brand/`, `marketing/*.md`) — casi siempre el propio repo. */
   raizDocs?: string;
   llamar?: LlamadaClaude;
 };
@@ -48,7 +48,7 @@ export async function generarRadar(fecha: string, opciones: OpcionesRadar = {}):
     'brand/CONTENT_RULES.md',
     'marketing/PRODUCT_TRUTH.md',
     'marketing/CONTENT_ENGINE.md',
-    'agents/fantasy-radar.md',
+    'marketing/prompts/fantasy-radar.md',
   ]);
 
   const system = [
@@ -98,7 +98,7 @@ function markdownDeRadar(payload: { date: string; opportunities: RadarOpportunit
   return lineas.join('\n');
 }
 
-/** Ejecuta el Radar y escribe `marketing/radar/<fecha>.{json,md}`, igual que pide `agents/fantasy-radar.md`. */
+/** Ejecuta el Radar y escribe `marketing/radar/<fecha>.{json,md}`, igual que pide `marketing/prompts/fantasy-radar.md`. */
 export async function ejecutarYGuardarRadar(fecha: string, raiz = process.cwd()): Promise<ResultadoRadar> {
   const resultado = await generarRadar(fecha, { raizDocs: raiz });
   const carpeta = path.join(raiz, 'marketing', 'radar');

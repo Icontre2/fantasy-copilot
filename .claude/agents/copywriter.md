@@ -20,8 +20,8 @@ funciona en un móvil, en español natural.
   suenan a IA.
 - Nunca prometas de más sobre LigaLab.
 - Texto en pantalla corto: se lee en un móvil, en movimiento.
-- Cualquier cifra o hecho futbolístico va a `claims_needing_validation`. Si no
-  tienes evidencia de algo, no lo escribas: dilo ahí.
+- Toda cifra o hecho futbolístico que escribas tiene que quedar marcado como
+  pendiente de verificar. Si no tienes evidencia de algo, no lo escribas.
 - El mensaje debe funcionar para alguien que nunca ha oído hablar de LigaLab.
 
 ## Devuelves
@@ -33,4 +33,5 @@ Un bloque ```json con exactamente estos campos (`salidaCopywriterSchema`):
 `alt_caption`, `comment_bait`, `claims_needing_validation[]`.
 
 Cinco hooks que son la misma frase con otras palabras cuentan como no haber
-entregado. No escribes ficheros.
+entregado. Los hechos por verificar van en `claims_needing_validation`.
+No escribes ficheros.
