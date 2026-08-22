@@ -2,37 +2,14 @@
   "updatedAt": "2026-08-22",
   "mode": "prelaunch",
   "items": [
-    {
-      "contentId": "LL-2026-002",
-      "series": "NO ES LO MISMO",
-      "hook": "EL VALOR DE SU PLANTILLA NO ES SU CAJA",
-      "status": "design_ready",
-      "needsCapture": false,
-      "canvaDesignId": "DAHTAhHnih0",
-      "canvaEditUrl": "https://www.canva.com/d/7b1vCaWjJS09uNg"
-    },
-    {
-      "contentId": "LL-2026-003",
-      "series": "ANTES DE HACER X",
-      "hook": "ANTES DE PUJAR, MIRA LO QUE TE QUEDA",
-      "status": "design_draft",
-      "needsCapture": false,
-      "canvaDesignId": "DAHTAgAII9o",
-      "note": "Canva draft edited; commit requires explicit user approval."
-    },
-    {
-      "contentId": "LL-2026-004",
-      "series": "NO ES LO MISMO",
-      "hook": "PLANTILLA CARA ≠ DINERO DISPONIBLE",
-      "status": "pending_approval",
-      "needsCapture": false
-    },
-    {
-      "contentId": "LL-2026-005",
-      "series": "EL DATO QUE FALTA",
-      "hook": "QUE SUBA NO ES LO ÚNICO QUE IMPORTA",
-      "status": "pending_approval",
-      "needsCapture": false
-    }
+    {"contentId":"LL-2026-002","series":"NO ES LO MISMO","hook":"EL VALOR DE SU PLANTILLA NO ES SU CAJA","status":"design_ready","needsCapture":false,"canvaDesignId":"DAHTAhHnih0","canvaEditUrl":"https://www.canva.com/d/7b1vCaWjJS09uNg"},
+    {"contentId":"LL-2026-003","series":"ANTES DE HACER X","hook":"ANTES DE PUJAR, MIRA LO QUE TE QUEDA","status":"design_ready","needsCapture":false,"canvaDesignId":"DAHTAgAII9o","canvaEditUrl":"https://www.canva.com/d/_sMMmOYmRqDlwk0"},
+    {"contentId":"LL-2026-004","series":"NO ES LO MISMO","hook":"PLANTILLA CARA ≠ DINERO DISPONIBLE","status":"pending_approval","needsCapture":false},
+    {"contentId":"LL-2026-005","series":"EL DATO QUE FALTA","hook":"QUE SUBA NO ES LO ÚNICO QUE IMPORTA","status":"pending_approval","needsCapture":false},
+    {"contentId":"LL-2026-006","series":"EL DATO QUE FALTA","hook":"TENER DINERO ≠ PODER GASTARLO TODO","status":"pending_approval","needsCapture":false},
+    {"contentId":"LL-2026-007","series":"NO ES LO MISMO","hook":"TU RIVAL PUEDE DAR MÁS MIEDO POR SU CAJA QUE POR SU PLANTILLA","status":"pending_approval","needsCapture":false},
+    {"contentId":"LL-2026-008","series":"ANTES DE HACER X","hook":"UNA CLÁUSULA NO SE MIRA CUANDO YA ES TARDE","status":"pending_approval","needsCapture":false},
+    {"contentId":"LL-2026-009","series":"DUDA REAL","hook":"NO NECESITAS ADIVINAR EL ONCE. NECESITAS VER LA DUDA","status":"pending_approval","needsCapture":false},
+    {"contentId":"LL-2026-010","series":"EL DATO QUE FALTA","hook":"EL MERCADO NO TE DICE QUIÉN TIENE MARGEN PARA PUJAR","status":"pending_approval","needsCapture":false}
   ]
 }
