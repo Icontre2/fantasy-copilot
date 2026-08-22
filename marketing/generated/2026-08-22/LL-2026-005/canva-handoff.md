@@ -1,84 +1,65 @@
 # Canva Handoff — LL-2026-005
 
 ## Objetivo
-Dejar esta pieza lista para montar en Canva sin inventar UI, datos ni comportamiento de producto.
+Montar una pieza TikTok-native donde la tensión Fantasy abre el vídeo y una captura REAL de LigaLab demuestra la solución. No inventar UI, datos ni comportamiento.
 
 ## Formato
 - 1080 × 1920, 9:16.
-- Fondo principal: Night `#0B0B0D`.
-- Texto principal: White `#FFFFFF`.
-- Texto secundario: Muted `#A7ABB4`.
-- Acento: LigaLab Red `#E10600`.
-- Mantener el rojo en ~3–8% del lienzo.
-- Márgenes: 90 px laterales, 120 px superiores, 280 px inferiores libres de texto crítico.
+- Duración objetivo: 8–10 s.
+- Sin intro de logo.
+- Subtítulos/texto dentro de safe area móvil.
+- LigaLab Red `#E10600` solo como firma/acento, no como protagonista.
 
-## Estructura visual
-### Frame 1 — Hook (0.0–2.0 s)
-Texto grande, 3 líneas:
-`QUE SUBA`
-`NO ES LO ÚNICO`
-`QUE IMPORTA`
+## Estructura
+### 0.0–2.5 s — Hook
+Texto superior grande:
+`COMO SUBA UN POCO MÁS, TE LO QUITAN 💀`
 
-- Peso 800–900.
-- Alinear a izquierda.
-- Subrayar solo `SUBA` con la línea roja o usar un wipe rojo corto bajo esa palabra.
-- Sin logo de entrada.
+Visual: fondo/clip neutro de reacción o tensión Fantasy que no implique una función del producto. Priorizar sensación de TikTok/UGC sobre motion corporativo.
 
-### Frame 2 — Primera pista (2.0–5.0 s)
-Texto:
-`Sí: mirar la subida`
-`te da una pista.`
+### 2.5–3.5 s — Giro
+Texto corto:
+`yo miraría la cláusula ya`
 
-Visual conceptual permitido: pequeña flecha ascendente abstracta, sin cifras ni aspecto de gráfico real de LigaLab.
+Corte seco. Sin explicación adicional.
 
-### Frame 3 — Contexto (5.0–8.0 s)
-Palabra principal:
-`CLÁUSULA`
+### 3.5–7.5 s — Producto REAL
+Insertar exclusivamente una grabación real de 3–4 s de la vista existente de LigaLab relacionada con cláusula/alerta.
 
-Texto secundario:
-`Pero también importa la cláusula.`
+Reglas:
+- No recrear la pantalla.
+- No fabricar notificación.
+- No añadir cifras que no estén en la captura.
+- Si aparecen datos personales/de liga que no deban publicarse, ocultarlos antes de producción.
+- El montaje puede hacer zoom/crop sobre la captura real, pero no alterar lo que la UI afirma.
 
-- `CLÁUSULA` puede entrar con scale leve.
-- No mostrar importe alguno.
+Texto superpuesto opcional, solo si la captura lo necesita:
+`antes de que sea tarde`
 
-### Frame 4 — Tiempo (8.0–11.0 s)
-Palabra principal:
-`CUÁNDO`
-
-Texto secundario:
-`Y sobre todo: cuándo puede quedar a tiro.`
-
-Visual conceptual permitido: barra de progreso genérica sin números, fechas, jugador ni branding de la app.
-
-### Frame 5 — Síntesis (11.0–14.0 s)
-Texto:
-`SUBIDA + CLÁUSULA + PLAZO`
-
-Debajo:
-`Ese contexto cambia la decisión.`
-
-- La línea roja puede recorrer de izquierda a derecha bajo la suma.
-
-### Frame 6 — Cierre (14.0–15.0 s)
+### 7.5–9.0 s — Remate
 `LigaLab · en construcción`
 
-- Cierre 0.8–1.0 s.
-- Sin CTA de descarga, prueba o acceso.
+Mantener cierre breve. No CTA de descarga ni disponibilidad.
 
-## Motion
-- Cortes entre 0.7–2.0 s.
-- Entradas: slide/scale leve.
-- Línea roja: wipe 150–350 ms.
-- Debe entenderse completo sin audio.
+## Asset requerido
+`needs_capture=true`
 
-## Prohibiciones específicas
-- No escribir `te avisa`, `alerta automática`, `push` ni equivalentes.
-- No mostrar notificaciones ficticias.
-- No generar capturas o pantallas falsas de LigaLab.
-- No usar cifras, nombres de jugadores, clubes o cláusulas reales.
-- No insinuar disponibilidad pública.
+Captura solicitada:
+- 3–4 segundos.
+- Vertical o grabación que permita crop 9:16.
+- Navegar por la vista REAL ya existente donde se vea la información de cláusula/alerta.
+- Sin tocar ni modificar UI para crear la grabación.
+- No es necesario mostrar nombre real de jugador/rival si compromete privacidad; puede usarse una liga/demo real permitida.
 
-## Estado de handoff
-`ready_for_canva_draft`
+## QA antes de montar
+- [ ] La grabación procede del producto real.
+- [ ] La función mostrada existe hoy.
+- [ ] No se promete que LigaLab evite un clausulazo ni garantice resultados.
+- [ ] No hay CTA de descarga/acceso público.
+- [ ] El hook se entiende antes del segundo 2.
+- [ ] La pieza parece contenido Fantasy antes que anuncio de SaaS.
 
-La pieza puede diseñarse sin captura real (`needs_capture=false`). La edición final en Canva requiere aprobación humana antes de guardarse/publicarse.
+## Estado
+`blocked_on_real_capture`
+
+Mientras falte la captura, NO sustituirla por mockup, Canva UI, imagen generada ni notificación ficticia.
