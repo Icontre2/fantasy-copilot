@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { ES_CRITICO, salidaBrandReviewerSchema, salidaCreativeDirectorSchema, validarSalida } from "./contracts.ts";
+import { ES_CRITICO, salidaBrandReviewerSchema, salidaCopywriterSchema, salidaCreativeDirectorSchema, validarSalida } from "./contracts.ts";
 import {
   DOCUMENTOS_POR_ESPECIALISTA,
   esCopyPobre,
@@ -252,4 +252,40 @@ test("ningún especialista recibe más de cuatro documentos", () => {
     assert.ok(documentos.length > 0, `${especialista} necesita algún documento`);
     assert.ok(documentos.length <= 4, `${especialista} recibe ${documentos.length}: eso ya es leerse medio repo`);
   }
+});
+
+// ── Fixture de un fallo real, no inventado ───────────────────────────────────
+
+/**
+ * Esta es la salida LITERAL que devolvió el subagente `copywriter` cuando se le
+ * inyectó un fallo a propósito para probar el Test 9. No es una salida
+ * imaginada por quien escribe el test: es lo que produjo el modelo.
+ *
+ * Se fija aquí porque es el único caso que demuestra la distinción que sostiene
+ * toda la política de recuperación — una salida puede cumplir el contrato al
+ * milímetro y no servir para nada. El esquema no puede ver la diferencia; por
+ * eso `esCopyPobre` existe.
+ */
+const SALIDA_POBRE_REAL: SalidaCopywriter = {
+  hooks: ["Mira LigaLab", "mira ligalab", "Mira LigaLab ", "MIRA LIGALAB", " Mira  LigaLab"],
+  best_hook: "Mira LigaLab",
+  spoken_script: "Mira LigaLab. Es una herramienta para tu fantasy.",
+  on_screen_text: ["LigaLab", "Míralo"],
+  ctas: ["Mira LigaLab", "Entra en LigaLab", "Prueba LigaLab"],
+  best_cta: "Mira LigaLab",
+  tiktok_caption: "Mira LigaLab.",
+  alt_caption: "Texto en pantalla que dice LigaLab.",
+  comment_bait: "¿Lo miras?",
+  claims_needing_validation: [],
+};
+
+test("Test 9 (fallo real): la salida degradada de un especialista pasa el esquema y aun así se detecta", () => {
+  const validacion = validarSalida(salidaCopywriterSchema, SALIDA_POBRE_REAL);
+  assert.equal(validacion.ok, true, "el contrato la acepta: cinco hooks, tres CTA, todos los tipos correctos");
+  assert.equal(esCopyPobre(SALIDA_POBRE_REAL), true, "y aun así no sirve — cinco hooks que son la misma frase");
+});
+
+test("Test 9 (fallo real): ante ella se reintenta una vez, y agotado el reintento se aborta por crítico", () => {
+  assert.equal(recuperarDe("copywriter", 0).accion, "reintentar");
+  assert.equal(recuperarDe("copywriter", 1).accion, "abortar", "sin copywriter no hay pieza");
 });
