@@ -5,7 +5,7 @@
     {"contentId":"LL-2026-002","series":"NO ES LO MISMO","hook":"EL VALOR DE SU PLANTILLA NO ES SU CAJA","status":"design_ready","needsCapture":false,"canvaDesignId":"DAHTAhHnih0","canvaEditUrl":"https://www.canva.com/d/7b1vCaWjJS09uNg"},
     {"contentId":"LL-2026-003","series":"ANTES DE HACER X","hook":"ANTES DE PUJAR, MIRA LO QUE TE QUEDA","status":"design_ready","needsCapture":false,"canvaDesignId":"DAHTAgAII9o","canvaEditUrl":"https://www.canva.com/d/_sMMmOYmRqDlwk0"},
     {"contentId":"LL-2026-004","series":"NO ES LO MISMO","hook":"PLANTILLA CARA ≠ DINERO DISPONIBLE","status":"design_draft","needsCapture":false,"canvaDesignId":"DAHTAwZ5mdU","note":"Draft visual created in Canva; save requires explicit approval."},
-    {"contentId":"LL-2026-005","series":"EL DATO QUE FALTA","hook":"QUE SUBA NO ES LO ÚNICO QUE IMPORTA","status":"ready_for_design","needsCapture":false},
+    {"contentId":"LL-2026-005","series":"POV FANTASY","hook":"COMO SUBA UN POCO MÁS, TE LO QUITAN 💀","status":"capture_needed","needsCapture":true,"note":"Package rewritten to TikTok-native voice. Needs 3-4s real screen recording of existing clause/alert view; no recreated UI."},
     {"contentId":"LL-2026-006","series":"EL DATO QUE FALTA","hook":"TENER DINERO ≠ PODER GASTARLO TODO","status":"ready_for_design","needsCapture":false},
     {"contentId":"LL-2026-007","series":"NO ES LO MISMO","hook":"TU RIVAL PUEDE DAR MÁS MIEDO POR SU CAJA QUE POR SU PLANTILLA","status":"pending_approval","needsCapture":false},
     {"contentId":"LL-2026-008","series":"ANTES DE HACER X","hook":"UNA CLÁUSULA NO SE MIRA CUANDO YA ES TARDE","status":"pending_approval","needsCapture":false},
