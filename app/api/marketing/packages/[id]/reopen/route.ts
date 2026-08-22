@@ -1,5 +1,4 @@
-import { privateJson } from "@/src/server/http/responses";
-import { autorizar, esRespuestaDeError, errorDeMarketing } from "@/src/server/marketing/http";
+import { autorizar, esRespuestaDeError, errorDeMarketing, responder } from "@/src/server/marketing/http";
 import { reabrirPaquete } from "@/src/server/marketing/service";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +15,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const { id } = await params;
   try {
     const paquete = await reabrirPaquete(quien.credencial, id, quien.email);
-    return privateJson({ package: paquete });
+    return responder({ package: paquete }, quien.cookies);
   } catch (error) {
     return errorDeMarketing(error);
   }

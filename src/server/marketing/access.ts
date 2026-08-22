@@ -1,4 +1,4 @@
-import { identidadDePeticion } from '../auth/identity.ts';
+import { identidadDePeticionConRefresco } from '../auth/identity.ts';
 
 /**
  * Quién puede entrar al panel de marketing.
@@ -21,9 +21,17 @@ import { identidadDePeticion } from '../auth/identity.ts';
  * seguiría negándoselo.
  */
 
-export type AccesoDeMarketing =
+export type AccesoDeMarketing = (
   | { autorizado: true; email: string; accessToken: string }
-  | { autorizado: false; email: string | null };
+  | { autorizado: false; email: string | null }
+) & {
+  /**
+   * Cookies que la respuesta tiene que fijar porque se ha renovado la
+   * identidad. Vacío en el caso normal. Sin devolverlas, la renovación se
+   * repetiría en CADA petición del panel.
+   */
+  cookies: string[];
+};
 
 /**
  * Parseo puro, separado a propósito: así se puede probar la regla de acceso
@@ -48,11 +56,16 @@ export function emailAutorizado(email: string, admins: string[]): boolean {
 }
 
 export async function accesoDeMarketing(request: Request): Promise<AccesoDeMarketing> {
-  const quien = await identidadDePeticion(request);
-  if (!quien?.email) return { autorizado: false, email: quien?.email ?? null };
+  /*
+   * Con refresco, a diferencia del resto de la app: el access token de
+   * Supabase dura una hora, y un panel que se abre a diario para revisar no
+   * puede exigir repetir el login social entre una visita y la siguiente.
+   */
+  const { identidad: quien, cookies } = await identidadDePeticionConRefresco(request);
+  if (!quien?.email) return { autorizado: false, email: quien?.email ?? null, cookies };
 
   const autorizado = emailAutorizado(quien.email, listaDeAdmins());
   return autorizado
-    ? { autorizado: true, email: quien.email, accessToken: quien.accessToken }
-    : { autorizado: false, email: quien.email };
+    ? { autorizado: true, email: quien.email, accessToken: quien.accessToken, cookies }
+    : { autorizado: false, email: quien.email, cookies };
 }

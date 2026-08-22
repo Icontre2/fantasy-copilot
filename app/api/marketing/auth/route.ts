@@ -1,5 +1,5 @@
 import { accesoDeMarketing } from "@/src/server/marketing/access";
-import { privateJson } from "@/src/server/http/responses";
+import { responder } from "@/src/server/marketing/http";
 
 export const dynamic = "force-dynamic";
 
@@ -14,5 +14,8 @@ export const dynamic = "force-dynamic";
  */
 export async function GET(request: Request) {
   const acceso = await accesoDeMarketing(request);
-  return privateJson({ authorized: acceso.autorizado, email: acceso.email });
+  // Esta es la primera llamada que hace el panel, así que es la que suele
+  // renovar la identidad: devolver aquí las cookies evita que el resto de la
+  // carga vaya renovando una y otra vez.
+  return responder({ authorized: acceso.autorizado, email: acceso.email }, acceso.cookies);
 }

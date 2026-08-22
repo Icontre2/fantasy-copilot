@@ -13,6 +13,12 @@ export const COOKIE_INTENTO = 'llf_intento';
 export const COOKIE_USUARIO = 'llf_user';
 
 /**
+ * El refresh token de Supabase, para poder renovar `llf_user` cuando caduque
+ * sin obligar a repetir el login social. Ver `identity.ts`.
+ */
+export const COOKIE_USUARIO_REFRESCO = 'llf_user_refresh';
+
+/**
  * El motivo por el que fallo el acceso con Google.
  *
  * Va en cookie y no en la direccion (`/?error=...`) por dos razones. Una: la
@@ -48,6 +54,16 @@ const MINUTOS_10 = 10 * 60;
  */
 const UNA_HORA = 60 * 60;
 
+/**
+ * Lo que dura el refresh token de Supabase en el navegador.
+ *
+ * Aquí SÍ tiene sentido guardar 30 días, al revés que con el access token: el
+ * refresh token no caduca a la hora, y es lo único que permite volver a saber
+ * quién eres sin repetir el login social. Sin él, el panel de marketing te
+ * echaba cada hora.
+ */
+const TREINTA_DIAS = 30 * 24 * 60 * 60;
+
 function atributos(maxAge: number): string {
   const secure = process.env.NODE_ENV === 'production' ? ' Secure;' : '';
   return `Path=/; HttpOnly; SameSite=Lax;${secure} Max-Age=${maxAge}`;
@@ -64,6 +80,14 @@ export function limpiarIntento(): string {
 
 export function cookieDeUsuario(valor: string): string {
   return `${COOKIE_USUARIO}=${encodeURIComponent(valor)}; ${atributos(UNA_HORA)}`;
+}
+
+export function cookieDeRefrescoDeUsuario(valor: string): string {
+  return `${COOKIE_USUARIO_REFRESCO}=${encodeURIComponent(valor)}; ${atributos(TREINTA_DIAS)}`;
+}
+
+export function limpiarRefrescoDeUsuario(): string {
+  return `${COOKIE_USUARIO_REFRESCO}=; ${atributos(0)}`;
 }
 
 export function limpiarUsuario(): string {

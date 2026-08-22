@@ -1,5 +1,5 @@
 import { privateJson } from "@/src/server/http/responses";
-import { autorizar, esRespuestaDeError, errorDeMarketing } from "@/src/server/marketing/http";
+import { autorizar, esRespuestaDeError, errorDeMarketing, responder } from "@/src/server/marketing/http";
 import { marcarQADePaquete } from "@/src/server/marketing/service";
 import { qaResultSchema } from "@/src/server/marketing/schemas";
 
@@ -26,7 +26,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const { id } = await params;
   try {
     const paquete = await marcarQADePaquete(quien.credencial, id, cuerpo.data, quien.email);
-    return privateJson({ package: paquete });
+    return responder({ package: paquete }, quien.cookies);
   } catch (error) {
     return errorDeMarketing(error);
   }

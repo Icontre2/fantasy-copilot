@@ -192,7 +192,53 @@ export type Identificado = { id: string; email: string | null };
  * No se guarda en ningun sitio ni viaja al navegador: se usa dentro de la misma
  * peticion en la que se obtiene y se descarta con ella.
  */
-export type Canje = { usuario: Identificado; accessToken: string };
+export type Canje = { usuario: Identificado; accessToken: string; refreshToken: string | null };
+
+/**
+ * Renueva la identidad con el refresh token de Supabase.
+ *
+ * ── Por qué hace falta ──────────────────────────────────────────────────────
+ * El access token de Supabase dura UNA HORA. La cookie de identidad lo lleva
+ * tal cual, así que sin esto la app deja de saber quién eres a la hora de
+ * haber entrado con Google. Para el flujo del producto («entra con Google y
+ * acto seguido conecta LALIGA») no se notaba: son dos minutos. Para el panel
+ * de marketing, que se abre a diario para revisar, significaba volver a hacer
+ * el login social CADA VEZ.
+ *
+ * Supabase rota el refresh token en cada renovación —el que devuelve no es el
+ * que se le mandó—, así que quien llame tiene que guardar el nuevo. Es el
+ * mismo fallo que tuvo el enlace con LALIGA: renovar y no guardar deja el
+ * token gastado y la siguiente vez ya no funciona.
+ */
+export async function refrescarUsuario(
+  config: ConfigSupabaseAuth,
+  refreshToken: string,
+): Promise<Canje | null> {
+  let respuesta: Response;
+  try {
+    respuesta = await fetch(`${config.url}/auth/v1/token?grant_type=refresh_token`, {
+      method: 'POST',
+      headers: { apikey: config.apiKey, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+      cache: 'no-store',
+      signal: AbortSignal.timeout(10_000),
+    });
+  } catch {
+    return null;
+  }
+
+  if (!respuesta.ok) return null;
+  const cuerpo = (await respuesta.json().catch(() => null)) as
+    | { user?: { id?: string; email?: string | null }; access_token?: string; refresh_token?: string }
+    | null;
+
+  if (!cuerpo?.user?.id || !cuerpo.access_token) return null;
+  return {
+    usuario: { id: cuerpo.user.id, email: cuerpo.user.email ?? null },
+    accessToken: cuerpo.access_token,
+    refreshToken: cuerpo.refresh_token ?? null,
+  };
+}
 
 /**
  * Canjea el codigo por la identidad de quien acaba de entrar.
@@ -221,6 +267,7 @@ export async function canjearCodigo(
     | {
         user?: { id?: string; email?: string | null };
         access_token?: string;
+        refresh_token?: string;
         msg?: string;
         error_description?: string;
         error?: string;
@@ -236,6 +283,7 @@ export async function canjearCodigo(
     canje: {
       usuario: { id: cuerpo.user.id, email: cuerpo.user.email ?? null },
       accessToken: cuerpo.access_token,
+      refreshToken: cuerpo.refresh_token ?? null,
     },
   };
 }
