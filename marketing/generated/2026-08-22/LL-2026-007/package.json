@@ -1,0 +1,13 @@
+{
+  "id":"LL-2026-007",
+  "date":"2026-08-22",
+  "mode":"prelaunch",
+  "series":"NO ES LO MISMO",
+  "hook":"TU RIVAL PUEDE DAR MÁS MIEDO POR SU CAJA QUE POR SU PLANTILLA",
+  "insight":"La fortaleza visible de una plantilla y la capacidad futura de compra no son la misma cosa.",
+  "needs_capture":false,
+  "formats":["tiktok","reel","short"],
+  "status":"pending_approval",
+  "product_truth":["LigaLab reconstruye caja estimada por participante a partir de operaciones públicas y reglas de la liga"],
+  "qa":{"brand_pass":true,"product_truth_pass":true,"facts_pass":true,"notes":["Evergreen.","Se habla de caja estimada, no exacta."]}
+}
