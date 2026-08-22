@@ -1,0 +1,103 @@
+{
+  "id": "LL-20260822-004",
+  "date": "2026-08-22",
+  "status": "pending_approval",
+  "sourceOpportunityId": "LL-20260822-004",
+  "score": 82,
+  "problem": "El manager vigila la cláusula mirando el precio de hoy, que no le dice nada accionable. Lo que necesita es el DÍA: cuándo un jugador ajeno se le pone a tiro y cuándo el suyo deja de estar blindado. Cree que su problema es de caja y en realidad es de calendario.",
+  "feature": "Alertas de cláusula",
+  "hook": "Nadie te la quitó por sorpresa. La cuenta ya estaba hecha y no la miró nadie.",
+  "needsCapture": true,
+  "captureRequest": "DOS capturas reales de producción, vertical de movil, resolución nativa, modo oscuro. CAPTURA A (slide 6): la lista de cláusulas ordenada por proximidad de fichaje, con los cuatro campos visibles — hueco, ritmo diario, días a ese ritmo, y blindaje con su fecha. Tres o cuatro filas, para que se entienda que el orden es por CUÁNDO puedes fichar y no por precio. CAPTURA B (slide 7): el estado de tendencia ausente — la fila donde la app dice que no hay datos suficientes y da el motivo, sin mostrar estimacion. Tiene que verse el mensaje literal de la app: es lo que sostiene «no se inventa el número». NO DEBE VERSE: nombre, alias, avatar ni inicial de ningún manager real; nombre de liga privada identificable; escudos de club; logo de LALIGA; fotos de jugadores; hora, batería y operadora si hay datos personales. Los nombres se tapan usando una liga de prueba o, si no hay alternativa, con un bloque plano opaco del gris de fondo del producto — nunca con difuminado, que se lee como que hay algo que esconder, ni con franja roja, que mete color de marketing dentro de la captura. SE ENTREGA TAL CUAL: no se recolorea el morado #8b5cf6, no se armonizan los verdes ni rosas de tendencia con el rojo de marca, no se retoca ninguna cifra, no se recorta para ocultar un campo que no favorece. Si la captura A no muestra los cuatro campos a la vez, se entregan dos capturas consecutivas y se decide en montaje: no se compone una pantalla nueva juntando trozos. Si la captura B no existe hoy en producción, el slide 7 pasa a texto puro sobre fondo neutro. En ningún caso se recrea la pantalla.",
+  "strategy": {
+    "audience": "Manager de liga privada que ya ha pagado alguna cláusula y ya le han clausulado por sorpresa al menos una vez.",
+    "problem": "Confunde una decisión de calendario con una de dinero. Guarda caja para un jugador que ya se le escapó, y descuida al suyo que lleva tres días desprotegido.",
+    "insight": "«Me lo quitaron por sorpresa» casi nunca es una sorpresa: es una cuenta que estaba hecha y que nadie miró. La cláusula no se lee con el precio, se lee con dos números — la distancia que queda y el ritmo al que se cierra. Uno solo no sirve de nada.",
+    "feature": "Alertas de cláusula",
+    "proofNeeded": "Captura real de AlertsView con la lista ordenada por cuándo puedes fichar.",
+    "angle": "Cuenta atrás aplicada a la MECÁNICA, no a un nombre: los dos números, la resta, y la lista ya ordenada.",
+    "cta": "Mira tu liga con LigaLab y empieza por arriba de la lista.",
+    "riskNotes": "Alertas es una pantalla que el usuario ABRE, no un aviso que llega: push y cron están apagados en producción. Y la frontera de la predicción: la app hace una división, no un pronóstico. Si borras «a este ritmo» de una frase y la frase sigue teniendo sentido, es predicción y no se publica."
+  },
+  "hooks": [
+    "Nadie te la quitó por sorpresa. La cuenta ya estaba hecha y no la miró nadie.",
+    "Miras el precio de la cláusula todos los días. El precio no te dice el día.",
+    "Le faltan 1,2 M. Sube 400k al día. La resta hazla tú.",
+    "Con un número solo no puedes hacer nada. Hacen falta dos.",
+    "Crees que tu problema es la caja. Tu problema es el calendario."
+  ],
+  "script": "SLIDE 1 — Nadie te la quitó por sorpresa. La cuenta ya estaba hecha y no la miró nadie.\n\nSLIDE 2 — El problema es dónde miras. Abres la app, ves el precio de la cláusula de hoy y lo comparas con tu caja. Eso no te dice nada que puedas usar.\n\nSLIDE 3 — Una cláusula no se lee con un número. Se lee con dos. Uno: cuánto hueco falta hasta llegar a ella. Dos: a qué ritmo se está cerrando ese hueco.\n\nSLIDE 4 — Ejemplo. Le faltan 1,2 M. Sube ≈400k al día de media. Ahí ya no estás mirando un precio.\n\nSLIDE 5 — A este ritmo son tres días. A este ritmo: si el ritmo cambia, cambia el número. No es un pronóstico, es una división — lo que falta entre lo que sube al día. Con el hueco solo no sabes si es esta semana o el mes que viene; con el ritmo solo no sabes desde dónde arranca. Juntos sí.\n\nSLIDE 6 — Eso es lo que hace LigaLab. Por cada jugador de tu liga: hueco hasta la cláusula, subida media diaria, días estimados a ese ritmo, y si está blindado y hasta cuándo. Y la lista no va ordenada por precio ni por nombre: va ordenada por cuándo puedes fichar.\n\nSLIDE 7 — Cuando no hay tendencia, no se inventa el número. La tarjeta dice por qué: sin histórico, congelado, o el valor no sube.\n\nSLIDE 8 — Es una pantalla que abres tú, no un aviso que te llega. Mira tu liga con LigaLab y empieza por arriba de la lista.",
+  "captions": {
+    "carousel": "«Me lo quitaron por sorpresa» casi nunca es sorpresa: es una cuenta que estaba hecha. Hueco que falta + ritmo al que sube. Un número solo no sirve.",
+    "tiktok": "«Me lo quitaron por sorpresa» casi nunca es sorpresa: es una cuenta que estaba hecha. Hueco que falta + ritmo al que sube. Un número solo no sirve. #fantasy #laligafantasy #clausulas"
+  },
+  "cta": "Mira tu liga con LigaLab y empieza por arriba de la lista.",
+  "shots": [
+    {
+      "kind": "typography_motion",
+      "description": "SLIDE 1 · PORTADA. «Nadie te la quitó por sorpresa» a sangre; bajo la línea roja de firma, «La cuenta ya estaba hecha y no la miró nadie.» en gris; en tercer nivel, ««No me dio tiempo». Casi nunca es verdad.» Fondo #08070a→#050506, sin manchas de luz. Cero iconografía. SIN NINGUNA CIFRA: si este slide circula solo, circula como afirmación, no como dato."
+    },
+    {
+      "kind": "generated_visual",
+      "description": "SLIDE 2 · «El precio de hoy no te dice el día». Una sola cifra grande y muda, tachada con una línea roja diagonal fina y deliberadamente no del todo legible. Es el gesto de «este número, solo, no responde a la pregunta». Prohibido que parezca ficha de jugador: sin escudo, sin silueta, sin nombre."
+    },
+    {
+      "kind": "generated_visual",
+      "description": "SLIDE 3 · «Una cláusula se lee con DOS números». Aparece la estructura de la división: dos bloques VACÍOS etiquetados HUECO y RITMO en rojo, separados por la línea roja horizontal. Los bloques están vacíos a propósito — es el esquema, no el dato. «DOS» en rojo, único énfasis del slide."
+    },
+    {
+      "kind": "generated_visual",
+      "description": "SLIDE 4 · Se rellena el esquema anterior: «Le faltan 1,2 M» arriba, «Sube ≈400k/día de media» debajo, cifras tabulares grandes. CRÍTICO: píldora de borde rojo con la palabra EJEMPLO, y bajo las cifras «Cifras de ejemplo. Los números reales salen de tu liga.» Sin barra de estado, pestañas ni chrome de app: es una tarjeta tipográfica, no una pantalla."
+    },
+    {
+      "kind": "generated_visual",
+      "description": "SLIDE 5 · EL SLIDE BLINDADO. «A este ritmo:» va en la línea INMEDIATAMENTE superior a «3 días», ambos dentro de una MISMA caja de filete rojo que contiene también «si el ritmo cambia, cambia el número». «A este ritmo» a un cuerpo mínimo del 40% del de la cifra, para que ningún recorte, miniatura o repost pueda aislar el «3 días». Fuera de la caja: «Un número solo no sirve. Los dos juntos, sí.» Mantiene el sello EJEMPLO. NO se usa jamás como portada ni como frame de preview."
+    },
+    {
+      "kind": "real_app_capture",
+      "description": "SLIDE 6 · «Ordenado por cuándo puedes fichar» + captura REAL de la lista con sus cuatro campos y el orden por proximidad. Morado del producto intacto, sin recolorear ni armonizar con el rojo. Filete rojo de 2 px alrededor, único elemento de marca que la toca. No se superpone texto encima, no se resaltan filas, no se recorta para «mejorar» lo que muestra.",
+      "captureNeeded": "Lista de cláusulas ordenada por proximidad de fichaje, con hueco, ritmo diario, días a ese ritmo y blindaje con fecha; 3-4 filas."
+    },
+    {
+      "kind": "real_app_capture",
+      "description": "SLIDE 7 · «Sin tendencia = te dice por qué. No se inventa el número.» Captura REAL del estado de dato ausente: la fila donde la app declara que no hay tendencia suficiente y explica el motivo, en lugar de mostrar una estimación. Es el slide que sostiene el principio de marca con evidencia y no con una frase. Si esa pantalla no se puede capturar tal cual existe hoy, el slide pasa a texto puro sobre fondo neutro — nunca a una recreación.",
+      "captureNeeded": "El estado de tendencia ausente, con el mensaje literal de la app explicando el motivo."
+    },
+    {
+      "kind": "typography_motion",
+      "description": "SLIDE 8 · CIERRE. «Pantalla que abres tú.» grande, debajo «No es un aviso.» SIN campana, sin badge, sin punto rojo de notificación, sin marco de móvil con push, sin ningún glifo que insinúe alerta: push está apagado en producción y el icono lo afirmaría igual que la palabra. Cierra «Mira tu liga con LigaLab» con el logotipo en su tamaño de firma."
+    }
+  ],
+  "imagePrompt": "Carrusel vertical 1080x1350, ocho slides. Base neutra #08070a → #050506 en degradado plano, sin manchas de luz y en particular sin ningún halo morado: el morado no existe fuera de las capturas reales. Acento rojo de marca LigaLab, un solo énfasis por slide; el hex no está fijado en el repositorio, se usa el valor aprobado por identidad y no se inventa uno plausible. Tipografía Sora con figuras TABULARES en todo dato numérico. Línea roja horizontal de 2 px a la misma altura Y en los ocho slides, para que al deslizar no salte. Filete rojo de 2 px alrededor de toda captura real, y SOLO alrededor de capturas reales: el filete es lo que dice al espectador «esto es la app de verdad». PROHIBIDO generar interfaz de aplicación: sin barra de estado, pestañas, botones ni chrome de app en los slides generados. Prohibidos además escudos de clubes, logo de LALIGA, fotos de prensa de jugadores, y cualquier glifo de notificación — campanas, badges, puntos rojos, marcos de móvil con push.",
+  "platforms": [
+    "instagram",
+    "tiktok",
+    "x"
+  ],
+  "formats": [
+    "carousel"
+  ],
+  "qa": {
+    "pass": true,
+    "blockedReasons": [],
+    "warnings": [
+      "Origen de esta pieza: una oportunidad de ACTUALIDAD sin evidencia (un rumor de redes sobre una cláusula que iba a desplomarse) que el Strategist devolvió BLOCKED por dos motivos independientes — cero fuente citable, y predicción de valor prohibida por PRODUCT_TRUTH:218. Esta es la alternativa evergreen, que no depende de ninguna noticia. La oportunidad original no se produjo y no se va a producir.",
+      "Aplicado antes de escribir un aviso menor del Reviewer: el slide 4 decía «Sube 400k/día», que se lee como ritmo fijo cuando el campo del producto es subida media diaria. Ahora dice «≈400k/día de media», lo que además reintroduce el ≈.",
+      "Aviso NO aplicado, a propósito: «Casi nunca es verdad» (slide 1) es una generalización sobre el lector. El Reviewer la marcó como la frase más opinable de la pieza y a la vez reconoció que funciona como tensión. Se mantiene: es el hook, y suavizarla lo desactiva. Queda anotado para quien apruebe.",
+      "LA REGLA QUE MÁS FÁCIL SE ROMPE AL EDITAR: si borras «a este ritmo» de una frase y la frase sigue teniendo sentido, es predicción y no se publica. Y la condicional tiene que ir en el MISMO slide que el número de días — si el «3 días» circula solo en un repost o en una miniatura, circula como promesa de fecha.",
+      "Alertas es una pantalla que el usuario ABRE, no un aviso que llega: push y cron están apagados en producción. La prohibición alcanza a la iconografía, no solo a las palabras: una campana o un punto rojo afirman lo mismo que la frase.",
+      "El slide 7 depende de que el estado «sin tendencia» sea capturable hoy en producción. Si no lo es, pasa a texto puro sobre fondo neutro. Nunca a una recreación.",
+      "Las cifras 1,2 M y ≈400k/día son EJEMPLO INVENTADO, no un dato de producto. El sello EJEMPLO en los slides 4 y 5 es innegociable: sin él, el slide es un mockup falso de LigaLab.",
+      "No decir «el primero» ni «lo que nadie hace»: FantasyStats ya anuncia análisis de cláusulas de rivales. Nuestro terreno aquí es el ORDEN por fecha de disponibilidad, no la existencia de la función."
+    ],
+    "requiredChanges": [],
+    "checkedAt": "2026-08-22T00:00:00.000Z",
+    "checkedBy": "brand-reviewer (subagente)"
+  },
+  "approval": {
+    "required": true,
+    "status": "pending",
+    "approvedAt": null,
+    "approvedBy": null
+  }
+}
