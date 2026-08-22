@@ -35,51 +35,29 @@ export function toPosition(positionId: string): Position | null {
   return mapped && mapped !== 'ENT' ? mapped : null;
 }
 
-const IMAGE_KEY = /(avatar|image|img|photo|picture|portrait|thumbnail|profile|media)/i;
-const DIRECT_IMAGE_KEY = /^(avatar|avatarUrl|image|imageUrl|img|imgUrl|photo|photoUrl|picture|profileImage|profileImageUrl|profilePicture|thumbnail)$/i;
+function imageUrl(value: unknown): string {
+  if (typeof value === 'string') return value.trim();
+  if (!value || typeof value !== 'object') return '';
 
-function cleanImageUrl(value: unknown): string {
-  if (typeof value !== 'string') return '';
-  const url = value.trim();
-  if (!url) return '';
-  if (/^(https?:\/\/|data:image\/|\/\/)/i.test(url)) return url;
-  return '';
-}
-
-/**
- * LALIGA ha cambiado varias veces la forma del perfil de manager. En algunos
- * endpoints la imagen llega plana y en otros puede venir anidada. Recorremos
- * solo ramas cuyo nombre parece relacionado con imagen/perfil y limitamos la
- * profundidad para no confundir cualquier URL del objeto con una foto.
- */
-function nestedImageUrl(value: unknown, depth = 0): string {
-  if (depth > 5 || value === null || value === undefined) return '';
-
-  const direct = cleanImageUrl(value);
-  if (direct) return direct;
-
-  if (Array.isArray(value)) {
-    for (const item of value) {
-      const found = nestedImageUrl(item, depth + 1);
-      if (found) return found;
-    }
-    return '';
-  }
-
-  if (typeof value !== 'object') return '';
   const object = value as Record<string, unknown>;
+  const preferredKeys = [
+    'url',
+    'src',
+    'avatar',
+    'image',
+    'profileImage',
+    'profilePicture',
+    'picture',
+    'original',
+    'large',
+    'medium',
+    'small',
+    '256x256',
+    '128x128',
+  ];
 
-  // Primero, las claves de imagen explícitas.
-  for (const [key, candidate] of Object.entries(object)) {
-    if (!DIRECT_IMAGE_KEY.test(key)) continue;
-    const found = nestedImageUrl(candidate, depth + 1);
-    if (found) return found;
-  }
-
-  // Después, contenedores semánticos como profile/media/images.
-  for (const [key, candidate] of Object.entries(object)) {
-    if (!IMAGE_KEY.test(key)) continue;
-    const found = nestedImageUrl(candidate, depth + 1);
+  for (const key of preferredKeys) {
+    const found = imageUrl(object[key]);
     if (found) return found;
   }
 
@@ -88,10 +66,7 @@ function nestedImageUrl(value: unknown, depth = 0): string {
 
 function managerAvatar(api: ApiManagerLike | ApiUser): string {
   const raw = api as unknown as Record<string, unknown>;
-
-  // Mantiene prioridad sobre las variantes conocidas para no cambiar una foto
-  // válida si LALIGA añade otros metadatos al mismo objeto.
-  const preferred = [
+  const candidates = [
     raw.avatar,
     raw.avatarUrl,
     raw.image,
@@ -103,19 +78,14 @@ function managerAvatar(api: ApiManagerLike | ApiUser): string {
     raw.photo,
     raw.photoUrl,
     raw.images,
-    raw.profile,
-    raw.media,
   ];
 
-  for (const candidate of preferred) {
-    const found = nestedImageUrl(candidate);
-    if (found) return found;
+  for (const candidate of candidates) {
+    const resolved = imageUrl(candidate);
+    if (resolved) return resolved;
   }
 
-  // Último recurso: busca ramas semánticas desconocidas conservadas por el
-  // `.passthrough()` del schema. No acepta URLs de claves no relacionadas con
-  // imágenes, así que no puede acabar pintando enlaces de perfil como avatar.
-  return nestedImageUrl(raw);
+  return '';
 }
 
 export function mapManager(api: ApiManagerLike | ApiUser): Manager {

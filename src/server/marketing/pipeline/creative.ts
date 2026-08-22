@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { paqueteCrudoSchema, radarOpportunitySchema, type PaqueteCrudo } from '../schemas.ts';
 import { leerPaquete } from '../packages.ts';
 import { llamarClaude, type LlamadaClaude, type UsoDeTokens } from './claude.ts';
-import { leerDocs } from './docs.ts';
+import { leerDocs, rutaDeAgente } from './docs.ts';
 import { pedirJSON } from './json.ts';
 import {
   brandReviewerOutputSchema,
@@ -24,10 +24,10 @@ import {
 
 /**
  * Etapas 2-6 — Strategist → Copywriter → Creative Director → Video Director
- * → Brand Reviewer (`agents/strategist.md` … `agents/brand-reviewer.md`).
+ * → Brand Reviewer (`.claude/agents/strategist.md` … `.claude/agents/brand-reviewer.md`).
  *
  * Parte de un `package.json` que YA existe (el `draft` que escribe
- * `prepare-agent-queue.mjs`) y del `marketing/radar/<fecha>.json` del que
+ * `prepare-agent-queue.ts`) y del `marketing/radar/<fecha>.json` del que
  * salió — nunca reconstruye la selección ni el scoring, que es trabajo del
  * Radar y de ese script. Solo rellena lo que un `package.json` recién creado
  * tiene a `null`.
@@ -51,7 +51,7 @@ export type ResultadoCreativo = { paquete: PaqueteCrudo; usage: UsoDeTokens };
 export type OpcionesCreativo = {
   /** Dónde vive el `package.json` y el `radar/<fecha>.json` de esta tanda — casi siempre el propio repo, un directorio temporal en los tests. */
   raizDatos?: string;
-  /** Dónde viven los documentos estáticos (`agents/`, `brand/`, `marketing/*.md`) — casi siempre el propio repo. Separado de `raizDatos` a propósito: un test puede fabricar datos en un directorio temporal sin tener que copiar ahí también toda la documentación real. */
+  /** Dónde viven los documentos estáticos (`.claude/agents/`, `brand/`, `marketing/*.md`) — casi siempre el propio repo. Separado de `raizDatos` a propósito: un test puede fabricar datos en un directorio temporal sin tener que copiar ahí también toda la documentación real. */
   raizDocs?: string;
   llamar?: LlamadaClaude;
 };
@@ -84,7 +84,7 @@ export async function generarCreativo(fecha: string, contentId: string, opciones
   };
 
   // 1. Strategist
-  const docsEstratega = await leerDocs(raizDocs, ['marketing/PRODUCT_TRUTH.md', 'marketing/STRATEGY.md', 'marketing/CONTENT_ENGINE.md', 'agents/strategist.md']);
+  const docsEstratega = await leerDocs(raizDocs, ['marketing/PRODUCT_TRUTH.md', 'marketing/STRATEGY.md', 'marketing/CONTENT_ENGINE.md', rutaDeAgente('strategist')]);
   const estrategia = await pedirJSON(llamar, {
     model: MODELO_CARO,
     system: `Eres el agente "Strategist" de LigaLab.\n\n${docsEstratega}`,
@@ -94,7 +94,7 @@ export async function generarCreativo(fecha: string, contentId: string, opciones
   sumar(estrategia.usage);
 
   // 2. Copywriter
-  const docsCopy = await leerDocs(raizDocs, ['brand/VOICE.md', 'brand/CONTENT_RULES.md', 'agents/copywriter.md']);
+  const docsCopy = await leerDocs(raizDocs, ['brand/VOICE.md', 'brand/CONTENT_RULES.md', rutaDeAgente('copywriter')]);
   const copy = await pedirJSON(llamar, {
     model: MODELO_CARO,
     system: `Eres el agente "Copywriter" de LigaLab.\n\n${docsCopy}`,
@@ -104,7 +104,7 @@ export async function generarCreativo(fecha: string, contentId: string, opciones
   sumar(copy.usage);
 
   // 3. Creative Director
-  const docsCreativo = await leerDocs(raizDocs, ['brand/BRAND.md', 'marketing/IMAGE_PIPELINE.md', 'agents/creative-director.md']);
+  const docsCreativo = await leerDocs(raizDocs, ['brand/BRAND.md', 'marketing/IMAGE_PIPELINE.md', rutaDeAgente('creative-director')]);
   const creativo = await pedirJSON(llamar, {
     model: MODELO_CARO,
     system: `Eres el agente "Creative Director" de LigaLab.\n\n${docsCreativo}`,
@@ -114,7 +114,7 @@ export async function generarCreativo(fecha: string, contentId: string, opciones
   sumar(creativo.usage);
 
   // 4. Video Director
-  const docsVideo = await leerDocs(raizDocs, ['marketing/SEEDANCE_PIPELINE.md', 'agents/video-director.md']);
+  const docsVideo = await leerDocs(raizDocs, ['marketing/SEEDANCE_PIPELINE.md', rutaDeAgente('video-director')]);
   const video = await pedirJSON(llamar, {
     model: MODELO_CARO,
     system: `Eres el agente "Video Director" de LigaLab.\n\n${docsVideo}`,
@@ -124,7 +124,7 @@ export async function generarCreativo(fecha: string, contentId: string, opciones
   sumar(video.usage);
 
   // 5. Brand Reviewer — el gate. Nunca publica; solo decide pass/fail.
-  const docsRevisor = await leerDocs(raizDocs, ['marketing/PRODUCT_TRUTH.md', 'brand/BRAND.md', 'brand/VOICE.md', 'brand/CONTENT_RULES.md', 'agents/brand-reviewer.md']);
+  const docsRevisor = await leerDocs(raizDocs, ['marketing/PRODUCT_TRUTH.md', 'brand/BRAND.md', 'brand/VOICE.md', 'brand/CONTENT_RULES.md', rutaDeAgente('brand-reviewer')]);
   const revision = await pedirJSON(llamar, {
     model: MODELO_CARO,
     system: `Eres el agente "Brand Reviewer" de LigaLab.\n\n${docsRevisor}`,

@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { captionsSchema, escenaSchema, planoSchema, qaResultSchema, strategyOutputSchema } from '../schemas.ts';
 
 /**
- * Las cinco etapas caras (`agents/strategist.md` → `agents/brand-reviewer.md`),
+ * Las cinco etapas caras (`.claude/agents/strategist.md` → `.claude/agents/brand-reviewer.md`),
  * cada una como { schema de su salida, plantilla de su prompt }. `creative.ts`
  * solo encadena estas cinco llamadas — la especificación de QUÉ pide cada
  * etapa vive aquí, no repartida por el orquestador.

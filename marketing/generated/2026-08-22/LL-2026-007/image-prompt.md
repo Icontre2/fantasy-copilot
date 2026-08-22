@@ -1,3 +1,0 @@
-# Image Prompt — LL-2026-007
-
-9:16 social cover for LigaLab. Near-black background, bold condensed white typography, premium sports analytics feel. Main headline: “TU RIVAL PUEDE DAR MÁS MIEDO POR SU CAJA QUE POR SU PLANTILLA”. Two abstract zones: PLANTILLA vs CAJA ESTIMADA. Thin red accent line. No logos, no club branding, no numbers, no app interface, no fake screenshots. Small footer: “LigaLab · en construcción”.

@@ -1,0 +1,150 @@
+name: Tanda diaria de marketing
+
+# Fase E — que el sistema se despierte solo.
+#
+# Ejecuta las tres etapas de la pipeline y abre una PR con lo generado. NO
+# empuja a main: el gate humano del documento maestro dice que nada pasa a
+# `generated` ni a `published` sin aprobación explícita, y una rama que se
+# fusiona sola sería ese gate saltado por la puerta de atrás.
+#
+# Coste por ejecución: 1 llamada barata (Radar, Haiku, con búsqueda web) + hasta
+# `creativeCandidateLimit` piezas caras (Opus). El límite lo aplica
+# `marketing:queue` y lo revalida `marketing:generate`; ademas es un techo POR
+# DÍA, así que un `workflow_dispatch` manual sobre una fecha ya procesada no
+# vuelve a gastar.
+
+on:
+  schedule:
+    # 06:00 UTC = 08:00 en España (CEST). Antes de que se cierren los onces.
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    inputs:
+      fecha:
+        description: 'Fecha a procesar (YYYY-MM-DD). Vacío = hoy en UTC.'
+        required: false
+        type: string
+
+# Nunca dos tandas a la vez sobre el mismo repositorio: se pisarían los ficheros
+# generados y la segunda abriría una PR con el trabajo de la primera a medias.
+concurrency:
+  group: marketing-daily
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  tanda:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Sin clave no se inventa contenido: se para y se dice. Es la misma regla
+      # que aplican los scripts, comprobada aquí antes de gastar un minuto de
+      # runner instalando dependencias.
+      - name: Comprobar que hay clave
+        id: clave
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "Falta el secret ANTHROPIC_API_KEY. La tanda no se ejecuta." >> "$GITHUB_STEP_SUMMARY"
+            echo "hay=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "hay=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Use Node.js
+        if: steps.clave.outputs.hay == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        if: steps.clave.outputs.hay == 'true'
+        run: npm ci
+
+      - name: Fijar la fecha
+        if: steps.clave.outputs.hay == 'true'
+        id: fecha
+        run: echo "valor=${{ inputs.fecha || '' }}" >> "$GITHUB_OUTPUT"
+
+      - name: Fantasy Radar
+        if: steps.clave.outputs.hay == 'true'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          FECHA="${{ steps.fecha.outputs.valor }}"
+          [ -z "$FECHA" ] && FECHA=$(date -u +%F)
+          echo "FECHA=$FECHA" >> "$GITHUB_ENV"
+          npm run marketing:radar -- "$FECHA"
+
+      - name: Preparar la cola
+        if: steps.clave.outputs.hay == 'true'
+        run: npm run marketing:queue -- "$FECHA"
+
+      - name: Generar las piezas
+        if: steps.clave.outputs.hay == 'true'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: npm run marketing:generate -- "$FECHA"
+
+      # El canario `paquetes-reales.test.ts` recorre todo `marketing/generated/**`
+      # y falla si el panel no puede leer algo. Corre ANTES de abrir la PR: una
+      # tanda que produce una pieza ilegible no debe llegar a revisión humana
+      # como si estuviera bien.
+      - name: Verificar lo generado
+        if: steps.clave.outputs.hay == 'true'
+        run: npm test
+
+      - name: ¿Hay algo nuevo?
+        if: steps.clave.outputs.hay == 'true'
+        id: cambios
+        run: |
+          if [ -z "$(git status --porcelain marketing/)" ]; then
+            echo "Nada nuevo para $FECHA." >> "$GITHUB_STEP_SUMMARY"
+            echo "hay=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "hay=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Abrir PR con la tanda
+        if: steps.clave.outputs.hay == 'true' && steps.cambios.outputs.hay == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          RAMA="marketing/tanda-$FECHA"
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$RAMA"
+          git add marketing/
+          git commit -m "Tanda de marketing del $FECHA
+
+          Generada por .github/workflows/marketing-daily.yml. Ninguna pieza esta
+          aprobada ni publicada: entran en /marketing como pending_approval y
+          esperan decision humana."
+          git push -u origin "$RAMA"
+          gh pr create \
+            --title "Tanda de marketing del $FECHA" \
+            --body "$(cat <<'CUERPO'
+          Tanda diaria generada automáticamente.
+
+          **Nada de esto está aprobado ni publicado.** Las piezas entran como
+          `pending_approval` y esperan decisión humana en `/marketing`.
+
+          ### Antes de fusionar
+
+          - Revisar cada pieza en el panel, no solo el diff.
+          - Comprobar que las fuentes del Radar siguen vivas y son de hoy.
+          - Atender los `needsCapture`: sin la captura real, esas piezas no se
+            producen — no hay versión generada de una pantalla de producto.
+
+          ---
+          _Generated by [Claude Code](https://claude.ai/code)_
+          CUERPO
+          )"

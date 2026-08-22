@@ -8,7 +8,7 @@ import { z } from 'zod';
  * entre sí. La primera (`marketing/templates/content-package.schema.json`,
  * `brand/CONTENT_RULES.md`) usa snake_case y un id `LL-YYYY-NNN`; nunca llegó a
  * tener código que la escribiera. La segunda —la que SÍ escribe
- * `scripts/marketing/prepare-agent-queue.mjs` y lee `set-approval.mjs`— usa
+ * `scripts/marketing/prepare-agent-queue.ts` y lee `set-approval.mjs`— usa
  * camelCase y un id `LL-YYYYMMDD-NNN`. Son incompatibles y nadie las reconcilió.
  *
  * Aquí se toma la SEGUNDA como fuente de verdad, porque es la única con código
@@ -17,7 +17,7 @@ import { z } from 'zod';
  * completo a una convención que nunca se ejecutó.
  *
  * Todo lo que pueda faltar en un paquete real —porque las fases de estrategia,
- * copy, dirección creativa y vídeo son hoy solo prompts en `agents/*.md`, sin
+ * copy, dirección creativa y vídeo son hoy solo prompts en `.claude/agents/*.md`, sin
  * agente que las ejecute— es opcional aquí a propósito. Un campo vacío se
  * enseña vacío en el panel; no se rellena con nada inventado.
  */
@@ -46,7 +46,7 @@ export const radarOpportunitySchema = z.object({
 });
 export type RadarOpportunity = z.infer<typeof radarOpportunitySchema>;
 
-// ── Estrategia (agents/strategist.md) ───────────────────────────────────────
+// ── Estrategia (.claude/agents/strategist.md) ───────────────────────────────────────
 
 export const strategyOutputSchema = z.object({
   audience: z.string().optional(),
@@ -59,7 +59,7 @@ export const strategyOutputSchema = z.object({
   riskNotes: z.string().optional(),
 });
 
-// ── Copy (agents/copywriter.md) ─────────────────────────────────────────────
+// ── Copy (.claude/agents/copywriter.md) ─────────────────────────────────────────────
 
 export const captionsSchema = z.object({
   tiktok: z.string().optional(),
@@ -68,7 +68,7 @@ export const captionsSchema = z.object({
   carousel: z.string().optional(),
 });
 
-// ── Dirección creativa (agents/creative-director.md) ────────────────────────
+// ── Dirección creativa (.claude/agents/creative-director.md) ────────────────────────
 
 export const TIPOS_DE_PLANO = ['real_app_capture', 'generated_visual', 'typography_motion', 'football_reference'] as const;
 export const tipoDePlanoSchema = z.enum(TIPOS_DE_PLANO);
@@ -80,14 +80,14 @@ export const planoSchema = z.object({
   captureNeeded: z.string().optional(),
 });
 
-// ── Vídeo (agents/video-director.md) ────────────────────────────────────────
+// ── Vídeo (.claude/agents/video-director.md) ────────────────────────────────────────
 
 export const escenaSchema = z.object({
   timestamp: z.string(),
   description: z.string(),
 });
 
-// ── QA (agents/brand-reviewer.md) ───────────────────────────────────────────
+// ── QA (.claude/agents/brand-reviewer.md) ───────────────────────────────────────────
 //
 // El campo que de verdad manda es `pass`: es el único que lee
 // `scripts/marketing/set-approval.mjs` para decidir si se puede aprobar. Los
@@ -173,13 +173,13 @@ export type CapturaReal = z.infer<typeof capturaRealSchema>;
 //
 // Deliberadamente permisivo: casi todo opcional, porque casi todo lo llenan
 // fases que todavía no tienen agente. Lo único obligatorio es lo que
-// `prepare-agent-queue.mjs` YA escribe siempre.
+// `prepare-agent-queue.ts` YA escribe siempre.
 
 export const paqueteCrudoSchema = z
   .object({
     /*
      * Las DOS convenciones de id conviven de verdad, no en teoría:
-     * `prepare-agent-queue.mjs` escribe `LL-YYYYMMDD-NNN`, y los paquetes que
+     * `prepare-agent-queue.ts` escribe `LL-YYYYMMDD-NNN`, y los paquetes que
      * se han producido siguiendo `marketing/templates/content-package.schema.json`
      * usan `LL-YYYY-NNN`. Exigir solo la primera dejaba la pieza real
      * `LL-2026-001` marcada como «bloqueada» en el panel, que es justo lo que

@@ -1,3 +1,0 @@
-# Seedance Prompt — LL-2026-007
-
-Vertical 9:16, 12–14 seconds. Premium dark sports-data aesthetic. Start with oversized white typography: “TU RIVAL PUEDE DAR MÁS MIEDO POR SU CAJA QUE POR SU PLANTILLA”. Split-screen conceptual contrast: left side abstract squad cards/silhouettes labelled PLANTILLA; right side abstract reserve/cash capacity labelled CAJA ESTIMADA. No readable fake app UI, no player names, no club crests, no invented numbers. Use a thin LigaLab red line as transition motif. End card: “LigaLab · en construcción”. Fast, clean kinetic typography, no corporate stock look.

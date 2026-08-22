@@ -104,7 +104,7 @@ export function editar(actual: EstadoHumano, contexto: ContextoEfectivo, cambios
 }
 
 /**
- * MARCAR QA. Hoy lo hace una persona, no un agente: `agents/brand-reviewer.md`
+ * MARCAR QA. Hoy lo hace una persona, no un agente: `.claude/agents/brand-reviewer.md`
  * es un prompt, no código que corra dentro de esta app. El resultado se
  * guarda igual de honesto que si lo hiciera un agente —con quién lo comprobó—
  * y `needsReReview` se limpia porque esto ES la revisión que faltaba.

@@ -13,7 +13,7 @@
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-strip-types --test \"app/**/*.test.ts\" \"src/**/*.test.ts\"",
     "marketing:radar": "node --experimental-strip-types scripts/marketing/run-radar.ts",
-    "marketing:queue": "node scripts/marketing/prepare-agent-queue.mjs",
+    "marketing:queue": "node --experimental-strip-types scripts/marketing/prepare-agent-queue.ts",
     "marketing:generate": "node --experimental-strip-types scripts/marketing/run-creative.ts",
     "marketing:approve": "node scripts/marketing/set-approval.mjs"
   },

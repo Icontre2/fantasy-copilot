@@ -1,3 +1,0 @@
-# Image Prompt — LL-2026-002
-
-Vertical 9:16 key visual for a Spanish fantasy football TikTok. Premium dark neutral background, abstract football pitch texture, two clean graphic concepts facing each other: a stack of generic player cards representing squad value and a minimal wallet/cash symbol representing liquidity. Large visual `≠` between them. Strong red accent line used only as marketing framing. Leave generous empty space for editable text overlay. No real player faces, no club logos, no fake app screenshot, no exact money amount, no imitation of LigaLab UI.

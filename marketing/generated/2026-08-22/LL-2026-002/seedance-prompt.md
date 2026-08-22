@@ -1,5 +1,0 @@
-# Seedance Prompt — LL-2026-002
-
-Create a 9:16 vertical sports-growth video, 12–14 seconds. High-contrast dark neutral background, sharp kinetic typography, subtle football-stadium atmosphere, premium but fast TikTok pacing. Visual beat 1: two abstract fantasy-team value cards slide in, then a bold `≠` symbol separates them. Visual beat 2: one side becomes a generic squad-value concept, the other becomes a simple wallet/cash concept. Visual beat 3: rapid zoom into the question `¿CUÁNTA CAJA TIENE?`. Visual beat 4: clean LigaLab red-line framing and the text `Estoy construyendo LigaLab`. Final frame: `¿Tú cómo calculas la caja de tus rivales?`
-
-Do not generate any LigaLab app interface, readable fake product screen, real club badge, real player likeness, exact money amount, or claim of public availability. Keep all UI-like objects generic and abstract.

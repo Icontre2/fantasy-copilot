@@ -1,0 +1,69 @@
+{
+  "id": "LL-20260822-002",
+  "date": "2026-08-22",
+  "status": "pending_approval",
+  "sourceOpportunityId": "LL-20260822-002",
+  "score": 72,
+  "problem": "Antes de decidir si blinda a un jugador, el manager no sabe si el rival que se lo puede quitar tiene dinero para hacerlo. Blinda al que nadie iba a tocar, o deja abierto al que sí, y se entera cuando ya se lo han pagado.",
+  "feature": "Caja de rivales reconstruida (≈) + Alertas de cláusula",
+  "hook": "Blindas al jugador equivocado porque miras tu plantilla en vez de mirar la cartera del otro.",
+  "needsCapture": true,
+  "captureRequest": "Tres capturas reales de producción, con sesión propia y en modo oscuro. A (slide 5): EconomyView con la caja reconstruida de un rival y su desglose — saldo inicial, operaciones, ingresos por puntos — con el ≈ visible. B (slide 6): la explicación del método de estimación tal y como se muestra en pantalla, con el ≈ en el mismo fotograma; el recorte se hace después sobre el original, nunca redibujando. C (slide 7): AlertsView con dos o tres tarjetas de jugador donde se lean el hueco hasta la cláusula, la subida media diaria, los días estimados y el estado de blindaje con su fecha. NO debe verse: nombres, alias o avatares de managers reales, nombre real de la liga, datos personales, barra de estado, escudos de clubes, logo de LALIGA ni fotos de prensa. NO se pueden recolorear al rojo de marca, cambiar tipografías, sustituir cifras ni recomponer el layout: el framing rodea la captura, no entra.",
+  "strategy": {
+    "audience": "Manager de LALIGA Fantasy en liga privada de amigos o de trabajo, donde el pique es personal. Sabe qué es una cláusula y ya ha pagado alguna.",
+    "problem": "Decide el blindaje mirando su propia plantilla, cuando el dato que resuelve la decisión es la caja del rival.",
+    "insight": "Blindar no es una decisión sobre tu jugador. Es una decisión sobre la cuenta bancaria del rival — y esa es justo la cifra que LALIGA no te enseña.",
+    "feature": "Caja de rivales reconstruida (≈) + Alertas de cláusula",
+    "proofNeeded": "Captura real de EconomyView con el ≈ visible, de la explicación del método, y de AlertsView.",
+    "angle": "Creencia falsa → dato: estás blindando por instinto, y el instinto no sabe cuánto dinero tiene el de enfrente.",
+    "cta": "Antes de blindar, compruébalo en LigaLab.",
+    "riskNotes": "Prohibido prometer exactitud sobre la caja ajena: el ≈ es parte del mensaje. No existe simulador de blindaje ni aviso automático. El producto no recomienda a quién blindar."
+  },
+  "hooks": [
+    "Blindas al jugador equivocado porque miras tu plantilla en vez de mirar la cartera del otro.",
+    "¿Sabes cuánto dinero puede gastar hoy el rival que te tiene ganas?",
+    "La cláusula no la paga tu jugador. La paga la cuenta bancaria del de enfrente.",
+    "Te levantas, abres la app y ya no está. Y encima era el que ibas a blindar hoy.",
+    "En tu liga hay uno con caja para pagarte cualquier cláusula. ¿Sabrías decir quién?"
+  ],
+  "script": "Cuando decides a quién blindar, estás mirando el sitio equivocado. Miras tu plantilla: quién rinde, quién está caro, quién te da miedo perder. Y así acabas blindando al que nadie iba a tocar. Blindar no es una decisión sobre tu jugador. Es una decisión sobre el dinero del rival. Si el de enfrente no llega a la cláusula, blindar ahí es tirar el dinero. Si llega, es lo único que te salva. El problema es que ese número no lo tienes a mano. Ves tu caja, sí, porque LALIGA la publica. Pero la del rival, la que decide si te lo quitan o no, no. LigaLab reconstruye la caja de cada rival: parte de los 100 M€ iniciales, le suma y le resta el historial de operaciones y le añade lo que ha ingresado por puntos. Sale un número con ≈ delante, porque es una estimación, y dentro te explica cómo está hecho. Y en la vista de cláusulas, jugador por jugador, tienes cuánto falta para llegar a su cláusula y si está blindado y hasta cuándo. LigaLab no te dice a quién blindar. Eso es tuyo. Solo te pone la cuenta del rival delante para que dejes de decidirlo a ciegas.",
+  "captions": {
+    "tiktok": "El error no es blindar poco. Es blindar sin saber si el otro tiene dinero para pagarte la cláusula. LigaLab reconstruye la caja de cada rival (≈, es estimación) y te enseña el hueco hasta cada cláusula. A quién blindas, lo decides tú. #lfantasy #fantasy #laligafantasy #ligaprivada #clausulas",
+    "carousel": "Blindaste al que nadie iba a tocar y te vaciaron el que dejaste abierto. Pasa por mirar tu plantilla en vez de la cartera del rival. LigaLab te enseña la caja estimada (≈) de cada uno de tu liga y cuánto le falta a cada jugador para su cláusula. Nada de consejos: la cuenta, y ya."
+  },
+  "cta": "Antes de blindar, compruébalo en LigaLab.",
+  "shots": [
+    { "kind": "typography_motion", "description": "Slide 1 — portada tipográfica sobre negro. «Blindas mirando tu plantilla.» en Sora Medium gris; debajo y desalineada a la derecha, «El problema está en la de enfrente.» en Sora ExtraBold blanco, un 40% mayor. La línea roja nace en el borde izquierdo. Sin captura, sin cifras: se lee entera en miniatura de feed." },
+    { "kind": "football_reference", "description": "Slide 2 — silueta de un manager de espaldas recortada a negro, frente a una pizarra táctica de trazo blanco fino. Fuera de foco a su derecha, un segundo tablero apenas insinuado: el que debería estar mirando. Sin escudos, sin logo de LALIGA, sin rostro, sin fotografía de prensa. Texto: «Blindar no es una decisión sobre tu jugador. / Es una decisión sobre su dinero.», con «su dinero» en rojo." },
+    { "kind": "generated_visual", "description": "Slide 3 — bifurcación. Una línea blanca vertical que se parte en dos ramas. Izquierda atenuada: «Si no llega a la cláusula → blindar ahí es tirar dinero.» Derecha en blanco pleno con remate rojo: «Si llega → es lo único que te salva.» Trazo geométrico limpio. Prohibido rotular cifras en euros: la bifurcación es cualitativa." },
+    { "kind": "generated_visual", "description": "Slide 4 — el giro de eje. Dos rectángulos de vidrio esmerilado: el izquierdo nítido con una retícula tabular VACÍA (filas dibujadas, ningún número), el derecho del mismo tamaño cubierto por un tramado denso ilegible y contorno rojo. Texto: «Tu caja: exacta. LALIGA la publica. / La del rival: no la tienes a mano.» Ninguna cifra legible, ningún chrome de app — es diagrama, no interfaz." },
+    { "kind": "real_app_capture", "description": "Slide 5 — captura real de EconomyView con la caja reconstruida de un rival y su desglose. El framing rodea: fondo, línea roja y el texto «LigaLab la reconstruye: 100 M€ iniciales + historial de operaciones + ingresos por puntos» ENCIMA de la captura, nunca sobre ella. Esquinas redondeadas y borde rojo de 2 px, sin recolorear ni recortar el interior. Si la captura no llega, esta slide no se produce: no hay versión generada.", "captureNeeded": "EconomyView: caja reconstruida de un rival con desglose (saldo inicial, operaciones, ingresos por puntos) y el ≈ visible. Sin datos identificables de managers ni barra de estado." },
+    { "kind": "real_app_capture", "description": "Slide 6 — recorte cerrado del punto exacto donde el ≈ acompaña a la cifra estimada y se ofrece la explicación del método en pantalla. Ampliar sí, redibujar no. Llamada tipográfica roja apuntando al ≈ con una línea fina, dibujada FUERA del área de la captura. Texto: «Sale con ≈ porque es una estimación. / Y te explicamos el método dentro.» Es el activo de honestidad de la marca: pierde todo su valor si el ≈ no es el real de producción.", "captureNeeded": "La explicación del método de estimación tal y como se muestra en pantalla, con el ≈ en el mismo fotograma." },
+    { "kind": "real_app_capture", "description": "Slide 7 — captura real de AlertsView con dos o tres tarjetas de jugador consecutivas: hueco hasta la cláusula, subida media diaria, días estimados y estado de blindaje con fecha. Mismo framing que la slide 5. Texto encima: «Jugador por jugador: cuánto falta hasta su cláusula y si está blindado, hasta cuándo.» Sin flechas ni círculos rojos sobre la interfaz: toda anotación va en el margen.", "captureNeeded": "AlertsView: dos o tres tarjetas de jugador con hueco hasta la cláusula, subida media diaria, días estimados y blindaje con su fecha. Sin nombres de managers ni de la liga." },
+    { "kind": "typography_motion", "description": "Slide 8 — cierre con el peso máximo a la derecha, completando el desplazamiento del eje. «No te decimos a quién blindar.» en gris; «Eso lo decides tú, con la cuenta delante.» en Sora ExtraBold blanco, subrayado por la línea roja que aquí completa su recorrido y sale por el borde. Wordmark algo mayor pero contenido, más el CTA. Sin captura, sin ilustración." }
+  ],
+  "imagePrompt": "Carrusel vertical 1080x1350 para redes, tema oscuro casi negro (#08070a a #050506), degradado muy plano y SIN manchas de luz de color. Acento rojo de marca LigaLab, un solo énfasis por slide. Tipografía geométrica sans estilo Sora, muy marcada; cifras tabulares. Estética editorial de app financiera premium, vidrio esmerilado sobre fondo oscuro, composición limpia con mucho aire y jerarquía clara. Una línea roja de 4 px avanza un octavo por slide como barra de progreso y firma. Sin logos de marcas reales, sin escudos de clubes, sin logo de LALIGA, sin caras ni fotografías de prensa de jugadores. PROHIBIDO generar interfaz de aplicación: nada de barras de estado, pestañas, botones ni cifras en euros legibles en el arte generado — las únicas pantallas de producto son capturas reales insertadas después.",
+  "platforms": ["tiktok", "instagram", "x"],
+  "formats": ["carousel"],
+  "qa": {
+    "pass": true,
+    "blockedReasons": [],
+    "warnings": [
+      "Adyacencia imprecisa corregida antes de escribir: la caja reconstruida vive en la economía de la liga (PRODUCT_TRUTH.md:45,51) y el hueco/blindaje en AlertsView (:43). El guion ya nombra la vista de cláusulas por separado en vez de sugerir que están juntas.",
+      "«no lo ves en ningún sitio» era más absoluto que PRODUCT_TRUTH.md:173 («la caja ajena es estimación salvo que LALIGA la publique»). Sustituido por «no lo tienes a mano», en guion y en la slide 4.",
+      "Inconsistencia documental de color: RESUELTA. Esta pieza la destapó. IMAGE_PIPELINE.md §3-§4 separa ahora la paleta de marketing (rojo) de la del producto (morado, solo dentro de la captura real), y hay test que falla si alguien lo revierte.",
+      "La frase del método es la más densa de la pieza y roza VOICE.md:11 (frases breves en móvil). Se acepta: es justo la frase que sostiene el ≈.",
+      "El PASS decae si las capturas no confirman lo que el guion promete — en particular, si la captura del método no muestra la explicación en pantalla, la pieza vuelve a revisión.",
+      "Sigue vigente el bloqueo §0 de PRODUCT_TRUTH (uso comercial sin autorización escrita de LALIGA). No afecta al contenido, sí a cualquier campaña de pago que use esta pieza."
+    ],
+    "requiredChanges": [],
+    "checkedAt": "2026-08-22T00:00:00.000Z",
+    "checkedBy": "brand-reviewer (subagente)"
+  },
+  "approval": {
+    "required": true,
+    "status": "pending",
+    "approvedAt": null,
+    "approvedBy": null
+  }
+}

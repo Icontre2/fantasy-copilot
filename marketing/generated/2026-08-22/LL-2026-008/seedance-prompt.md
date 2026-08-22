@@ -1,3 +1,0 @@
-# Seedance Prompt — LL-2026-008
-
-Vertical 9:16, 12–14 seconds. Dark premium sports-data style. Open with giant white text: “UNA CLÁUSULA NO SE MIRA CUANDO YA ES TARDE”. Visual metaphor: a clean countdown/proximity bar approaching a threshold, but use no real numbers or fake app UI. Red line advances as tension device. Secondary text: “VIGILA EL MARGEN ANTES”. No club logos, no player names, no invented alerts, no push notification mockups. End with “LigaLab · en construcción”.

@@ -9,7 +9,7 @@ y explícitamente fuera de este sprint.
 ## Qué hace
 
 1. Lee `marketing/generated/<fecha>/<contentId>/package.json` — el fichero que
-   escribe `scripts/marketing/prepare-agent-queue.mjs` y rellena
+   escribe `scripts/marketing/prepare-agent-queue.ts` y rellena
    `npm run marketing:generate` (ver `marketing/AGENT_RUNTIME.md` para cómo se
    genera ese contenido) — y lo enseña en una cola ordenada: pendiente de
    aprobar primero, bloqueado después, el resto por fecha.
@@ -71,7 +71,7 @@ En el repositorio conviven dos formas de escribir un paquete, y el panel lee
 
 | | Convención A | Convención B |
 | --- | --- | --- |
-| La escribe | `scripts/marketing/prepare-agent-queue.mjs` + `npm run marketing:generate` | A mano, siguiendo `marketing/templates/content-package.schema.json` |
+| La escribe | `scripts/marketing/prepare-agent-queue.ts` + `npm run marketing:generate` | A mano, siguiendo `marketing/templates/content-package.schema.json` |
 | Id | `LL-YYYYMMDD-NNN` | `LL-YYYY-NNN` |
 | Procedencia | `sourceOpportunityId`, `score` | `radarId`, `radarScore` |
 | Problema | `problem` en la raíz | dentro de `strategy.problem` |
