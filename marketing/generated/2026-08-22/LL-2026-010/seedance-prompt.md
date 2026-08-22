@@ -1,0 +1,3 @@
+# Seedance Prompt — LL-2026-010
+
+Vertical 9:16, 12–14 seconds. Dark premium sports-data look. Start with bold white text: “EL MERCADO NO TE DICE QUIÉN TIENE MARGEN PARA PUJAR”. Show abstract market cards in the center and several anonymous bidder silhouettes around them, with subtle red pressure lines indicating competition. No real names, numbers, balances, club crests or fake app UI. Secondary line: “VER EL JUGADOR ES SOLO UNA PARTE”. End: “LigaLab · en construcción”.
