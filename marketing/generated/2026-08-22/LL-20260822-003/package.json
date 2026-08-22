@@ -1,0 +1,71 @@
+{
+  "id": "LL-20260822-003",
+  "date": "2026-08-22",
+  "status": "pending_approval",
+  "sourceOpportunityId": "LL-RADAR-20260822-002",
+  "score": 93,
+  "problem": "Las bajas se las cuenta la prensa gratis. Lo que el manager no tiene es la respuesta a la única pregunta que le importa: con el sistema cambiado, ¿su jugador sigue dentro del once que queda, o se come un 2 desde el banquillo?",
+  "feature": "Once probable propio y de cada rival + Comparador",
+  "hook": "Ya sabes las bajas. ¿Sabes si tu jugador entra en el once que queda?",
+  "needsCapture": true,
+  "captureRequest": "Grabación de pantalla vertical, no capturas estáticas: en los beats 4-7 el movimiento de la pieza ES el de la app. Resolución nativa, sin barra de grabación, sin notificaciones. CAPTURA A (beats 4-5): pantalla de once probable con los porcentajes de titularidad; ~6 s continuos — 2 s de la formación quieta y luego el gesto real de scroll o tap hasta el detalle de una ficha con su porcentaje. CAPTURA B (beats 6-7): comparador con dos jugadores y valor, cláusula, media y puntos visibles a la vez; ~5 s. CAPTURA C (beat 6): los 2 s de navegación real entre A y B; si el producto no permite ese salto directo, se corta con fundido a negro en vez de fingir una fluidez que no existe. GRABAR UN EQUIPO DISTINTO al del caso de actualidad: la pieza evita nombrar al club a propósito, y capturar otro equipo evita tener que tapar nada. NO DEBE VERSE: nada identificable de otros managers (nombres, alias, avatares, clasificaciones de liga privada), escudos de club, logo de LALIGA, fotos de prensa de jugadores, el nombre del club, ni datos personales de la cuenta. Tapar sí, repintar no. NO HAY PLAN B GENERADO: si las grabaciones no llegan, los beats 4-7 se caen y hay que decidir entre publicar una pieza de tres beats o no publicar.",
+  "strategy": {
+    "audience": "Manager de liga privada con uno o dos jugadores del equipo afectado en su once, que este fin de semana decide si los alinea o los sienta y le quedan horas.",
+    "problem": "Una baja ajena no cambia tu alineación; un cambio de dibujo sí. El manager lee la noticia, entiende el problema y sigue igual de bloqueado, porque la noticia habla del equipo y él necesita hablar de su once.",
+    "insight": "Enterarse de las bajas es gratis. Lo caro es no saber si tu jugador sobrevive al once que queda después de las bajas.",
+    "feature": "Once probable propio y de cada rival + Comparador",
+    "proofNeeded": "Grabación real del once probable con porcentajes y del comparador cara a cara.",
+    "angle": "Creencia falsa → decisión: da por hecho que ya sabes las bajas y ataca el paso siguiente, que es donde nadie te ayuda.",
+    "cta": "Mira tu once en LigaLab y decide con el dato delante.",
+    "riskNotes": "LigaLab NO detecta ni avisa de lesiones, sanciones ni bajas: es roadmap. Prohibido el campo semántico avisa/alerta/detecta/antes que nadie. La pieza no nombra club ni jugador, así que ninguna previsión de AS aparece como hecho cerrado. El once probable no es diferencial y su dato es de un tercero: si la pieza se puede resumir en «mira el once del Valencia», hemos hecho publicidad gratis del proveedor."
+  },
+  "hooks": [
+    "Ya sabes las bajas. ¿Sabes si tu jugador entra en el once que queda?",
+    "Cuatro bajas no te dicen nada. Lo que decide tu jornada es quién ocupa esos huecos.",
+    "Te quedan horas para elegir y estás mirando el dato equivocado.",
+    "La lista de bajas es gratis. Lo caro es alinear a un tío que se queda fuera del dibujo.",
+    "Un cambio de sistema y tu carrilero deja de ser carrilero. ¿Lo tienes mirado?"
+  ],
+  "script": "Las bajas ya las sabes. Lo que no sabes es si tu jugador sigue en el once que queda. Cuando caen varios de atrás, el sistema cambia. Y hay gente que se cae del dibujo sin estar lesionada. En LigaLab tienes el once probable con los porcentajes: ves si tu jugador está dentro. ¿Dudas entre dos? Cara a cara: valor, cláusula, media, puntos. Decides tú. Nosotros te enseñamos la cuenta.",
+  "captions": {
+    "tiktok": "Saber las bajas no es la parte difícil. La difícil es saber si tu jugador sigue en el once que queda. Once probable con % de titularidad y comparador cara a cara en LigaLab. La decisión, tuya.",
+    "reels": "Te quedan horas para cerrar el once y estás mirando la lista de bajas. Mira el once que queda: quién entra, con qué porcentaje y si tu jugador sigue dentro del dibujo.",
+    "shorts": "Te quedan horas para cerrar el once y estás mirando la lista de bajas. Mira el once que queda: quién entra, con qué porcentaje y si tu jugador sigue dentro del dibujo."
+  },
+  "cta": "Mira tu once en LigaLab y decide con el dato delante.",
+  "shots": [
+    { "kind": "typography_motion", "description": "BEAT 1 (0,0-2,4 s) — «Las bajas ya las sabes». Negro casi puro #08070a. El texto entra ya escrito, sin tecleo: aparece de golpe y se estabiliza, como algo que no hace falta explicar. Debajo, en cuerpo pequeño y gris, el sello de fuente «AS · 22 ago 2026», fijo y atado al artículo." },
+    { "kind": "generated_visual", "description": "BEAT 2 (2,4-5,0 s) — «¿Y el once que queda?». Aparecen once puntos de luz en formación: sin campo dibujado, sin líneas de banda, sin escudo. Solo la constelación. Tres puntos de la zona baja bajan al 15% de opacidad y quedan grises. Los ocho vivos siguen en blanco. Nadie se ha movido todavía." },
+    { "kind": "generated_visual", "description": "BEAT 3 (5,0-8,0 s) — «Cambia el sistema → cambian los huecos». La constelación se recoloca: los ocho vivos se desplazan con trayectorias cortas y curvas, entran tres puntos rojos desde el borde inferior y —momento clave— uno de los puntos blancos que estaba SANO se desplaza fuera del dibujo y se apaga. Ese punto cuenta la idea entera y se le da medio segundo solo para él. Cero cifras legibles: es geometría, no datos." },
+    { "kind": "typography_motion", "description": "BEAT 4 (8,0-9,6 s) — RÓTULO PUENTE, sobre negro y fuera de cualquier captura: «Así se ve en LigaLab, con cualquier equipo». Separa la constelación del caso de la demostración de la función, y declara que la pantalla que viene NO es el once del caso. Añadido en la autocorrección." },
+    { "kind": "real_app_capture", "description": "BEAT 5 (9,6-13,1 s) — «Once probable + % de titularidad». Entra la grabación real de la pantalla de once probable. La constelación generada se contrae hacia el centro y el filete rojo se cierra a su alrededor: el dibujo abstracto se convierte, literalmente, en el marco de la pantalla verdadera. La captura no se recolorea ni se rediseña, y el morado del producto se ve tal cual, sin armonizar con el rojo.", "captureNeeded": "Once probable con porcentajes de titularidad visibles; 2 s de formación quieta antes del gesto." },
+    { "kind": "real_app_capture", "description": "BEAT 6 (13,1-16,1 s) — «¿Está tu jugador dentro del dibujo?». La misma grabación, ahora en detalle: el gesto real de scroll o tap lleva a una ficha concreta y a su porcentaje. El movimiento es el de la app, no un zoom inventado. Un subrayado rojo fino aparece FUERA del filete, en el margen, a la altura del porcentaje: la marca señala, no dibuja encima.", "captureNeeded": "Detalle de una ficha dentro del once con su porcentaje de titularidad, alcanzado con el gesto real." },
+    { "kind": "real_app_capture", "description": "BEAT 7 (16,1-19,6 s) — «¿Dudas entre dos? Cara a cara». Transición dentro de la app: de la pantalla de once probable a la del comparador. La transición es la navegación real grabada, no un corte de montaje que finja una fluidez que la app no tiene.", "captureNeeded": "Navegación real entre once probable y comparador; si no existe ese salto directo, fundido a negro." },
+    { "kind": "real_app_capture", "description": "BEAT 8 (19,6-23,1 s) — «Valor · cláusula · media · puntos». Se mantiene el comparador y las cuatro palabras aparecen en la banda inferior, en fila, iluminándose una a una en rojo al ritmo del habla. Las cifras que se ven son las de la app: ni una cifra de marketing sobre la captura.", "captureNeeded": "Comparador con dos jugadores y valor, cláusula, media y puntos visibles a la vez en el mismo cuadro." },
+    { "kind": "typography_motion", "description": "BEAT 9 (23,1-26,0 s) — «La cuenta te la enseñamos. Decides tú.» La captura se retira, el filete rojo se suelta y se estira hasta convertirse en la línea roja de firma horizontal a un tercio de la base. Debajo, marca pequeña en esquina y el sello «AS · 22 ago 2026» todavía visible. Última imagen: negro, línea roja, dos frases." }
+  ],
+  "imagePrompt": "Motion vertical 9:16, 1080x1920, 26 segundos. Base neutra #08070a → #050506 en degradado vertical muy plano, SIN manchas de luz moradas en las capas de marketing: el morado solo puede venir de dentro de la captura real. Tipografía Sora (SemiBold 78-92 px para la frase de beat, Regular 30 px para el sello de fuente). Rojo de marca únicamente en: filete de captura, palabra de énfasis, línea de firma y atributo activo. Elemento generado central: una constelación abstracta de once puntos de luz en formación sobre negro, que se recoloca cuando tres se apagan — sin campo dibujado, sin líneas de banda, sin escudos, sin cifras legibles. PROHIBIDO generar interfaz de aplicación: los planos de producto son grabación de pantalla real insertada dentro de un filete rojo de 6 px, y ese filete es la única señal que separa lo generado de lo verdadero. Sin logos de marcas reales, sin logo de LALIGA, sin fotografías de prensa de jugadores. Nada de cámara, actores, stock ni b-roll de fútbol.",
+  "platforms": ["tiktok", "instagram_reels", "youtube_shorts"],
+  "formats": ["motion"],
+  "sources": [
+    { "label": "AS — posible once del Valencia ante Celta", "url": "https://as.com/futbol/primera/alineacion-posible-del-valencia-ante-el-celta-en-laliga-ea-sports-f202608-n/", "publishedAt": "2026-08-22" },
+    { "label": "AS — Maffeo inscrito y disponible", "url": "https://as.com/futbol/primera/maffeo-ya-esta-inscrito-y-podra-jugar-ante-el-celta-f202608-n/", "publishedAt": "2026-08-21" }
+  ],
+  "qa": {
+    "pass": true,
+    "blockedReasons": [],
+    "warnings": [
+      "AUTOCORRECCIÓN USADA (1 de 1). El primer veredicto fue FIX con cinco cambios obligatorios; todos aplicados; el segundo veredicto fue PASS. No quedan vueltas disponibles.",
+      "El CTA no menciona que LigaLab requiere cuenta de LALIGA Fantasy y estar en una liga (limitación 1 de PRODUCT_TRUTH). No es falso —la pieza no promete acceso abierto ni disponibilidad en tiendas—: es fricción de conversión. Se registra aquí a propósito, para que lo tenga delante quien apruebe, en vez de meterlo en un CTA de 15 segundos y destruirlo.",
+      "El once probable depende de raspar a FútbolFantasy (PRODUCT_TRUTH §4). Si esa fuente cae, la función que demuestran los beats 5-6 cae con ella. Relevante sobre todo si la pieza se reutiliza fuera de su ventana.",
+      "CADUCA A LAS 48 HORAS del 22 ago 2026. Confirmar la mañana de la publicación que no ha salido una quinta baja o una recuperación que invalide el escenario.",
+      "Antes de grabar: comprobar que los porcentajes de titularidad ya reflejan la situación. Si salen sin actualizar o como «?», la pieza cambia de ángulo o no sale — no se puede enseñar una pantalla que contradiga la noticia que citas.",
+      "Antes de grabar: comprobar si la UI de once probable muestra escudos o avatares fotográficos de forma inevitable. Si es así, los beats 6-8 hay que replantearlos.",
+      "RESTRICCIÓN DE PRODUCCIÓN que sobrevive a esta revisión: prohibido en montaje y en rótulos todo el campo semántico «avisa / alerta / detecta / te enterarás / antes que nadie». Llevaría la pieza a funciones apagadas (§2) o de roadmap (§3)."
+    ],
+    "requiredChanges": [],
+    "checkedAt": "2026-08-22T00:00:00.000Z",
+    "checkedBy": "brand-reviewer (subagente, 2 revisiones)"
+  },
+  "approval": { "required": true, "status": "pending", "approvedAt": null, "approvedBy": null }
+}

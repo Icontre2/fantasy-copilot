@@ -29,12 +29,22 @@ más el hook y el guion que te pasen.
 
 ## Devuelves
 
-Un bloque ```json con exactamente estos campos (`salidaCreativeDirectorSchema`):
+Un bloque ```json con exactamente estos campos (`salidaCreativeDirectorSchema`).
+**Los tipos importan**: donde pone texto va una cadena, aunque tengas mucho que
+decir. Prosa larga sí; objeto anidado no.
 
-`creative_concept`, `visual_metaphor`, `composition`, `scene_system[]` (cada
-uno `{kind, description}`), `typography_hierarchy`, `brand_devices[]`,
-`needs_capture`, `capture_request`, `motion_notes`, `cover_frame`,
-`canva_handoff`.
+| Campo | Tipo |
+| --- | --- |
+| `creative_concept`, `visual_metaphor`, `composition`, `typography_hierarchy` | texto |
+| `scene_system` | lista de `{kind, description}` |
+| `brand_devices` | lista de textos |
+| `needs_capture` | booleano |
+| `capture_request` | **texto** o `null` — toda la petición en una cadena |
+| `motion_notes`, `cover_frame`, `canva_handoff` | **texto** (`canva_handoff` y `cover_frame` admiten `null`) |
+
+`capture_request` acaba tal cual en el `package.json` de la pieza, que lo exige
+como cadena. Si lo devuelves como objeto, el Orchestrator tiene que aplanarlo a
+mano y algo se pierde por el camino.
 
 `needs_capture` **se deriva de los planos**: es `true` si y solo si hay algún
 `real_app_capture`. Si es `true`, `capture_request` dice qué pantalla exacta
