@@ -1,0 +1,27 @@
+{
+  "id": "LL-2026-005",
+  "date": "2026-08-22",
+  "mode": "prelaunch_evergreen",
+  "insight": "Que un jugador suba de valor no responde a toda la decisión competitiva: también importa cuándo una cláusula puede quedar a tiro.",
+  "hook": "QUE SUBA NO ES LO ÚNICO QUE IMPORTA",
+  "product_truth": ["Alertas de cláusula"],
+  "needs_capture": false,
+  "formats": ["tiktok", "reel", "short"],
+  "status": "pending_approval",
+  "strategy": {
+    "series": "EL DATO QUE FALTA",
+    "problem": "Fijarse solo en la subida de valor sin mirar el contexto de cláusula y plazo.",
+    "angle": "La subida importa; el cuándo también.",
+    "cta": "LigaLab · en construcción"
+  },
+  "assets": {
+    "realCaptures": [],
+    "generatedAllowed": ["typography_motion", "generic_progress_bar", "brand_red_line"]
+  },
+  "qa": {
+    "brand_pass": true,
+    "product_truth_pass": true,
+    "facts_pass": true,
+    "notes": ["No afirma alertas push automáticas.", "No usa jugadores ni cifras actuales.", "No necesita captura para esta pieza educativa."]
+  }
+}
