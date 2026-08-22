@@ -1,0 +1,185 @@
+{
+  "date": "2026-08-22",
+  "opportunities": [
+    {
+      "id": "LL-RADAR-20260822-001",
+      "title": "Athletic: demasiadas dudas para cerrar el once",
+      "problem": "Quien tenga jugadores del Athletic debe decidir con varias posiciones abiertas: lateral derecho, doble pivote y mediapunta/extremo.",
+      "whyNow": "AS actualizó el 22 de agosto el posible once ante el Sevilla y mantiene dudas entre Areso/Rincón, Jauregizar/Gerenabarrena, Nico/Navarro y Sancet/Canales.",
+      "feature": "Once probable propio y de cada rival + Comparador",
+      "hook": "Tu Athletic tiene demasiadas dudas hoy",
+      "formats": ["tiktok", "instagram_reels", "youtube_shorts"],
+      "score": 95,
+      "sources": [{"label": "AS — posible once del Athletic ante Sevilla", "url": "https://as.com/futbol/primera/alineacion-posible-del-athletic-ante-el-sevilla-de-laliga-ea-sports-f202608-n/", "publishedAt": "2026-08-22"}],
+      "riskNotes": "No convertir el posible once en certeza. Hablar de probabilidades y comparación, no recomendar a quién fichar."
+    },
+    {
+      "id": "LL-RADAR-20260822-002",
+      "title": "Valencia: cuatro bajas y un carrilero improvisado",
+      "problem": "Los managers con jugadores del Valencia tienen que rehacer el once por cuatro bajas y por un dibujo de cinco defensas con Jesús Vázquez a pierna cambiada.",
+      "whyNow": "AS confirma el 22 de agosto las bajas de Rioja, Foulquier, Diego López y Copete; Maffeo está inscrito pero apunta al banquillo.",
+      "feature": "Once probable propio y de cada rival + Comparador",
+      "hook": "Cuatro bajas cambian el once del Valencia",
+      "formats": ["tiktok", "instagram_reels", "youtube_shorts"],
+      "score": 93,
+      "sources": [
+        {"label": "AS — posible once del Valencia ante Celta", "url": "https://as.com/futbol/primera/alineacion-posible-del-valencia-ante-el-celta-en-laliga-ea-sports-f202608-n/", "publishedAt": "2026-08-22"},
+        {"label": "AS — Maffeo inscrito y disponible", "url": "https://as.com/futbol/primera/maffeo-ya-esta-inscrito-y-podra-jugar-ante-el-celta-f202608-n/", "publishedAt": "2026-08-21"}
+      ],
+      "riskNotes": "No afirmar que Maffeo será suplente como hecho cerrado; presentarlo como previsión publicada."
+    },
+    {
+      "id": "LL-RADAR-20260822-003",
+      "title": "Real Madrid: debut con siete bajas",
+      "problem": "Quien tenga jugadores del Madrid afronta un debut con muchas ausencias y varios fichajes/canteranos entrando en la rotación.",
+      "whyNow": "AS informa el 22 de agosto de las bajas de Militão, Rodrygo, Mendy, Tchouaméni, Thiago, Endrick y Asencio ante el Espanyol.",
+      "feature": "Once probable propio y de cada rival + Comparador",
+      "hook": "Siete bajas cambian el Madrid de hoy",
+      "formats": ["tiktok", "instagram_reels", "youtube_shorts"],
+      "score": 92,
+      "sources": [
+        {"label": "AS — Tchouaméni y Endrick, bajas ante Espanyol", "url": "https://as.com/futbol/tchouameni-y-endrick-bajas-para-el-partido-ante-el-espanyol-f202608-n/", "publishedAt": "2026-08-22"},
+        {"label": "AS — posible once del Real Madrid ante Espanyol", "url": "https://as.com/futbol/alineacion-posible-del-real-madrid-ante-el-espanyol-en-laliga-ea-sports-f202608-n/", "publishedAt": "2026-08-21"}
+      ],
+      "riskNotes": "Evitar tratar alineaciones probables como oficiales antes de la publicación del once."
+    },
+    {
+      "id": "LL-RADAR-20260822-004",
+      "title": "Villarreal: Gerard Moreno y Sergi Cardona, pendientes",
+      "problem": "Managers con Gerard Moreno o Sergi Cardona necesitan saber cuánto riesgo de suplencia/ausencia asumen antes de cerrar su alineación.",
+      "whyNow": "Íñigo Pérez confirmó el 21 de agosto que Gerard arrastra una sobrecarga y Cardona sigue tratamiento individual, pendientes de evolución.",
+      "feature": "Once probable propio y de cada rival + Comparador",
+      "hook": "Gerard y Cardona llegan entre dudas",
+      "formats": ["tiktok", "instagram_reels", "youtube_shorts"],
+      "score": 90,
+      "sources": [{"label": "AS — Íñigo Pérez confirma dudas de Gerard y Cardona", "url": "https://as.com/futbol/primera/inigo-una-de-nuestras-senas-de-identidad-debe-ser-ir-a-hacer-dano-f202608-n/", "publishedAt": "2026-08-21"}],
+      "riskNotes": "No diagnosticar lesiones ni asegurar ausencia. Usar el estado de duda publicado."
+    },
+    {
+      "id": "LL-RADAR-20260822-005",
+      "title": "Sevilla: Kike Salas fuera y Robbie Ure gana sitio",
+      "problem": "La sanción de Kike Salas obliga a cambiar la defensa y el posible cambio Isaac Romero→Robbie Ure abre otra decisión Fantasy.",
+      "whyNow": "AS publica hoy que Kike Salas es baja por sanción y sitúa a Castrín y Robbie Ure en el posible once ante el Athletic.",
+      "feature": "Once probable propio y de cada rival + Comparador",
+      "hook": "El Sevilla cambia defensa y delantero",
+      "formats": ["tiktok", "instagram_reels", "youtube_shorts"],
+      "score": 88,
+      "sources": [{"label": "AS — posible once del Sevilla ante Athletic", "url": "https://as.com/futbol/primera/alineacion-posible-del-sevilla-ante-el-athletic-en-laliga-ea-sports-f202608-n/", "publishedAt": "2026-08-22"}],
+      "riskNotes": "No presentar a Robbie Ure como titular confirmado antes del once oficial."
+    },
+    {
+      "id": "LL-RADAR-20260822-006",
+      "title": "Celta: Febas entra, Borja Iglesias espera",
+      "problem": "Los managers deben distinguir entre fichajes listos para ser titulares y nombres importantes que todavía apuntan al banquillo.",
+      "whyNow": "AS coloca a Febas en el once inicial y a Borja Iglesias, Bayindir, Faye y Javi Galán entre los suplentes para el debut del Celta.",
+      "feature": "Once probable propio y de cada rival + Comparador",
+      "hook": "No todos los fichajes llegan para empezar",
+      "formats": ["tiktok", "instagram_reels", "youtube_shorts"],
+      "score": 87,
+      "sources": [{"label": "AS — posible once del Celta ante Valencia", "url": "https://as.com/futbol/primera/alineacion-posible-del-celta-ante-el-valencia-en-laliga-ea-sports-f202608-n/", "publishedAt": "2026-08-22"}],
+      "riskNotes": "La alineación sigue siendo probable hasta que el club publique el once oficial."
+    },
+    {
+      "id": "LL-RADAR-20260822-007",
+      "title": "Barcelona: cinco fichajes pueden debutar",
+      "problem": "Hay demasiados nombres nuevos alrededor del Barça y el manager necesita comparar quién tiene realmente sitio inmediato en el once.",
+      "whyNow": "AS informó el 21 de agosto de que Gordon, Adeyemi, Bisiwu, Rodri y Cancelo pueden ser inscritos, aunque Rodri y Cancelo aún no apuntan a estar disponibles de inicio.",
+      "feature": "Once probable propio y de cada rival + Comparador",
+      "hook": "Cinco fichajes, pero no cinco titulares",
+      "formats": ["tiktok", "instagram_reels", "youtube_shorts"],
+      "score": 86,
+      "sources": [{"label": "AS — situación de inscripciones y nuevos fichajes del Barça", "url": "https://as.com/futbol/todos-podran-ser-inscritos-y-se-perfilan-los-nuevos-dorsales-f202608-n/", "publishedAt": "2026-08-21"}],
+      "riskNotes": "No afirmar que todos debutarán; la fuente solo confirma disponibilidad potencial según inscripción y decisión técnica."
+    },
+    {
+      "id": "LL-RADAR-20260822-008",
+      "title": "Sergio Martínez juega con una salida inminente",
+      "problem": "Un jugador con futuro inmediato fuera del Racing puede alterar decisiones de mercado y de alineación en Fantasy.",
+      "whyNow": "AS publica hoy que Sergio Martínez ha elegido el Real Madrid y que se despedirá del Racing después del próximo partido ante Getafe.",
+      "feature": "Mercado con pujas reales + Evolución de valor + Comparador",
+      "hook": "¿Qué haces con un jugador que se va?",
+      "formats": ["tiktok", "instagram_reels", "youtube_shorts"],
+      "score": 84,
+      "sources": [{"label": "AS — Sergio Martínez se decide por el Real Madrid", "url": "https://as.com/futbol/primera/sergio-martinez-se-decide-por-el-real-madrid-f202608-n/", "publishedAt": "2026-08-22"}],
+      "riskNotes": "La operación está pendiente de firma según la fuente. No tratar la salida como oficial hasta confirmación del club."
+    },
+    {
+      "id": "LL-RADAR-20260822-009",
+      "title": "Osasuna: Rosier fuera y Yeboah aún sin debut",
+      "problem": "La defensa de Osasuna llega al partido con una baja confirmada y un fichaje reciente que todavía no está listo para competir.",
+      "whyNow": "AS confirma hoy que Rosier es baja y que Yeboah acaba de comenzar trabajo individual, sin debut previsto todavía.",
+      "feature": "Once probable propio y de cada rival + Comparador",
+      "hook": "Osasuna tiene un hueco defensivo real",
+      "formats": ["instagram_reels", "youtube_shorts"],
+      "score": 82,
+      "sources": [{"label": "AS — Yeboah ya se ejercita y Rosier es baja", "url": "https://as.com/futbol/rockson-yeboah-ya-se-ejercita-en-tajonar-f202608-n/", "publishedAt": "2026-08-22"}],
+      "riskNotes": "No presentar a Yeboah como descartado para fechas posteriores; solo para el contexto inmediato descrito."
+    },
+    {
+      "id": "LL-RADAR-20260822-010",
+      "title": "Levante: fichajes e inscripciones todavía en el aire",
+      "problem": "Managers con jugadores del Levante pueden comprar o alinear nombres cuya disponibilidad administrativa aún no está clara.",
+      "whyNow": "AS informa hoy de que Ndukwe todavía no ha sido oficializado y recuerda que Sotelo, Requena, Thiago y Musuayi no pudieron ser convocados en el partido anterior por inscripciones.",
+      "feature": "Mercado con pujas reales + Once probable propio y de cada rival",
+      "hook": "No fiches sin mirar quién puede jugar",
+      "formats": ["instagram_reels", "youtube_shorts"],
+      "score": 80,
+      "sources": [{"label": "AS — situación de Ndukwe e inscripciones del Levante", "url": "https://as.com/futbol/primera/la-espera-de-ifeanyi-ndukwe-f202608-n/", "publishedAt": "2026-08-22"}],
+      "riskNotes": "La situación administrativa puede cambiar rápido; verificar de nuevo antes de producir la pieza."
+    },
+    {
+      "id": "LL-RADAR-20260822-011",
+      "title": "Valencia-Celta: dos equipos debutan en la jornada 2",
+      "problem": "La jornada 2 incluye equipos que todavía no han jugado la 1, lo que complica leer puntos y contexto de forma normal.",
+      "whyNow": "Valencia y Celta debutan hoy después de que sus partidos de la primera jornada fueran aplazados.",
+      "feature": "Puntos por jornada + Calendario con dificultad",
+      "hook": "Jornada 2 sin haber jugado la 1",
+      "formats": ["tiktok", "instagram_reels"],
+      "score": 79,
+      "sources": [{"label": "AS — Valencia-Celta, debut de ambos en jornada 2", "url": "https://as.com/futbol/primera/valencia-celta-de-vigo-tv-a-que-hora-es-donde-y-como-ver-laliga-ea-sports-online-hoy-f202608-n/", "publishedAt": "2026-08-21"}],
+      "riskNotes": "No generalizar el aplazamiento a todos los equipos. Enfocar el problema en lectura de jornadas y calendario."
+    },
+    {
+      "id": "LL-RADAR-20260822-012",
+      "title": "Espanyol: continuidad de bloque ante el Madrid",
+      "problem": "Tras una primera jornada positiva, el manager debe decidir si mantener jugadores del Espanyol frente a un rival mucho más exigente.",
+      "whyNow": "AS apunta a que Manolo González puede repetir gran parte del once que funcionó ante Levante para recibir hoy al Real Madrid.",
+      "feature": "Calendario con dificultad + Comparador + Once probable propio y de cada rival",
+      "hook": "Mismo once, rival completamente distinto",
+      "formats": ["instagram_reels", "youtube_shorts"],
+      "score": 77,
+      "sources": [{"label": "AS — posible once del Espanyol ante Real Madrid", "url": "https://as.com/futbol/primera/alineacion-posible-del-espanyol-ante-el-real-madrid-en-laliga-ea-sports-f202608-n/", "publishedAt": "2026-08-21"}],
+      "riskNotes": "No convertir la dificultad del rival en predicción de puntos. Mostrar contexto y comparación."
+    },
+    {
+      "id": "LL-RADAR-20260822-013",
+      "title": "Mercado abierto: plantillas todavía en movimiento",
+      "problem": "El usuario puede tomar decisiones de mercado con jugadores que cambian de club, rol o disponibilidad en cuestión de días.",
+      "whyNow": "La jornada 2 se juega con el mercado de fichajes todavía abierto y varios equipos siguen cerrando salidas, llegadas e inscripciones.",
+      "feature": "Mercado con pujas reales + Comparador + Evolución de valor",
+      "hook": "Tu mercado cambia antes que tu jornada",
+      "formats": ["tiktok", "instagram_reels"],
+      "score": 75,
+      "sources": [
+        {"label": "Cadena SER — jornada 2 con mercado aún abierto", "url": "https://cadenaser.com/nacional/2026/08/19/laliga-fantasy-alineaciones-probables-de-los-partidos-de-la-jornada-2-de-laliga-ea-sports-cadena-ser/", "publishedAt": "2026-08-19"},
+        {"label": "AS — mercado e inscripciones del Barcelona", "url": "https://as.com/futbol/todos-podran-ser-inscritos-y-se-perfilan-los-nuevos-dorsales-f202608-n/", "publishedAt": "2026-08-21"}
+      ],
+      "riskNotes": "Ángulo más general y menos diferencial; no usar sin un caso concreto o captura actual de LigaLab."
+    },
+    {
+      "id": "LL-RADAR-20260822-014",
+      "title": "Athletic-Sevilla: dos cambios forzados en defensa",
+      "problem": "Dani Vivian y Kike Salas dejan dos defensas alteradas en el mismo partido, afectando titulares y comparaciones directas.",
+      "whyNow": "AS sitúa a Vivian fuera por lesión y a Kike Salas fuera por sanción en el Athletic-Sevilla de hoy.",
+      "feature": "Once probable propio y de cada rival + Comparador",
+      "hook": "Dos bajas cambian las dos defensas",
+      "formats": ["instagram_reels", "youtube_shorts"],
+      "score": 74,
+      "sources": [
+        {"label": "AS — Athletic-Sevilla, bajas confirmadas", "url": "https://as.com/futbol/primera/athletic-club-de-bilbao-sevilla-tv-a-que-hora-es-donde-y-como-ver-laliga-ea-sports-online-hoy-f202608-n/", "publishedAt": "2026-08-22"},
+        {"label": "AS — posible once del Sevilla", "url": "https://as.com/futbol/primera/alineacion-posible-del-sevilla-ante-el-athletic-en-laliga-ea-sports-f202608-n/", "publishedAt": "2026-08-22"}
+      ],
+      "riskNotes": "Se solapa parcialmente con oportunidades 001 y 005; mantener como alternativa si se busca una pieza centrada en defensas."
+    }
+  ]
+}
