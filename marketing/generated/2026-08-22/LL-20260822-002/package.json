@@ -51,7 +51,7 @@
     "warnings": [
       "Adyacencia imprecisa corregida antes de escribir: la caja reconstruida vive en la economía de la liga (PRODUCT_TRUTH.md:45,51) y el hueco/blindaje en AlertsView (:43). El guion ya nombra la vista de cláusulas por separado en vez de sugerir que están juntas.",
       "«no lo ves en ningún sitio» era más absoluto que PRODUCT_TRUTH.md:173 («la caja ajena es estimación salvo que LALIGA la publique»). Sustituido por «no lo tienes a mano», en guion y en la slide 4.",
-      "Inconsistencia documental de color sin resolver en el repo: IMAGE_PIPELINE.md §3-§4 pide acento morado #8b5cf6; la pieza usa el rojo de marca por CONTENT_RULES.md:12 y BRAND.md:17. La decisión no vulnera ninguna norma, pero conviene arreglar el pipeline para no rediscutirlo en cada pieza.",
+      "Inconsistencia documental de color: RESUELTA. Esta pieza la destapó. IMAGE_PIPELINE.md §3-§4 separa ahora la paleta de marketing (rojo) de la del producto (morado, solo dentro de la captura real), y hay test que falla si alguien lo revierte.",
       "La frase del método es la más densa de la pieza y roza VOICE.md:11 (frases breves en móvil). Se acepta: es justo la frase que sostiene el ≈.",
       "El PASS decae si las capturas no confirman lo que el guion promete — en particular, si la captura del método no muestra la explicación en pantalla, la pieza vuelve a revisión.",
       "Sigue vigente el bloqueo §0 de PRODUCT_TRUTH (uso comercial sin autorización escrita de LALIGA). No afecta al contenido, sí a cualquier campaña de pago que use esta pieza."

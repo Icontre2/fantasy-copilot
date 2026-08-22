@@ -31,9 +31,9 @@ Dos avisos menores del Reviewer se aplicaron en vez de dejarlos anotados:
 
 ## Avisos que quedan abiertos
 
-- **Inconsistencia documental de color.** `IMAGE_PIPELINE.md` §3-§4 pide morado;
-  la pieza usa rojo por `CONTENT_RULES.md:12` y `BRAND.md:17`. La decisión no
-  vulnera ninguna norma, pero el pipeline debería arreglarse.
+- ~~**Inconsistencia documental de color.**~~ **Resuelta.** `IMAGE_PIPELINE.md`
+  §3-§4 ya separa la paleta de marketing (rojo) de la del producto (morado, solo
+  dentro de la captura). Esta pieza fue la que destapó la contradicción.
 - **Densidad de la frase del método.** Roza `VOICE.md:11` (frases breves en
   móvil). Se acepta: es justo la frase que sostiene el `≈`.
 - **El PASS es condicional a las capturas.** Si la captura del método no muestra

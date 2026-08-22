@@ -18,9 +18,12 @@ Del pipeline se conserva todo lo que no está en conflicto: fondo `#08070a` →
 `#050506`, Sora, cifras tabulares, y la prohibición de escudos, logo de LALIGA
 y fotos de prensa.
 
-> **Pendiente de repo:** conviene editar `IMAGE_PIPELINE.md` §3-§4 para que su
-> prompt base use base neutra + rojo de marca y aclare que el morado es
-> exclusivo de la UI real. Si no, cada carrusel repetirá esta discusión.
+> **Resuelto en el repo.** `IMAGE_PIPELINE.md` §3-§4 ya separa las dos paletas:
+> el arte generado va en rojo de marca y el morado queda como paleta del
+> producto, solo visible dentro de una captura real. Su prompt base incorpora
+> además la prohibición de generar interfaz, que antes vivía únicamente en la
+> prosa del §5 — y un modelo no lee el §5.
+> `src/server/marketing/docs-de-marca.test.ts` falla si alguien lo revierte.
 
 ## Prompt base
 
