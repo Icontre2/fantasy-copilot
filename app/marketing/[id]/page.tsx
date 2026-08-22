@@ -152,7 +152,12 @@ function Ficha({ pieza, onCambio }: { pieza: PaqueteDeCola; onCambio: (p: Paquet
 
       <EditForm key={`edit-${version}`} pieza={pieza} accionando={accionando} onGuardar={(cambios) => ejecutar("edit", cambios)} />
 
-      <Capturas pieza={pieza} />
+      <Capturas
+        key={`cap-${version}`}
+        pieza={pieza}
+        accionando={accionando}
+        onAdjuntar={(captura) => ejecutar("capture", captura)}
+      />
 
       <AuditTrail pieza={pieza} />
     </div>
@@ -612,21 +617,72 @@ function CampoTextarea({
 
 // ── Capturas reales y auditoría ───────────────────────────────────────────────
 
-function Capturas({ pieza }: { pieza: PaqueteDeCola }) {
-  if (pieza.captures.length === 0) return null;
+/**
+ * Fase 5. Se enseña siempre que la pieza necesite captura o ya tenga alguna:
+ * de nada sirve decir «hace falta una captura real» si luego no hay dónde
+ * apuntar que ya se ha tomado.
+ */
+function Capturas({
+  pieza,
+  accionando,
+  onAdjuntar,
+}: {
+  pieza: PaqueteDeCola;
+  accionando: boolean;
+  onAdjuntar: (captura: { type: string; file: string; description?: string }) => void;
+}) {
+  const [tipo, setTipo] = useState("");
+  const [fichero, setFichero] = useState("");
+  const [descripcion, setDescripcion] = useState("");
+
+  if (!pieza.needsCapture && pieza.captures.length === 0) return null;
+
+  const completo = tipo.trim() !== "" && fichero.trim() !== "";
+
   return (
     <Card>
-      <SectionTitle>Capturas reales adjuntas</SectionTitle>
-      <ul className="space-y-2">
-        {pieza.captures.map((c, i) => (
-          <li key={i} className="rounded-xl border border-white/10 bg-white/[.03] p-2.5 text-sm">
-            <p className="font-semibold text-white">{c.type}</p>
-            {c.description && <p className="text-neutral-400">{c.description}</p>}
-            <p className="mt-1 truncate text-xs text-neutral-500">{c.file}</p>
-            <p className="text-xs text-neutral-500">{fechaLegible(c.addedAt)}</p>
-          </li>
-        ))}
-      </ul>
+      <SectionTitle>Capturas reales</SectionTitle>
+
+      {pieza.captures.length > 0 ? (
+        <ul className="mb-4 space-y-2">
+          {pieza.captures.map((c, i) => (
+            <li key={i} className="rounded-xl border border-white/10 bg-white/[.03] p-2.5 text-sm">
+              <p className="font-semibold text-white">{c.type}</p>
+              {c.description && <p className="text-neutral-400">{c.description}</p>}
+              <p className="mt-1 break-all text-xs text-neutral-500">{c.file}</p>
+              <p className="text-xs text-neutral-500">{fechaLegible(c.addedAt)}</p>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mb-4 text-sm text-amber-300">Todavía no hay ninguna captura adjunta.</p>
+      )}
+
+      <p className="mb-3 text-xs text-neutral-500">
+        No se sube el fichero: se apunta de qué pantalla es y dónde está. La captura la haces tú de la app real — aquí no
+        se genera ninguna interfaz.
+      </p>
+
+      <div className="space-y-3">
+        <CampoTexto etiqueta="Pantalla (Comparador, Plantilla, Alertas de cláusula…)" valor={tipo} onCambio={setTipo} />
+        <CampoTexto etiqueta="URL o ruta del fichero" valor={fichero} onCambio={setFichero} />
+        <CampoTexto etiqueta="Descripción (opcional)" valor={descripcion} onCambio={setDescripcion} />
+        <GhostButton
+          onClick={() => {
+            onAdjuntar({
+              type: tipo,
+              file: fichero,
+              ...(descripcion.trim() ? { description: descripcion } : {}),
+            });
+            setTipo("");
+            setFichero("");
+            setDescripcion("");
+          }}
+          disabled={accionando || !completo}
+        >
+          Adjuntar captura
+        </GhostButton>
+      </div>
     </Card>
   );
 }

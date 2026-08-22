@@ -48,7 +48,15 @@ export type Estrategia = {
 
 export type CapturaReal = { type: string; file: string; description?: string; addedAt: string };
 
-export type AccionDeAuditoria = "created" | "qa_passed" | "qa_failed" | "edited" | "approved" | "rejected" | "reopened";
+export type AccionDeAuditoria =
+  | "created"
+  | "qa_passed"
+  | "qa_failed"
+  | "edited"
+  | "approved"
+  | "rejected"
+  | "reopened"
+  | "capture_added";
 
 export type EntradaDeAuditoria = { action: AccionDeAuditoria; actor: string; timestamp: string; note?: string };
 

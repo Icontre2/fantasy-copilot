@@ -80,6 +80,7 @@ export const ETIQUETA_ACCION: Record<AccionDeAuditoria, string> = {
   approved: "Aprobado",
   rejected: "Rechazado",
   reopened: "Reabierto",
+  capture_added: "Captura adjuntada",
 };
 
 export function fechaLegible(iso: string): string {

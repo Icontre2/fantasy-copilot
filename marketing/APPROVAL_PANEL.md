@@ -40,6 +40,14 @@ y explícitamente fuera de este sprint.
   real (Comparador, Plantilla, Histórico de jugador, Alertas de cláusula,
   Economía, Mercado…), el panel lo dice claramente y espera a que alguien la
   adjunte a mano — no genera ninguna interfaz falsa.
+- **No sube ficheros.** Adjuntar una captura guarda de qué pantalla es y
+  dónde está (una URL o una ruta), no el fichero. Conectar almacenamiento
+  externo es otra fase; esto es lo que hace falta para no perder la pista de
+  una captura que ya existe.
+
+Adjuntar una captura **no cambia el estado ni obliga a repetir el QA**: es
+registrar un hecho, no tomar una decisión — y es justo lo que ese QA pedía.
+Queda en el audit trail como `capture_added`.
 
 ## Dónde vive cada cosa
 
