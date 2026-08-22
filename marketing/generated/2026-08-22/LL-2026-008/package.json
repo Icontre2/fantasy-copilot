@@ -1,0 +1,13 @@
+{
+  "id":"LL-2026-008",
+  "date":"2026-08-22",
+  "mode":"prelaunch",
+  "series":"ANTES DE HACER X",
+  "hook":"UNA CLÁUSULA NO SE MIRA CUANDO YA ES TARDE",
+  "insight":"El riesgo de una cláusula importa antes de que llegue el momento de reaccionar.",
+  "needs_capture":false,
+  "formats":["tiktok","reel","short"],
+  "status":"pending_approval",
+  "product_truth":["LigaLab contempla alertas de cercanía a cláusula y días restantes cuando ese dato está disponible"],
+  "qa":{"brand_pass":true,"product_truth_pass":true,"facts_pass":true,"notes":["Evergreen.","No afirma que exista push automático.","No inventa días ni importes."]}
+}
