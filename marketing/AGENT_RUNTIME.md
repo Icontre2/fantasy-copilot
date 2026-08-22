@@ -32,6 +32,20 @@ Full write-up: `src/server/marketing/pipeline/` (the code) and its tests (`*.tes
 
 **Runs locally (or in CI), never on Vercel.** Production's filesystem is read-only — nothing running there could write to `marketing/generated/**` even if it tried, and the pipeline isn't wired into any deployed route. The flow is: run the three commands locally, review the diff, commit the new `marketing/radar/**` and `marketing/generated/**` files, push, deploy — only then does `/marketing` (which just reads whatever is in the deployed bundle) see the new queue.
 
+## Daily batch: what expires and what does not
+
+`marketing:queue` is the step that decides which Radar opportunities are worth the expensive chain. Three rules govern it, and all three exist because running it for real on 2026-08-22 broke them:
+
+**An opportunity that already has a piece never enters the chain again.** The check is by `sourceOpportunityId` — the provenance, which *both* package conventions declare — never by the piece id, which is the one field the two conventions disagree on. Without this, `LL-2026-001` (hand-made, old convention, covering `LL-RADAR-20260822-001`) and a freshly queued `LL-20260822-001` would cover the same opportunity, and five Opus calls would go into repeating work that already existed. Pieces from *any* date count: an opportunity converted yesterday is not reconverted because today's Radar repeats it.
+
+**`creativeCandidateLimit` is a ceiling per day, not per invocation.** Pieces already present in `marketing/generated/<date>/` consume slots, hand-made ones included. Running the command twice in a day therefore costs nothing the second time, instead of doubling the bill.
+
+**Piece numbers come from what is already on disk, not from the position in the batch.** Numbering by batch position works exactly once: on a second run the converted opportunities drop out, different ones take their place, and the numbering restarts at `001` on top of pieces that already exist. The files themselves survive (nothing overwrites an existing `package.json`), but `queue.json` ends up pointing an id at a different opportunity than the `package.json` of that same id declares. A queue that lies is worse than a queue that is missing.
+
+**Unused opportunities expire with the day.** A 14-opportunity Radar producing 3 pieces leaves 11 unused, and that is the intended outcome, not a backlog: `whyNow` is what makes an opportunity worth filming, and a probable-lineup story is worthless once the match is played. Tomorrow's Radar is generated from scratch. The command prints every discarded opportunity with its reason (`ya tiene pieza` / `score por debajo del mínimo` / `fuera del límite diario`) so the decision is visible rather than silent.
+
+A draft written by this step sets `needsCapture: false`, not `true`. Whether a real product capture is needed is derived by the Creative Director from its own shots (`creative.ts` → `necesitaCaptura`); a draft asserting it up front claims something nobody has decided yet, and cannot say *which* screen — which is exactly what the `paquetes-reales.test.ts` canary rejects.
+
 ## Human gate
 
 No publishing adapter is enabled by default. A package can reach `pending_approval`, but not `generated` or `published`, without explicit approval.

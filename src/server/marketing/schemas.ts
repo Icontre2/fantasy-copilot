@@ -8,7 +8,7 @@ import { z } from 'zod';
  * entre sí. La primera (`marketing/templates/content-package.schema.json`,
  * `brand/CONTENT_RULES.md`) usa snake_case y un id `LL-YYYY-NNN`; nunca llegó a
  * tener código que la escribiera. La segunda —la que SÍ escribe
- * `scripts/marketing/prepare-agent-queue.mjs` y lee `set-approval.mjs`— usa
+ * `scripts/marketing/prepare-agent-queue.ts` y lee `set-approval.mjs`— usa
  * camelCase y un id `LL-YYYYMMDD-NNN`. Son incompatibles y nadie las reconcilió.
  *
  * Aquí se toma la SEGUNDA como fuente de verdad, porque es la única con código
@@ -173,13 +173,13 @@ export type CapturaReal = z.infer<typeof capturaRealSchema>;
 //
 // Deliberadamente permisivo: casi todo opcional, porque casi todo lo llenan
 // fases que todavía no tienen agente. Lo único obligatorio es lo que
-// `prepare-agent-queue.mjs` YA escribe siempre.
+// `prepare-agent-queue.ts` YA escribe siempre.
 
 export const paqueteCrudoSchema = z
   .object({
     /*
      * Las DOS convenciones de id conviven de verdad, no en teoría:
-     * `prepare-agent-queue.mjs` escribe `LL-YYYYMMDD-NNN`, y los paquetes que
+     * `prepare-agent-queue.ts` escribe `LL-YYYYMMDD-NNN`, y los paquetes que
      * se han producido siguiendo `marketing/templates/content-package.schema.json`
      * usan `LL-YYYY-NNN`. Exigir solo la primera dejaba la pieza real
      * `LL-2026-001` marcada como «bloqueada» en el panel, que es justo lo que

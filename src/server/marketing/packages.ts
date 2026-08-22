@@ -9,7 +9,7 @@ import { estadoHumanoVacio, type EstadoHumano } from './state.ts';
  * Lectura de `marketing/generated/**\/package.json`, sin romper nunca el panel.
  *
  * ── Por qué esto puede fallar, y por qué eso está bien ───────────────────────
- * Estos ficheros los escribe un script (`prepare-agent-queue.mjs`) que hoy
+ * Estos ficheros los escribe un script (`prepare-agent-queue.ts`) que hoy
  * corre a mano, fuera de esta app. Un fichero a medio escribir, con un campo
  * mal puesto, o de la convención antigua que nadie llegó a ejecutar, es un
  * caso esperado — no una excepción de programa. Un paquete que no se puede
@@ -46,7 +46,7 @@ export async function listarRutasDePaquetes(): Promise<Array<{ fecha: string; id
  * ── Por qué esto existe, y por qué es más que un par de alias ───────────────
  * En el repositorio conviven dos convenciones de verdad, no en teoría:
  *
- *   - La que escribe `scripts/marketing/prepare-agent-queue.mjs`: camelCase,
+ *   - La que escribe `scripts/marketing/prepare-agent-queue.ts`: camelCase,
  *     id `LL-YYYYMMDD-NNN`, `sourceOpportunityId`, `score`, `sources[]`.
  *   - La de `marketing/templates/content-package.schema.json`, que es la que
  *     siguen los paquetes producidos a mano: snake_case, id `LL-YYYY-NNN`,

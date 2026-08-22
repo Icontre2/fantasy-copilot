@@ -17,7 +17,7 @@ import { generarYGuardarCreativo } from '../../src/server/marketing/pipeline/cre
  * Video Director → Brand Reviewer sobre cada pieza ya seleccionada.
  *
  * El límite de `automation.config.json` se vuelve a comprobar aquí, aunque
- * `prepare-agent-queue.mjs` ya lo aplicó: defensa en profundidad — si algún
+ * `prepare-agent-queue.ts` ya lo aplicó: defensa en profundidad — si algún
  * día alguien edita `queue.json` a mano y le añade piezas de más, esto no las
  * ejecuta todas igualmente.
  */
@@ -38,7 +38,21 @@ async function main(): Promise<void> {
 
   const config = configSchema.parse(JSON.parse(await readFile(path.join(raiz, 'marketing', 'automation.config.json'), 'utf8')));
   const queuePath = path.join(raiz, 'marketing', 'queue', fecha, 'queue.json');
-  const queue = queueSchema.parse(JSON.parse(await readFile(queuePath, 'utf8')));
+
+  // Sin `queue.json` esto reventaba con un ENOENT pelado, que no dice cuál de
+  // las dos cosas falta: la cola de ese día, o el Radar del que sale. Es el
+  // fallo que se encuentra al ejecutar la pipeline por primera vez sobre una
+  // fecha cuyo Radar ya existe pero cuya cola nunca se preparó.
+  let queueTexto: string;
+  try {
+    queueTexto = await readFile(queuePath, 'utf8');
+  } catch {
+    console.error(`No existe la cola de ${fecha} (${path.relative(raiz, queuePath)}).`);
+    console.error(`Prepárala antes: npm run marketing:queue -- ${fecha}`);
+    process.exitCode = 1;
+    return;
+  }
+  const queue = queueSchema.parse(JSON.parse(queueTexto));
 
   let items = queue.items;
   if (soloId) items = items.filter((item) => item.contentId === soloId);

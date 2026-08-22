@@ -27,7 +27,7 @@ import {
  * → Brand Reviewer (`agents/strategist.md` … `agents/brand-reviewer.md`).
  *
  * Parte de un `package.json` que YA existe (el `draft` que escribe
- * `prepare-agent-queue.mjs`) y del `marketing/radar/<fecha>.json` del que
+ * `prepare-agent-queue.ts`) y del `marketing/radar/<fecha>.json` del que
  * salió — nunca reconstruye la selección ni el scoring, que es trabajo del
  * Radar y de ese script. Solo rellena lo que un `package.json` recién creado
  * tiene a `null`.
