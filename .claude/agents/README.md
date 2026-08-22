@@ -6,7 +6,7 @@ Fases y Operación*).
 
 ## Cómo se usa
 
-Se invoca **solo al Orchestrator**:
+Se invoca **solo al Orchestrator**, que es la skill `orquestar-pieza`:
 
 > Genera la mejor pieza prelaunch de hoy.
 
@@ -18,7 +18,7 @@ consultar al Copywriter, algo va mal.
 
 | Agente | Papel | Herramientas | Escribe |
 | --- | --- | --- | --- |
-| `orchestrator` | Responsable del resultado final | Read, Grep, Glob, Write, Edit | Sí, solo `marketing/generated/` |
+| `orquestar-pieza` *(skill)* | Responsable del resultado final | las de la sesión principal | Sí, solo `marketing/generated/` |
 | `strategist` | Ángulo e insight | Read, Grep, Glob | No |
 | `copywriter` | Hooks, guion, CTA, captions | Read, Grep, Glob | No |
 | `creative-director` | Sistema visual 9:16 | Read, Grep, Glob | No |
@@ -28,6 +28,19 @@ consultar al Copywriter, algo va mal.
 Un jefe, varios especialistas. Los especialistas **no se llaman entre sí**: no
 existe la cadena `Strategist → Copywriter → …`. Cada uno aconseja al
 Orchestrator y vuelve.
+
+## Por qué el Orchestrator es una skill y no un agente
+
+Estuvo en `.claude/agents/orchestrator.md` y **no funcionaba**. Se comprobó
+ejecutándolo: un subagente no puede invocar a otro subagente, así que el
+Orchestrator se quedaba sin poder consultar a ningún especialista. Se comportó
+como debía —abortó en vez de escribir una pieza fingiendo un control de marca
+que nadie hizo— pero abortaba siempre.
+
+Como skill corre en la sesión principal, que sí puede lanzar subagentes. Es la
+única colocación en la que «el usuario pide una sola cosa y no interviene entre
+fases» es cierto. Hay un test que falla si alguien lo devuelve a
+`.claude/agents/`.
 
 ## Por qué solo el Orchestrator escribe
 
@@ -106,7 +119,7 @@ puede comprobar:
 
 ## Lo que estos agentes NO hacen todavía
 
-- No se ejecutan solos: hay que abrir Claude Code e invocar al Orchestrator
+- No se ejecutan solos: hay que abrir Claude Code e invocar `orquestar-pieza`
   (Fase E pendiente).
 - No generan imagen ni vídeo: `src/server/marketing/adapters.ts` sigue con
   interfaces sin conectar.

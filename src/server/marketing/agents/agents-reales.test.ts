@@ -18,9 +18,19 @@ import { DOCUMENTOS_POR_ESPECIALISTA } from "./policy.ts";
 
 const RAIZ = fileURLToPath(new URL("../../../..", import.meta.url));
 const CARPETA = path.join(RAIZ, ".claude", "agents");
+const SKILL_ORCHESTRATOR = path.join(RAIZ, ".claude", "skills", "orquestar-pieza", "SKILL.md");
 
+/*
+ * El Orchestrator NO está aquí, y no es un descuido.
+ *
+ * Estuvo en `.claude/agents/orchestrator.md` y no funcionaba: un subagente no
+ * puede invocar a otro subagente, así que se quedaba sin poder consultar a
+ * ningún especialista y abortaba en cada ejecución — se comprobó ejecutándolo.
+ * Vive ahora como skill (`.claude/skills/orquestar-pieza/`), que corre en la
+ * sesión principal y sí puede lanzarlos.
+ */
 const ESPECIALISTAS = ["strategist", "copywriter", "creative-director", "video-director", "brand-reviewer"] as const;
-const TODOS = ["orchestrator", ...ESPECIALISTAS] as const;
+const TODOS = ESPECIALISTAS;
 
 type Frontmatter = { name: string; description: string; tools: string[] };
 
@@ -46,9 +56,22 @@ async function leerFrontmatter(agente: string): Promise<Frontmatter> {
   return { name, description, tools: tools.split(",").map((t) => t.trim()).filter(Boolean) };
 }
 
-test("existen los siete ficheros y ninguno de más", async () => {
+test("en .claude/agents/ están los cinco especialistas y ninguno más", async () => {
   const encontrados = (await readdir(CARPETA)).filter((f) => f.endsWith(".md")).sort();
   assert.deepEqual(encontrados, [...TODOS].map((a) => `${a}.md`).concat("README.md").sort());
+});
+
+test("el Orchestrator es una skill, no un agente", async () => {
+  // Si alguien lo devuelve a `.claude/agents/`, vuelve a quedarse sin poder
+  // invocar especialistas y aborta en cada ejecución.
+  const comoAgente = await access(path.join(CARPETA, "orchestrator.md")).then(() => true).catch(() => false);
+  assert.equal(comoAgente, false, "orchestrator.md no puede vivir en .claude/agents/: como subagente no puede invocar a nadie");
+
+  const texto = await readFile(SKILL_ORCHESTRATOR, "utf8");
+  assert.match(texto, /^---$/m, "la skill necesita frontmatter");
+  assert.match(texto, /^name: orquestar-pieza$/m, "y que su nombre coincida con la carpeta");
+  assert.match(texto, /marketing\/generated/, "tiene que decir dónde puede escribir");
+  assert.match(texto, /ni UI, ni backend/i, "y qué no toca");
 });
 
 test("cada agente tiene frontmatter válido y su `name` coincide con el fichero", async () => {
@@ -59,11 +82,7 @@ test("cada agente tiene frontmatter válido y su `name` coincide con el fichero"
   }
 });
 
-test("solo el Orchestrator puede escribir", async () => {
-  const orquestador = await leerFrontmatter("orchestrator");
-  assert.ok(orquestador.tools.includes("Write"), "el Orchestrator es quien crea los ficheros finales");
-  assert.ok(orquestador.tools.includes("Edit"));
-
+test("ningún especialista puede escribir: el único que crea ficheros es el Orchestrator", async () => {
   for (const especialista of ESPECIALISTAS) {
     const fm = await leerFrontmatter(especialista);
     for (const prohibida of ["Write", "Edit", "NotebookEdit"]) {
@@ -98,12 +117,12 @@ test("toda ruta del repo que citan los agentes existe de verdad", async () => {
   // fallar la lectura o, peor, rellenar el hueco por su cuenta.
   const patron = /`((?:brand|marketing|src|agents|scripts)\/[\w./[\]<>-]+)`/g;
 
-  for (const agente of [...TODOS, "README"]) {
-    const texto = await readFile(path.join(CARPETA, `${agente}.md`), "utf8");
+  for (const fichero of [...[...TODOS, "README"].map((a) => path.join(CARPETA, `${a}.md`)), SKILL_ORCHESTRATOR]) {
+    const texto = await readFile(fichero, "utf8");
     for (const [, ruta] of texto.matchAll(patron)) {
       if (/[<>]/.test(ruta)) continue; // plantillas como marketing/generated/<fecha>/
       const existe = await access(path.join(RAIZ, ruta)).then(() => true).catch(() => false);
-      assert.ok(existe, `${agente}.md cita \`${ruta}\`, que no existe en el repositorio`);
+      assert.ok(existe, `${path.relative(RAIZ, fichero)} cita \`${ruta}\`, que no existe en el repositorio`);
     }
   }
 });
@@ -119,15 +138,11 @@ test("los documentos de los context packets existen", async () => {
 
 test("ningún agente menciona publicar en una red externa", async () => {
   const prohibido = /\b(publica(r|remos)?|postea(r)?)\s+(en\s+)?(tiktok|instagram|youtube)\b/i;
-  for (const agente of [...TODOS, "README"]) {
-    const texto = await readFile(path.join(CARPETA, `${agente}.md`), "utf8");
+  for (const fichero of [...[...TODOS, "README"].map((a) => path.join(CARPETA, `${a}.md`)), SKILL_ORCHESTRATOR]) {
+    const texto = await readFile(fichero, "utf8");
     const lineas = texto.split("\n").filter((l) => prohibido.test(l) && !/nunca|no\s|sin\s|manual/i.test(l));
-    assert.deepEqual(lineas, [], `${agente}.md parece autorizar publicación externa`);
+    assert.deepEqual(lineas, [], `${path.relative(RAIZ, fichero)} parece autorizar publicación externa`);
   }
 });
 
-test("el Orchestrator declara que solo escribe bajo marketing/generated", async () => {
-  const texto = await readFile(path.join(CARPETA, "orchestrator.md"), "utf8");
-  assert.match(texto, /marketing\/generated/);
-  assert.match(texto, /ni UI, ni backend/i, "tiene que decir explícitamente qué no toca");
-});
+

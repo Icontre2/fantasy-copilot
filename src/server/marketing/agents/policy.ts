@@ -6,8 +6,8 @@ import { ES_CRITICO, type Especialista, type SalidaBrandReviewer, type SalidaCop
  * Las decisiones del Orchestrator, como funciones puras.
  *
  * ── Por qué existen fuera del .md ───────────────────────────────────────────
- * `.claude/agents/orchestrator.md` describe estas reglas en prosa, que es lo
- * que lee Claude al invocarlo. Pero «una sola autocorrección», «sin loops» o
+ * `.claude/skills/orquestar-pieza/SKILL.md` describe estas reglas en prosa, que
+ * es lo que lee Claude al orquestar. Pero «una sola autocorrección», «sin loops» o
  * «el Video Director es opcional» son afirmaciones que o se pueden ejecutar y
  * comprobar, o son buenas intenciones. Aquí están ejecutadas, y
  * `policy.test.ts` recorre los diez escenarios de la Fase C contra ellas.
