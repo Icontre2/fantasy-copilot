@@ -63,6 +63,7 @@ export type PaqueteDeCola = {
   hook: string;
   hooks: string[];
   needsCapture: boolean;
+  captureRequest: string | null;
   strategy: Estrategia;
   script: string | null;
   captions: Captions | null;

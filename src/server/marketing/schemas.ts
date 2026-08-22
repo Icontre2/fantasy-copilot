@@ -170,7 +170,15 @@ export type CapturaReal = z.infer<typeof capturaRealSchema>;
 
 export const paqueteCrudoSchema = z
   .object({
-    id: z.string().regex(/^LL-\d{8}-\d{3}$/, 'el id no tiene la forma LL-YYYYMMDD-NNN'),
+    /*
+     * Las DOS convenciones de id conviven de verdad, no en teoría:
+     * `prepare-agent-queue.mjs` escribe `LL-YYYYMMDD-NNN`, y los paquetes que
+     * se han producido siguiendo `marketing/templates/content-package.schema.json`
+     * usan `LL-YYYY-NNN`. Exigir solo la primera dejaba la pieza real
+     * `LL-2026-001` marcada como «bloqueada» en el panel, que es justo lo que
+     * este campo NO debe provocar.
+     */
+    id: z.string().regex(/^LL-\d{4}(?:\d{4})?-\d{3}$/, 'el id no tiene la forma LL-YYYYMMDD-NNN ni LL-YYYY-NNN'),
     date: z.string(),
     status: estadoSchema,
     sourceOpportunityId: z.string(),
@@ -195,6 +203,17 @@ export const paqueteCrudoSchema = z
     sources: z.array(fuenteSchema).optional(),
     cta: z.string().nullable().optional(),
 
+    /**
+     * Qué pantalla real hace falta, en una frase. Es el `capture_request` de
+     * la convención antigua — y ahí es el ÚNICO sitio donde vive esa
+     * información, así que perderlo dejaría la fase 5 sin nada que enseñar
+     * («captura necesaria: sí» sin decir de qué).
+     */
+    captureRequest: z.string().nullable().optional(),
+
+    /** Capturas reales ya adjuntas en el propio fichero (`assets.realCaptures`). */
+    captures: z.array(capturaRealSchema).optional(),
+
     // El QA que escribe el fichero antes de que exista estado humano en la
     // base. Una vez hay estado humano, ESE manda (ver `mergePaquete`).
     qa: qaResultSchema.nullable().optional(),
@@ -211,9 +230,13 @@ export const paqueteCrudoSchema = z
       .nullable()
       .optional(),
   })
-  // La convención vieja usaba `needs_capture`, `insight`, `product_truth`. Se
-  // aceptan sin fallar en vez de rechazar el fichero entero por un nombre de
-  // campo de una convención que nunca llegó a tener código.
+  /*
+   * `passthrough` porque los ficheros de la convención antigua traen campos
+   * que aquí no tienen equivalente (`product_truth`, `radarId`, `assets`…).
+   * `normalizarPaquete` (en `packages.ts`) los TRADUCE a los de arriba antes
+   * de validar; esto solo evita que los originales, ya traducidos, hagan
+   * fallar la validación por sobrar.
+   */
   .passthrough();
 
 export type PaqueteCrudo = z.infer<typeof paqueteCrudoSchema>;

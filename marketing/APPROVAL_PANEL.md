@@ -56,6 +56,32 @@ y explícitamente fuera de este sprint.
 | Interfaces de la fase siguiente (imagen, vídeo, publicación, analítica) | `src/server/marketing/adapters.ts` |
 | Modelo de métricas del loop de crecimiento (solo tipos) | `src/server/marketing/metrics.ts` |
 
+## Las dos convenciones de `package.json`
+
+En el repositorio conviven dos formas de escribir un paquete, y el panel lee
+**las dos**:
+
+| | Convención A | Convención B |
+| --- | --- | --- |
+| La escribe | `scripts/marketing/prepare-agent-queue.mjs` + `npm run marketing:generate` | A mano, siguiendo `marketing/templates/content-package.schema.json` |
+| Id | `LL-YYYYMMDD-NNN` | `LL-YYYY-NNN` |
+| Procedencia | `sourceOpportunityId`, `score` | `radarId`, `radarScore` |
+| Problema | `problem` en la raíz | dentro de `strategy.problem` |
+| Feature | `feature` (texto) | `product_truth[]` (lista) |
+| Fuentes | `sources[]` | `source` (una sola) |
+| Captura | `needsCapture` + planos `real_app_capture` | `needs_capture` + `capture_request` |
+| QA | `{pass, blockedReasons, warnings, requiredChanges}` | `{brand_pass, product_truth_pass, facts_pass, notes}` |
+
+`normalizarPaquete` (en `packages.ts`) traduce B → A al leer, sin tocar el
+fichero. Cada traducción solo actúa si el campo destino falta, así que un
+paquete de la convención A pasa intacto.
+
+Esto no es una precaución teórica: la primera pieza real (`LL-2026-001`) llegó
+escrita entera en la convención B y el panel la marcaba como «bloqueada».
+`src/server/marketing/paquetes-reales.test.ts` recorre todo lo que hay en
+`marketing/generated/**` en cada `npm test` justo para que eso no vuelva a
+descubrirse mirando el panel.
+
 ## Por qué el estado humano vive en Supabase y no en el fichero
 
 Una vez desplegado en Vercel, `marketing/generated/**` es de solo lectura: no
