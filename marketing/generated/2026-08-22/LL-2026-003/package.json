@@ -1,0 +1,30 @@
+{
+  "id": "LL-2026-003",
+  "date": "2026-08-22",
+  "mode": "prelaunch_evergreen",
+  "insight": "Una puja no se evalúa solo por el precio del jugador: también importa qué margen deja para reaccionar después.",
+  "hook": "ANTES DE PUJAR, MIRA LO QUE TE QUEDA",
+  "needs_capture": false,
+  "formats": ["tiktok", "reel", "short"],
+  "status": "pending_approval",
+  "strategy": {
+    "series": "ANTES DE HACER X",
+    "problem": "Mirar solo el precio de entrada oculta el impacto de la puja sobre el margen disponible después.",
+    "angle": "No conviertas la puja en una cifra aislada.",
+    "cta": "LigaLab · en construcción"
+  },
+  "assets": {
+    "realCaptures": [],
+    "generatedAllowed": ["typography_motion", "abstract_budget_blocks", "brand_red_line"]
+  },
+  "qa": {
+    "brand_pass": true,
+    "product_truth_pass": true,
+    "facts_pass": true,
+    "notes": [
+      "Evergreen: no contiene hechos temporales ni cifras externas.",
+      "No promete recomendaciones de puja.",
+      "No necesita captura ni UI de producto."
+    ]
+  }
+}
