@@ -1,23 +1,38 @@
 {
-  "version": 2,
+  "version": 3,
   "daily": {
     "radarCandidateLimit": 20,
     "creativeCandidateLimit": 3,
     "defaultCreativeCount": 1,
     "minimumScoreForCreative": 70
   },
+  "orchestration": {
+    "mode": "single_pass_orchestrator",
+    "specialistDocsAreAdvisory": true,
+    "autoCorrectionPasses": 1,
+    "blockOnlyOn": [
+      "invalid_or_missing_radar",
+      "missing_evidence",
+      "product_truth_violation",
+      "invented_metric_or_screen",
+      "privacy_violation",
+      "brand_failure_after_autocorrection"
+    ]
+  },
   "tokenPolicy": {
     "cheapStages": ["fantasy-radar", "scoring"],
-    "expensiveStages": ["strategist", "copywriter", "creative-director", "video-director", "brand-reviewer"],
-    "rule": "Never run expensive stages for more than the top 3 Radar opportunities."
+    "coordinatedStage": "orchestrator",
+    "specialistReferences": ["strategist", "copywriter", "creative-director", "video-director", "brand-reviewer"],
+    "rule": "Run one coordinated creative pass for the best qualifying opportunity by default. Consult specialist documents only as needed. Never process more than the top 3 qualifying opportunities."
   },
-  "states": ["radar", "draft", "brand_review", "fact_review", "pending_approval", "approved", "rejected", "generated", "published"],
+  "states": ["radar", "draft", "review", "pending_approval", "approved", "rejected", "generated", "published", "blocked"],
   "humanApprovalRequiredBefore": ["generated", "published"],
   "publishersEnabled": false,
   "generation": {
     "imageProvider": "replaceable",
     "videoProvider": "seedance",
-    "realProductCapturesOnly": true
+    "realProductCapturesOnly": true,
+    "generateFinalVideo": false
   },
   "platforms": ["tiktok", "instagram_reels", "youtube_shorts"],
   "feedbackWindowsHours": [24, 72, 168]
