@@ -1,0 +1,3 @@
+# Seedance Prompt — LL-2026-009
+
+Vertical 9:16, 12–14 seconds. Premium dark sports-data aesthetic. Hook in oversized white type: “NO NECESITAS ADIVINAR EL ONCE”. Then snap to “NECESITAS VER LA DUDA”. Use abstract football formation dots with several positions softly pulsing or marked with uncertainty rings; no real players, percentages or fake UI. Thin red LigaLab line scans across the formation. End card: “LigaLab · en construcción”.
