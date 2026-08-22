@@ -1,0 +1,48 @@
+{
+  "id": "LL-2026-001",
+  "date": "2026-08-22",
+  "radarId": "LL-RADAR-20260822-001",
+  "radarScore": 95,
+  "insight": "Cuando varias posiciones siguen abiertas antes de un partido, el problema Fantasy no es adivinar el once sino ver dónde están las dudas y comparar alternativas con contexto real.",
+  "hook": "Tu Athletic tiene demasiadas dudas hoy",
+  "product_truth": [
+    "Once probable propio y de cada rival",
+    "Comparador"
+  ],
+  "needs_capture": true,
+  "capture_request": "Captura real del once probable en LigaLab con porcentajes disponibles; opcionalmente una captura real del Comparador entre dos alternativas. No mostrar datos identificables de managers.",
+  "formats": ["tiktok", "reel", "short"],
+  "status": "pending_approval",
+  "strategy": {
+    "audience": "Managers con jugadores del Athletic que deben cerrar su alineación",
+    "problem": "Varias posiciones del posible once siguen abiertas y una previa no equivale a una alineación oficial.",
+    "angle": "No adivines el once: localiza las dudas y decide con el dato delante.",
+    "cta": "Mira tu once probable en LigaLab."
+  },
+  "source": {
+    "label": "AS — posible once del Athletic ante Sevilla",
+    "url": "https://as.com/futbol/primera/alineacion-posible-del-athletic-ante-el-sevilla-de-laliga-ea-sports-f202608-n/",
+    "publishedAt": "2026-08-22",
+    "verifiedAt": "2026-08-22"
+  },
+  "assets": {
+    "realCaptures": [],
+    "generatedAllowed": [
+      "stadium_background",
+      "typography_motion",
+      "brand_red_line",
+      "generic_position_silhouettes"
+    ]
+  },
+  "qa": {
+    "brand_pass": true,
+    "product_truth_pass": true,
+    "facts_pass": true,
+    "notes": [
+      "La pieza habla siempre de dudas y alineación probable, nunca de once oficial.",
+      "El producto proof depende de capturas reales; no se genera UI falsa.",
+      "No hay recomendación de fichaje ni predicción de puntos.",
+      "La fuente fue verificada el 22 de agosto de 2026."
+    ]
+  }
+}
