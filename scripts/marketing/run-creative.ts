@@ -42,10 +42,6 @@ async function main(): Promise<void> {
   const config = configSchema.parse(JSON.parse(await readFile(path.join(raiz, 'marketing', 'automation.config.json'), 'utf8')));
   const queuePath = path.join(raiz, 'marketing', 'queue', fecha, 'queue.json');
 
-  // Sin `queue.json` esto reventaba con un ENOENT pelado, que no dice cuál de
-  // las dos cosas falta: la cola de ese día, o el Radar del que sale. Es el
-  // fallo que se encuentra al ejecutar la pipeline por primera vez sobre una
-  // fecha cuyo Radar ya existe pero cuya cola nunca se preparó.
   let queueTexto: string;
   try {
     queueTexto = await readFile(queuePath, 'utf8');
@@ -96,13 +92,22 @@ async function main(): Promise<void> {
           run_id: runId,
           timestamp: new Date().toISOString(),
           opportunity_id: paquete.sourceOpportunityId ?? null,
+          // En una ejecución exitosa esta pipeline, a día de hoy, invoca las
+          // cinco etapas. El runner todavía NO usa la lógica opcional de la
+          // skill del Orchestrator; por eso se registra exactamente lo que
+          // hizo el código actual y no lo que debería hacer una fase futura.
           agentes_invocados: [...AGENTES],
-          reintentos: 0,
+          // `pedirJSON` puede reintentar internamente y todavía no expone ese
+          // contador. No escribimos 0 porque sería inventarlo.
+          reintentos: null,
           reviewer_verdict: verdict,
-          autocorrection_used: false,
+          // La pipeline SDK no implementa la autocorrección semántica del
+          // Orchestrator. null = no observable en esta ruta, no "false".
+          autocorrection_used: null,
           final_status: finalStatus,
           content_id: paquete.id,
           source: 'sdk-pipeline',
+          trace_complete: false,
           error: null,
         },
         raiz,
@@ -117,13 +122,14 @@ async function main(): Promise<void> {
           run_id: runId,
           timestamp: new Date().toISOString(),
           opportunity_id: null,
-          agentes_invocados: [],
-          reintentos: 0,
+          agentes_invocados: null,
+          reintentos: null,
           reviewer_verdict: null,
-          autocorrection_used: false,
+          autocorrection_used: null,
           final_status: 'review_pending',
           content_id: item.contentId,
           source: 'sdk-pipeline',
+          trace_complete: false,
           error: mensaje,
         },
         raiz,
