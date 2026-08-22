@@ -1,5 +1,5 @@
 import { privateJson } from "@/src/server/http/responses";
-import { autorizar, esRespuestaDeError, errorDeMarketing } from "@/src/server/marketing/http";
+import { autorizar, esRespuestaDeError, errorDeMarketing, responder } from "@/src/server/marketing/http";
 import { obtenerPaquete } from "@/src/server/marketing/service";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +13,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   try {
     const paquete = await obtenerPaquete(quien.credencial, id);
     if (!paquete) return privateJson({ error: `No existe ningún paquete con id ${id}.` }, 404);
-    return privateJson({ package: paquete });
+    return responder({ package: paquete }, quien.cookies);
   } catch (error) {
     return errorDeMarketing(error);
   }

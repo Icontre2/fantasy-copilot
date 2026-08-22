@@ -1,5 +1,4 @@
-import { privateJson } from "@/src/server/http/responses";
-import { autorizar, esRespuestaDeError, errorDeMarketing } from "@/src/server/marketing/http";
+import { autorizar, esRespuestaDeError, errorDeMarketing, responder } from "@/src/server/marketing/http";
 import { obtenerCola } from "@/src/server/marketing/service";
 
 export const dynamic = "force-dynamic";
@@ -11,7 +10,7 @@ export async function GET(request: Request) {
 
   try {
     const cola = await obtenerCola(quien.credencial);
-    return privateJson({ queue: cola });
+    return responder({ queue: cola }, quien.cookies);
   } catch (error) {
     return errorDeMarketing(error);
   }

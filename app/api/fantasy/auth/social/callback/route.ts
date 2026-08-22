@@ -4,6 +4,7 @@ import {
   cookieDeAviso,
   cookieDeError,
   cookieDeUsuario,
+  cookieDeRefrescoDeUsuario,
   leerCookie,
   limpiarIntento,
 } from "@/src/server/auth/cookies";
@@ -115,6 +116,16 @@ export async function GET(request: Request) {
    * se le pregunta si vale cada vez que se usa. Ver `identity.ts`.
    */
   headers.append("Set-Cookie", cookieDeUsuario(canje.accessToken));
+
+  /*
+   * Y el refresh token aparte, que dura mucho más. Es lo que permite volver a
+   * saber quién eres cuando el token de arriba caduque a la hora, sin repetir
+   * el login social. Aditivo: nada del producto lo lee todavía; hoy lo usa el
+   * panel de marketing, que es donde esa hora se notaba.
+   */
+  if (canje.refreshToken) {
+    headers.append("Set-Cookie", cookieDeRefrescoDeUsuario(canje.refreshToken));
+  }
 
   /*
    * Menos privilegio primero: con el JWT del propio usuario, la base solo le

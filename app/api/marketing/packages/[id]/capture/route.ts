@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { privateJson } from "@/src/server/http/responses";
-import { autorizar, esRespuestaDeError, errorDeMarketing } from "@/src/server/marketing/http";
+import { autorizar, esRespuestaDeError, errorDeMarketing, responder } from "@/src/server/marketing/http";
 import { adjuntarCapturaAPaquete } from "@/src/server/marketing/service";
 
 export const dynamic = "force-dynamic";
@@ -39,7 +39,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       { ...cuerpo.data, addedAt: new Date().toISOString() },
       quien.email,
     );
-    return privateJson({ package: paquete });
+    return responder({ package: paquete }, quien.cookies);
   } catch (error) {
     return errorDeMarketing(error);
   }

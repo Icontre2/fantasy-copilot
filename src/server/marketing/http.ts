@@ -1,6 +1,6 @@
 // Ruta relativa a proposito: el alias `@/` solo existe al compilar, asi que un
 // import de VALOR con alias no se puede ejecutar desde una prueba de node.
-import { privateJson } from '../http/responses.ts';
+import { privateJson, privateJsonWithCookies } from '../http/responses.ts';
 import { accesoDeMarketing } from './access.ts';
 import { credencialDeMarketing } from './store.ts';
 import { TransicionInvalida } from './actions.ts';
@@ -15,7 +15,7 @@ import type { Credencial } from '../auth/links.ts';
  * aquí, en el servidor, en CADA petición: es la única forma de que la RLS de
  * la migración y el guardia de la API digan siempre lo mismo.
  */
-export type PeticionAutorizada = { email: string; credencial: Credencial };
+export type PeticionAutorizada = { email: string; credencial: Credencial; cookies: string[] };
 
 export async function autorizar(request: Request): Promise<PeticionAutorizada | Response> {
   const acceso = await accesoDeMarketing(request);
@@ -23,15 +23,30 @@ export async function autorizar(request: Request): Promise<PeticionAutorizada | 
     // 401 si no sabemos quién es (no ha entrado con Google/Facebook); 403 si
     // sabemos quién es y no está en la lista. Ninguno de los dos dice más de
     // lo necesario sobre quién sí está autorizado.
-    return privateJson({ error: 'No autorizado.' }, acceso.email ? 403 : 401);
+    return responder({ error: 'No autorizado.' }, acceso.cookies, acceso.email ? 403 : 401);
   }
 
   const credencial = credencialDeMarketing(acceso.accessToken);
   if (!credencial) {
-    return privateJson({ error: 'La configuración pública de Supabase no está disponible en este despliegue.' }, 503);
+    return responder(
+      { error: 'La configuración pública de Supabase no está disponible en este despliegue.' },
+      acceso.cookies,
+      503,
+    );
   }
 
-  return { email: acceso.email, credencial };
+  return { email: acceso.email, credencial, cookies: acceso.cookies };
+}
+
+/**
+ * Responde fijando las cookies de identidad renovada, si las hay.
+ *
+ * Sin esto la renovación funcionaría igual pero se repetiría en CADA
+ * petición: una llamada de más a Supabase por cada carga del panel, y el
+ * refresh token rotando sin que nadie guarde el nuevo.
+ */
+export function responder(cuerpo: unknown, cookies: string[], status = 200): Response {
+  return cookies.length > 0 ? privateJsonWithCookies(cuerpo, cookies, status) : privateJson(cuerpo, status);
 }
 
 /** `true` si lo que devolvió `autorizar` ya es una `Response` de error. */
