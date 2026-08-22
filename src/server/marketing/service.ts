@@ -11,8 +11,8 @@ import {
 } from './packages.ts';
 import { leerEstado, guardarEstado } from './store.ts';
 import { estadoHumanoVacio, type Ediciones, type EstadoHumano } from './state.ts';
-import { aprobar, editar, marcarQA, reabrir, rechazar, TransicionInvalida, type ContextoEfectivo } from './actions.ts';
-import type { QAResult } from './schemas.ts';
+import { adjuntarCaptura, aprobar, editar, marcarQA, reabrir, rechazar, TransicionInvalida, type ContextoEfectivo } from './actions.ts';
+import type { CapturaReal, QAResult } from './schemas.ts';
 
 /**
  * El punto de unión: junta la lectura de ficheros (`packages.ts`), el estado
@@ -104,4 +104,13 @@ export function marcarQADePaquete(credencial: Credencial, id: string, resultado:
 
 export function reabrirPaquete(credencial: Credencial, id: string, actor: string): Promise<VistaDePaquete> {
   return ejecutar(credencial, id, (actual, ctx, ahora) => reabrir(actual, ctx, actor, ahora));
+}
+
+export function adjuntarCapturaAPaquete(
+  credencial: Credencial,
+  id: string,
+  captura: CapturaReal,
+  actor: string,
+): Promise<VistaDePaquete> {
+  return ejecutar(credencial, id, (actual, _ctx, ahora) => adjuntarCaptura(actual, captura, actor, ahora));
 }

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { aprobar, editar, marcarQA, reabrir, rechazar, TransicionInvalida, type ContextoEfectivo } from "./actions.ts";
+import { adjuntarCaptura, aprobar, editar, marcarQA, reabrir, rechazar, TransicionInvalida, type ContextoEfectivo } from "./actions.ts";
 import { estadoHumanoVacio } from "./state.ts";
 import type { QAResult } from "./schemas.ts";
 
@@ -136,6 +136,65 @@ test("marcarQA: pass=true adelanta a pending_approval; pass=false deja en brand_
 });
 
 // ── Reabrir: la única puerta de vuelta desde approved/rejected ─────────────
+
+// ── Fase 5: adjuntar una captura real ───────────────────────────────────────
+
+test("adjuntar captura: la guarda, la registra en el audit trail y pone la fecha el servidor", () => {
+  const conCaptura = adjuntarCaptura(
+    estadoNuevo(),
+    { type: "Alertas de cláusula", file: "https://ejemplo/captura.png", description: "Con porcentajes", addedAt: "1999-01-01T00:00:00.000Z" },
+    "admin@ligalab.app",
+    AHORA,
+  );
+
+  assert.equal(conCaptura.captures.length, 1);
+  assert.equal(conCaptura.captures[0].type, "Alertas de cláusula");
+  assert.equal(conCaptura.captures[0].description, "Con porcentajes");
+  // La fecha que mandó quien llama se ignora: la pone el servidor.
+  assert.equal(conCaptura.captures[0].addedAt, AHORA);
+  assert.equal(conCaptura.auditTrail.at(-1)?.action, "capture_added");
+  assert.equal(conCaptura.auditTrail.at(-1)?.actor, "admin@ligalab.app");
+});
+
+test("adjuntar captura: NO cambia el estado ni obliga a volver a revisar", () => {
+  const antes = estadoNuevo();
+  const despues = adjuntarCaptura(antes, { type: "Comparador", file: "/ruta/x.png", addedAt: AHORA }, "a@b.com", AHORA);
+
+  assert.equal(despues.status, antes.status, "una captura es un hecho, no una decisión");
+  assert.equal(despues.needsReReview, false, "adjuntar la captura que el QA pedía no puede invalidar ese QA");
+});
+
+test("adjuntar captura: una pieza aprobable sigue siendo aprobable después", () => {
+  const conCaptura = adjuntarCaptura(estadoNuevo(), { type: "Plantilla", file: "/x.png", addedAt: AHORA }, "a@b.com", AHORA);
+  const aprobado = aprobar(conCaptura, contexto(), "admin@ligalab.app", AHORA);
+  assert.equal(aprobado.status, "approved");
+  // Y la captura y su entrada de auditoría siguen ahí.
+  assert.equal(aprobado.captures.length, 1);
+  assert.deepEqual(
+    aprobado.auditTrail.map((e) => e.action),
+    ["created", "capture_added", "approved"],
+  );
+});
+
+test("adjuntar captura: sin pantalla o sin fichero → TransicionInvalida", () => {
+  assert.throws(
+    () => adjuntarCaptura(estadoNuevo(), { type: "  ", file: "/x.png", addedAt: AHORA }, "a@b.com", AHORA),
+    TransicionInvalida,
+  );
+  assert.throws(
+    () => adjuntarCaptura(estadoNuevo(), { type: "Mercado", file: "   ", addedAt: AHORA }, "a@b.com", AHORA),
+    TransicionInvalida,
+  );
+});
+
+test("adjuntar captura: se pueden acumular varias sin perder las anteriores", () => {
+  let estado = adjuntarCaptura(estadoNuevo(), { type: "Mercado", file: "/1.png", addedAt: AHORA }, "a@b.com", AHORA);
+  estado = adjuntarCaptura(estado, { type: "Comparador", file: "/2.png", addedAt: AHORA }, "a@b.com", AHORA);
+  assert.deepEqual(
+    estado.captures.map((c) => c.type),
+    ["Mercado", "Comparador"],
+  );
+});
 
 test("reabrir: solo tiene sentido desde approved o rejected", () => {
   assert.throws(() => reabrir(estadoNuevo(), contexto({ status: "draft" }), "admin@ligalab.app", AHORA), TransicionInvalida);

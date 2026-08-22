@@ -138,6 +138,13 @@ export const ACCIONES_DE_AUDITORIA = [
   'approved',
   'rejected',
   'reopened',
+  /*
+   * Adjuntar una captura real es una acción humana más, y la regla es que
+   * TODA acción humana queda registrada. No estaba en la lista original
+   * porque entonces no se podía adjuntar nada; ahora que se puede, dejarla
+   * fuera sería un hueco en el historial, no una fidelidad a la lista.
+   */
+  'capture_added',
 ] as const;
 export const accionDeAuditoriaSchema = z.enum(ACCIONES_DE_AUDITORIA);
 

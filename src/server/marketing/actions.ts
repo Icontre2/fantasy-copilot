@@ -1,4 +1,4 @@
-import { ESTADOS_EDITABLES, type Estado, type QAResult } from './schemas.ts';
+import { ESTADOS_EDITABLES, type CapturaReal, type Estado, type QAResult } from './schemas.ts';
 import type { EstadoHumano, Ediciones } from './state.ts';
 
 /**
@@ -148,5 +148,48 @@ export function reabrir(actual: EstadoHumano, contexto: ContextoEfectivo, actor:
     rejectedBy: null,
     rejectionReason: null,
     auditTrail: [...actual.auditTrail, { action: 'reopened', actor, timestamp: ahora }],
+  };
+}
+
+/**
+ * ADJUNTAR UNA CAPTURA REAL (fase 5).
+ *
+ * Registrar un hecho, no tomar una decisión: por eso NO cambia el estado ni
+ * marca `needsReReview`. Una captura no invalida el QA que ya se hizo sobre
+ * el contenido; al contrario, es lo que ese QA pedía («el product proof
+ * depende de capturas reales; no se genera UI falsa»).
+ *
+ * Se permite en cualquier estado, incluido `approved`: pegar la captura que
+ * ya se ha tomado no debería obligar a reabrir y revisar la pieza entera.
+ *
+ * No se sube ningún fichero: `file` es una URL o una ruta que alguien pega.
+ * Conectar almacenamiento externo es otra fase — esto es lo que hace falta
+ * para no perder la pista de una captura que YA existe.
+ */
+export function adjuntarCaptura(
+  actual: EstadoHumano,
+  captura: CapturaReal,
+  actor: string,
+  ahora: string,
+): EstadoHumano {
+  if (!captura.type.trim()) throw new TransicionInvalida('Hace falta decir de qué pantalla es la captura.');
+  if (!captura.file.trim()) throw new TransicionInvalida('Hace falta la URL o la ruta de la captura.');
+
+  const nueva: CapturaReal = {
+    type: captura.type.trim(),
+    file: captura.file.trim(),
+    ...(captura.description?.trim() ? { description: captura.description.trim() } : {}),
+    // La fecha la pone el servidor, nunca el cliente: un historial con fechas
+    // que puede fijar quien llama no sirve como historial.
+    addedAt: ahora,
+  };
+
+  return {
+    ...base(actual, ahora),
+    captures: [...actual.captures, nueva],
+    auditTrail: [
+      ...actual.auditTrail,
+      { action: 'capture_added', actor, timestamp: ahora, note: nueva.type },
+    ],
   };
 }
