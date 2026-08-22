@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "LigaLab Content Metrics",
+  "type": "object",
+  "required": ["contentId", "platform", "publishedAt", "windows"],
+  "properties": {
+    "contentId": {"type": "string"},
+    "platform": {"enum": ["tiktok", "instagram_reels", "youtube_shorts"]},
+    "publishedAt": {"type": "string", "format": "date-time"},
+    "postUrl": {"type": ["string", "null"]},
+    "windows": {
+      "type": "object",
+      "properties": {
+        "24h": {"$ref": "#/$defs/window"},
+        "72h": {"$ref": "#/$defs/window"},
+        "168h": {"$ref": "#/$defs/window"}
+      }
+    },
+    "learning": {"type": ["string", "null"]},
+    "nextAction": {"type": ["string", "null"]}
+  },
+  "$defs": {
+    "window": {
+      "type": ["object", "null"],
+      "properties": {
+        "views": {"type": ["integer", "null"]},
+        "averageWatchTimeSeconds": {"type": ["number", "null"]},
+        "completionRate": {"type": ["number", "null"]},
+        "likes": {"type": ["integer", "null"]},
+        "comments": {"type": ["integer", "null"]},
+        "shares": {"type": ["integer", "null"]},
+        "saves": {"type": ["integer", "null"]},
+        "profileVisits": {"type": ["integer", "null"]},
+        "followersGained": {"type": ["integer", "null"]}
+      }
+    }
+  }
+}
