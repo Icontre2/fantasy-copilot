@@ -11,15 +11,13 @@ import { pedirJSON } from './json.ts';
 /**
  * Etapa 1 — Fantasy Radar (`marketing/prompts/fantasy-radar.md`).
  *
- * La única etapa "barata" de la pipeline y, a la vez, la única con
- * herramienta de búsqueda: todo lo que dice tiene que poder verificarse con
- * una URL real, porque es la base de la que beben las demás. Nunca
- * confía en que el modelo se invente el `id` de cada oportunidad — lo asigna
- * esta función, siempre con la misma forma, para que `sourceOpportunityId`
- * aguas abajo sea estable.
+ * Es la única etapa con herramienta de búsqueda: todo lo que dice tiene que
+ * poder verificarse con una URL real. La búsqueda web requiere un modelo que
+ * soporte tool calling; por eso el Radar tiene su propia variable de modelo y
+ * NO hereda el modelo barato usado por etapas sin herramientas.
  */
 
-const MODELO_BARATO = process.env.MARKETING_AGENT_MODEL_CHEAP ?? 'claude-haiku-4-5';
+const MODELO_RADAR = process.env.MARKETING_RADAR_MODEL ?? 'claude-sonnet-4-6';
 const MAX_OPORTUNIDADES = 20;
 
 const radarPayloadSchema = z.object({
@@ -64,7 +62,7 @@ export async function generarRadar(fecha: string, opciones: OpcionesRadar = {}):
   const prompt = `Genera el radar de oportunidades de contenido de LigaLab para el ${fecha}. Usa la búsqueda web para verificar cualquier dato de actualidad (lesiones, mercado, calendario, jugadores en forma) antes de puntuar una idea — no puntúes nada que no hayas podido verificar.`;
 
   const { data, usage } = await pedirJSON(llamar, {
-    model: MODELO_BARATO,
+    model: MODELO_RADAR,
     system,
     prompt,
     schema: radarPayloadSchema,
