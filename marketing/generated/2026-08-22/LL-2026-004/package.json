@@ -1,0 +1,26 @@
+{
+  "id": "LL-2026-004",
+  "date": "2026-08-22",
+  "mode": "prelaunch_evergreen",
+  "insight": "Una plantilla cara no equivale a la misma capacidad de gastar ahora.",
+  "hook": "PLANTILLA CARA ≠ DINERO DISPONIBLE",
+  "needs_capture": false,
+  "formats": ["tiktok", "reel", "short"],
+  "status": "pending_approval",
+  "strategy": {
+    "series": "NO ES LO MISMO",
+    "problem": "Confundir valor de plantilla con capacidad de gasto.",
+    "angle": "Separar activos y caja mentalmente antes de leer a un rival.",
+    "cta": "Estoy construyendo LigaLab para ver la liga así."
+  },
+  "assets": {
+    "realCaptures": [],
+    "generatedAllowed": ["typography_motion", "abstract_team_value_block", "abstract_spending_capacity_block", "brand_red_line"]
+  },
+  "qa": {
+    "brand_pass": true,
+    "product_truth_pass": true,
+    "facts_pass": true,
+    "notes": ["Evergreen sin cifras actuales.", "No afirma conocer dinero exacto de rivales.", "No necesita producto real."]
+  }
+}
