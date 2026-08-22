@@ -373,10 +373,21 @@ function CreativeCard({ pieza }: { pieza: PaqueteDeCola }) {
       </Campo>
       <Campo titulo="15. Necesidad de captura">
         {pieza.needsCapture ? (
-          <p className="inline-flex items-center gap-1.5 font-semibold text-amber-300">
-            <Camera className="h-4 w-4" aria-hidden />
-            Sí — nunca se genera una interfaz falsa. Pantallas concretas arriba, en cada plano marcado como captura real.
-          </p>
+          <div className="space-y-2">
+            <p className="inline-flex items-center gap-1.5 font-semibold text-amber-300">
+              <Camera className="h-4 w-4" aria-hidden />
+              Captura real necesaria — nunca se genera una interfaz falsa.
+            </p>
+            {pieza.captureRequest ? (
+              <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-amber-200">
+                {pieza.captureRequest}
+              </p>
+            ) : (
+              <p className="text-neutral-400">
+                Las pantallas concretas están arriba, en cada plano marcado como captura real.
+              </p>
+            )}
+          </div>
         ) : (
           "No."
         )}
