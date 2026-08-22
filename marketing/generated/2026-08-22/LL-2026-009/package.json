@@ -1,0 +1,13 @@
+{
+  "id":"LL-2026-009",
+  "date":"2026-08-22",
+  "mode":"prelaunch",
+  "series":"DUDA REAL",
+  "hook":"NO NECESITAS ADIVINAR EL ONCE. NECESITAS VER LA DUDA",
+  "insight":"Una previa útil no elimina la incertidumbre: la hace visible.",
+  "needs_capture":false,
+  "formats":["tiktok","reel","short"],
+  "status":"pending_approval",
+  "product_truth":["LigaLab muestra once probable y porcentajes cuando están disponibles"],
+  "qa":{"brand_pass":true,"product_truth_pass":true,"facts_pass":true,"notes":["Evergreen; no menciona un partido concreto.","No presenta una previa como alineación oficial."]}
+}
