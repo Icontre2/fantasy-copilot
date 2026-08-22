@@ -43,7 +43,7 @@ test('Orchestrator bloquea Bash aunque el comando parezca inocuo', () => {
   assert.equal(output.permissionDecision, 'deny');
 });
 
-test('registro de ejecución se valida y persiste solo bajo generated/_runs', async () => {
+test('registro completo se valida y persiste solo bajo generated/_runs', async () => {
   const raiz = await mkdtemp(path.join(os.tmpdir(), 'ligalab-runlog-'));
   try {
     const destino = await guardarRegistroDeEjecucion(
@@ -57,7 +57,8 @@ test('registro de ejecución se valida y persiste solo bajo generated/_runs', as
         autocorrection_used: true,
         final_status: 'pending_approval',
         content_id: 'LL-20260822-999',
-        source: 'sdk-pipeline',
+        source: 'claude-code-skill',
+        trace_complete: true,
         error: null,
       },
       raiz,
@@ -70,7 +71,26 @@ test('registro de ejecución se valida y persiste solo bajo generated/_runs', as
     const persistido = JSON.parse(await readFile(destino, 'utf8'));
     assert.equal(registroDeEjecucionSchema.safeParse(persistido).success, true);
     assert.equal(persistido.autocorrection_used, true);
+    assert.equal(persistido.trace_complete, true);
   } finally {
     await rm(raiz, { recursive: true, force: true });
   }
+});
+
+test('registro parcial permite desconocidos en vez de inventar ceros', () => {
+  const resultado = registroDeEjecucionSchema.safeParse({
+    run_id: 'sdk-fallo',
+    timestamp: new Date().toISOString(),
+    opportunity_id: null,
+    agentes_invocados: null,
+    reintentos: null,
+    reviewer_verdict: null,
+    autocorrection_used: null,
+    final_status: 'review_pending',
+    content_id: 'LL-20260822-999',
+    source: 'sdk-pipeline',
+    trace_complete: false,
+    error: 'fallo antes de saber la etapa exacta',
+  });
+  assert.equal(resultado.success, true);
 });
