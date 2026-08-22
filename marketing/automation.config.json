@@ -1,18 +1,25 @@
 {
-  "version": 3,
+  "version": 4,
   "daily": {
+    "contentMode": "prelaunch",
     "radarCandidateLimit": 20,
     "creativeCandidateLimit": 3,
     "defaultCreativeCount": 1,
-    "minimumScoreForCreative": 70
+    "minimumScoreForCreative": 70,
+    "mix": {
+      "evergreen_prelaunch": 0.7,
+      "radar_current": 0.2,
+      "product_build_in_public": 0.1
+    }
   },
   "orchestration": {
     "mode": "single_pass_orchestrator",
     "specialistDocsAreAdvisory": true,
     "autoCorrectionPasses": 1,
+    "radarRequiredFor": ["current_fact", "player_claim", "match_claim", "news_claim", "numeric_current_claim"],
+    "evergreenAllowedWithoutRadar": true,
     "blockOnlyOn": [
-      "invalid_or_missing_radar",
-      "missing_evidence",
+      "missing_required_evidence",
       "product_truth_violation",
       "invented_metric_or_screen",
       "privacy_violation",
@@ -23,13 +30,14 @@
     "cheapStages": ["fantasy-radar", "scoring"],
     "coordinatedStage": "orchestrator",
     "specialistReferences": ["strategist", "copywriter", "creative-director", "video-director", "brand-reviewer"],
-    "rule": "Run one coordinated creative pass for the best qualifying opportunity by default. Consult specialist documents only as needed. Never process more than the top 3 qualifying opportunities."
+    "rule": "Create one strong prelaunch piece by default. Use Radar only when the concept depends on current facts. Never process more than 3 pieces per run."
   },
   "states": ["radar", "draft", "review", "pending_approval", "approved", "rejected", "generated", "published", "blocked"],
   "humanApprovalRequiredBefore": ["generated", "published"],
   "publishersEnabled": false,
   "generation": {
     "imageProvider": "replaceable",
+    "designProvider": "canva",
     "videoProvider": "seedance",
     "realProductCapturesOnly": true,
     "generateFinalVideo": false
