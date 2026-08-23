@@ -1,15 +1,15 @@
 {
-  "updatedAt": "2026-08-23",
+  "updatedAt": "2026-08-24",
   "mode": "prelaunch",
   "creativeFeedback": "Recent copy direction rejected by human review as artificial/not TikTok-native. Do not advance copy-led concepts until reworked from observed references and visual-first concepts.",
   "stateNote": "Queue status vocabulary aligned to marketing/automation.config.json. Blocking detail lives in note; no custom asset_blocked/needs_rewrite states. Rejected/needs-rewrite concepts carry no numeric score.",
   "queueHealth": {
-    "totalIds": 15,
-    "usableBacklog": 2,
+    "totalIds": 16,
+    "usableBacklog": 3,
     "rejected": 2,
     "rewriteRequired": 11,
     "targetUsableBacklog": 10,
-    "deficit": 8,
+    "deficit": 7,
     "rule": "usableBacklog excludes rejected items and items whose note contains REWRITE REQUIRED. A validated draft with an asset dependency counts. New evergreen concepts must be visual-first and must not recycle rejected copy-led directions."
   },
   "items": [
@@ -27,6 +27,7 @@
     {"contentId":"LL-2026-013","series":"EL DATO QUE FALTA","hook":"EL PRECIO DEL JUGADOR ES SOLO UNA PARTE DE LA PUJA","status":"draft","needsCapture":false,"note":"REWRITE REQUIRED. Historical score removed because human creative feedback invalidated it."},
     {"contentId":"LL-2026-014","series":"BUILD IN PUBLIC","hook":"ESTOY CONSTRUYENDO LA PANTALLA QUE SIEMPRE ECHO DE MENOS EN MI LIGA","status":"draft","needsCapture":false,"note":"REWRITE REQUIRED. Historical score removed because human creative feedback invalidated it."},
     {"contentId":"LL-2026-015","series":"DUDA REAL","hook":"NO TODO LO QUE PARECE UNA OPORTUNIDAD LO ES","status":"draft","needsCapture":false,"note":"REWRITE REQUIRED. Historical score removed because human creative feedback invalidated it."},
-    {"contentId":"LL-2026-016","series":"RIVAL / CAJA","hook":"¿Puede quitártelo?","status":"draft","needsCapture":true,"note":"NEW EVERGREEN VISUAL-FIRST CONCEPT. Show real Fantasy market context, then real LigaLab rival profile + reconstructed rival cash marked with ≈. Requires real product capture. No prediction, exact-cash claim, automatic notification or recreated UI. Concept based on verified current product truth and current Fantasy content context; needs human creative review before advancement."}
+    {"contentId":"LL-2026-016","series":"RIVAL / CAJA","hook":"¿Puede quitártelo?","status":"draft","needsCapture":true,"note":"NEW EVERGREEN VISUAL-FIRST CONCEPT. Show real Fantasy market context, then real LigaLab rival profile + reconstructed rival cash marked with ≈. Requires real product capture. No prediction, exact-cash claim, automatic notification or recreated UI. Concept based on verified current product truth and current Fantasy content context; needs human creative review before advancement."},
+    {"contentId":"LL-2026-106","series":"COMPARADOR","hook":"","status":"draft","needsCapture":true,"note":"NEW EVERGREEN VISUAL-FIRST CONCEPT. Direct CompareView demonstration of two real players. No hook required; optional neutral label 'Comparador'. Uses only verified current product fields: value, clause, average, points, owner and evolution. Requires real product capture; no recommendation or prediction. Distinct from LL-2026-016 rival cash and LL-2026-105 league economy."}
   ]
 }
