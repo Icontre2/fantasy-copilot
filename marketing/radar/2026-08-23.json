@@ -1,0 +1,236 @@
+{
+  "date": "2026-08-23",
+  "opportunities": [
+    {
+      "id": "RD-20260823-001",
+      "title": "Atlético: once rehecho con Sorloth fuera y varios mundialistas entrando",
+      "problem": "El manager Fantasy tiene varias decisiones abiertas a pocas horas del Atlético-Villarreal: Sorloth es baja, Lookman apunta al nueve y Llorente, Giuliano, Grimaldo y Hjulmand ganan opciones de titularidad.",
+      "whyNow": "El partido se juega hoy, 23 de agosto, a las 17:00. AS actualizó el posible once esta madrugada y señala cambios relevantes respecto al estreno.",
+      "feature": "Once probable propio y de rivales + Comparador para contrastar titularidad, valor, puntos, media y evolución antes de cerrar el once.",
+      "hook": "Tu delantero no juega y el once del Atleti cambia: ¿a quién mantienes hoy?",
+      "formats": ["tiktok", "instagram_reels", "youtube_shorts"],
+      "score": 96,
+      "sources": [
+        {
+          "label": "AS — El posible once del Atlético ante el Villarreal",
+          "url": "https://as.com/futbol/primera/el-posible-once-del-atletico-ante-el-villarreal-f202608-n/",
+          "publishedAt": "2026-08-23"
+        },
+        {
+          "label": "AS — Simeone convoca a Julián Alvarez; al Cuti Romero aún no",
+          "url": "https://as.com/futbol/primera/simeone-convoca-a-julian-alvarez-al-cuti-romero-aun-no-f202608-n/",
+          "publishedAt": "2026-08-22"
+        }
+      ],
+      "riskNotes": "No presentar lesiones como una función de LigaLab. La solución mostrada debe ser Once probable + Comparador, funciones confirmadas en PRODUCT_TRUTH."
+    },
+    {
+      "id": "RD-20260823-002",
+      "title": "Barcelona: debut sin nueve de referencia y con mundialistas aún entrando",
+      "problem": "Flick llega al debut liguero sin Lewandowski, Ferran ni Rashford y con varios mundialistas con pocos entrenamientos; hay decisiones Fantasy abiertas en ataque, lateral izquierdo y mediocampo.",
+      "whyNow": "El Barcelona juega hoy a las 21:30 ante el Elche. El posible once publicado hoy apunta a Joan Garcia; Eric, Christensen, Gerard Martín, Cancelo o Balde; Bernal, Xavi Espart, Fermín; Raphinha, Lamine y Adeyemi.",
+      "feature": "Once probable + Comparador para ver el porcentaje de titularidad y enfrentar opciones A vs B con datos reales de la liga.",
+      "hook": "El Barça debuta sin 9: ¿arriesgas con un titular probable o buscas una opción más segura?",
+      "formats": ["tiktok", "instagram_reels", "youtube_shorts"],
+      "score": 94,
+      "sources": [
+        {
+          "label": "AS — Posible once del Barcelona ante el Elche",
+          "url": "https://as.com/futbol/primera/posible-once-del-barcelona-ante-el-elche-en-la-liga-ea-sports-f202608-n/",
+          "publishedAt": "2026-08-23"
+        }
+      ],
+      "riskNotes": "No recomendar fichajes ni predecir puntos. Enmarcarlo como decisión informada usando titularidad probable y comparador."
+    },
+    {
+      "id": "RD-20260823-003",
+      "title": "Getafe: rotaciones forzadas tras Europa, sanción y lesión larga",
+      "problem": "El manager con jugadores del Getafe afronta un once difícil de leer: el equipo viene de jugar Conference League, Kiko Femenía está sancionado, Uche está lesionado de larga duración y Bordalás puede rotar.",
+      "whyNow": "Getafe-Racing se juega hoy a las 19:30 y AS señala de forma expresa que el desgaste europeo obliga a introducir cambios.",
+      "feature": "Once probable + Comparador para decidir entre jugadores expuestos a rotación y alternativas de la plantilla o el mercado.",
+      "hook": "Jugó Europa hace tres días y hoy rota: este es el tipo de once que te rompe la jornada.",
+      "formats": ["tiktok", "instagram_reels", "youtube_shorts"],
+      "score": 92,
+      "sources": [
+        {
+          "label": "AS — Posible once del Getafe en la jornada 2",
+          "url": "https://as.com/futbol/primera/posible-once-del-getafe-en-la-jornada-2-de-laliga-ea-sports-f202608-n/",
+          "publishedAt": "2026-08-22"
+        },
+        {
+          "label": "AS — Examen de rotaciones",
+          "url": "https://as.com/futbol/primera/examen-de-rotaciones-f202608-n/",
+          "publishedAt": "2026-08-23"
+        }
+      ],
+      "riskNotes": "No vender alertas automáticas de lesión/sanción. El contenido debe centrarse en incertidumbre de once y comparación."
+    },
+    {
+      "id": "RD-20260823-004",
+      "title": "Villarreal: Comesaña o Carlos Maciá, la duda central del once",
+      "problem": "Quien tenga a Comesaña o esté valorando a Carlos Maciá necesita resolver una decisión A vs B muy concreta sobre titularidad.",
+      "whyNow": "AS sitúa hoy a Carlos Maciá como principal alternativa para entrar por Comesaña tras su buena segunda parte ante el Racing.",
+      "feature": "Once probable + Comparador para contrastar titularidad, valor, puntos, media, propietario y evolución.",
+      "hook": "Comesaña o Maciá: hoy hay una plaza y dos nombres.",
+      "formats": ["tiktok", "instagram_reels", "youtube_shorts"],
+      "score": 90,
+      "sources": [
+        {
+          "label": "AS — Alineación posible del Villarreal ante el Atlético",
+          "url": "https://as.com/futbol/primera/alineacion-posible-del-villarreal-ante-el-atletico-de-madrid-en-laliga-ea-sports-f202608-n/",
+          "publishedAt": "2026-08-23"
+        }
+      ],
+      "riskNotes": "No convertir la duda en certeza; presentar porcentajes/once probable como estimación, no como alineación confirmada."
+    },
+    {
+      "id": "RD-20260823-005",
+      "title": "Racing: Manu Hernando o Facu González junto a Pablo Ramón",
+      "problem": "La pareja de centrales del Racing no está cerrada y afecta directamente a managers que buscan titularidad barata o necesitan cubrir una baja.",
+      "whyNow": "AS actualizó anoche el posible once y mantiene abierta la pelea entre Manu Hernando y Facu González.",
+      "feature": "Once probable + Comparador.",
+      "hook": "Dos centrales para una plaza: ¿quién tiene más opciones de salir hoy?",
+      "formats": ["tiktok", "instagram_reels", "youtube_shorts"],
+      "score": 88,
+      "sources": [
+        {
+          "label": "AS — Alineación posible del Racing contra el Getafe",
+          "url": "https://as.com/futbol/primera/alineacion-posible-del-racing-contra-el-getafe-en-laliga-ea-sports-f202608-n/",
+          "publishedAt": "2026-08-22"
+        }
+      ],
+      "riskNotes": "Mantenerlo como duda probable, nunca como titularidad confirmada."
+    },
+    {
+      "id": "RD-20260823-006",
+      "title": "Elche: Buonanotte o Ali Houary pueden alterar el ataque",
+      "problem": "El ataque del Elche tiene varias piezas abiertas y los managers necesitan distinguir entre nombres con opción real de entrar y simples alternativas de banquillo.",
+      "whyNow": "AS publica hoy que Buonanotte y Ali Houary pueden entrar en el once ante el Barcelona, con Ponce y Osorio también recuperando opciones de minutos.",
+      "feature": "Once probable + Comparador.",
+      "hook": "El Elche cambia piezas justo antes del Barça: aquí está la duda que importa en Fantasy.",
+      "formats": ["tiktok", "instagram_reels", "youtube_shorts"],
+      "score": 86,
+      "sources": [
+        {
+          "label": "AS — Alineación posible del Elche ante el Barcelona",
+          "url": "https://as.com/futbol/primera/alineacion-posible-del-elche-ante-el-barcelona-en-laliga-ea-sports-f202608-n/",
+          "publishedAt": "2026-08-23"
+        }
+      ],
+      "riskNotes": "No prometer minutos ni resultado; usar el once probable como contexto de decisión."
+    },
+    {
+      "id": "RD-20260823-007",
+      "title": "Gerard Moreno y Sergi Cardona llegan como dudas al Metropolitano",
+      "problem": "Managers con Gerard Moreno o Sergi Cardona no tienen una certeza de titularidad antes de un partido difícil.",
+      "whyNow": "AS señala hoy que ambos arrastran molestias leves y son duda hasta última hora frente al Atlético.",
+      "feature": "Once probable + Comparador para medir el riesgo de mantenerlos frente a otra opción disponible.",
+      "hook": "Dos dudas hasta última hora: ¿te la juegas o comparas antes de cerrar?",
+      "formats": ["tiktok", "instagram_reels", "youtube_shorts"],
+      "score": 85,
+      "sources": [
+        {
+          "label": "AS — Alineación posible del Villarreal ante el Atlético",
+          "url": "https://as.com/futbol/primera/alineacion-posible-del-villarreal-ante-el-atletico-de-madrid-en-laliga-ea-sports-f202608-n/",
+          "publishedAt": "2026-08-23"
+        }
+      ],
+      "riskNotes": "LigaLab no tiene base de datos de lesiones; no presentar este dato como función propia."
+    },
+    {
+      "id": "RD-20260823-008",
+      "title": "Baena y Kang-in: pueden tener minutos sin partir de inicio",
+      "problem": "Tener un jugador de alto interés Fantasy que apunta al banquillo obliga a decidir si asumir el riesgo o usar una alternativa con mayor probabilidad de titularidad.",
+      "whyNow": "AS indica hoy que Baena todavía puede no llegar al once y que Kang-in Lee también podría comenzar en el banquillo.",
+      "feature": "Once probable + Comparador.",
+      "hook": "Buen jugador, mala señal Fantasy: cuando tu fichaje apunta al banquillo.",
+      "formats": ["tiktok", "instagram_reels", "youtube_shorts"],
+      "score": 84,
+      "sources": [
+        {
+          "label": "AS — El posible once del Atlético ante el Villarreal",
+          "url": "https://as.com/futbol/primera/el-posible-once-del-atletico-ante-el-villarreal-f202608-n/",
+          "publishedAt": "2026-08-23"
+        }
+      ],
+      "riskNotes": "No inferir puntos esperados por entrar desde el banquillo."
+    },
+    {
+      "id": "RD-20260823-009",
+      "title": "Julián Álvarez vuelve a convocatoria, pero no apunta a titular",
+      "problem": "El regreso a convocatoria de un jugador importante puede confundirse con regreso al once; para Fantasy son decisiones distintas.",
+      "whyNow": "Julián está convocado hoy ante Villarreal, pero AS lo sitúa fuera del once inicial previsto.",
+      "feature": "Once probable + Comparador.",
+      "hook": "Convocado no significa titular: el error que te puede dejar un hueco en el once.",
+      "formats": ["tiktok", "instagram_reels", "youtube_shorts"],
+      "score": 82,
+      "sources": [
+        {
+          "label": "AS — Simeone convoca a Julián Alvarez",
+          "url": "https://as.com/futbol/primera/simeone-convoca-a-julian-alvarez-al-cuti-romero-aun-no-f202608-n/",
+          "publishedAt": "2026-08-22"
+        },
+        {
+          "label": "AS — El posible once del Atlético ante el Villarreal",
+          "url": "https://as.com/futbol/primera/el-posible-once-del-atletico-ante-el-villarreal-f202608-n/",
+          "publishedAt": "2026-08-23"
+        }
+      ],
+      "riskNotes": "Evitar cualquier contenido sobre su situación personal o contractual; solo disponibilidad deportiva y titularidad probable."
+    },
+    {
+      "id": "RD-20260823-010",
+      "title": "Racing: el mercado amenaza con mover piezas titulares antes del cierre",
+      "problem": "Managers con jugadores como Salinas, Gustavo Puerta o Sergio Martínez afrontan incertidumbre de mercado en plena jornada y necesitan saber qué tienen realmente sus rivales y qué alternativas hay en mercado.",
+      "whyNow": "AS señala que el Racing llega al partido condicionado por posibles salidas en los últimos días del mercado de fichajes.",
+      "feature": "Mercado con pujas reales + Comparador + Economía de la liga para evaluar opciones disponibles y capacidad de puja sin inventar recomendaciones.",
+      "hook": "Tu jugador puede salir del club y el mercado Fantasy sigue abierto: ¿qué puedes hacer hoy?",
+      "formats": ["tiktok", "instagram_reels", "youtube_shorts"],
+      "score": 80,
+      "sources": [
+        {
+          "label": "AS — Examen de rotaciones",
+          "url": "https://as.com/futbol/primera/examen-de-rotaciones-f202608-n/",
+          "publishedAt": "2026-08-23"
+        }
+      ],
+      "riskNotes": "No afirmar que una salida se producirá; la fuente solo describe riesgo/rumor de mercado."
+    },
+    {
+      "id": "RD-20260823-011",
+      "title": "Cancelo o Balde: lateral izquierdo abierto en el debut del Barça",
+      "problem": "Una posición concreta del once del Barcelona sigue abierta y afecta a una decisión A vs B muy fácil de entender en contenido corto.",
+      "whyNow": "AS plantea hoy a Cancelo o Balde para el lateral izquierdo ante el Elche.",
+      "feature": "Once probable + Comparador.",
+      "hook": "Cancelo o Balde: una plaza, dos opciones y tu jornada empieza esta noche.",
+      "formats": ["tiktok", "instagram_reels", "youtube_shorts"],
+      "score": 79,
+      "sources": [
+        {
+          "label": "AS — Posible once del Barcelona ante el Elche",
+          "url": "https://as.com/futbol/primera/posible-once-del-barcelona-ante-el-elche-en-la-liga-ea-sports-f202608-n/",
+          "publishedAt": "2026-08-23"
+        }
+      ],
+      "riskNotes": "No declarar ganador del duelo; mostrar la incertidumbre y el dato disponible."
+    },
+    {
+      "id": "RD-20260823-012",
+      "title": "Diangana vuelve tras molestias y reabre opciones en el Elche",
+      "problem": "El regreso de un jugador tras molestias puede alterar jerarquías y dejar a otro jugador del usuario fuera del once.",
+      "whyNow": "AS confirma hoy que Grady Diangana vuelve a estar disponible para el Elche ante el Barcelona.",
+      "feature": "Once probable + Comparador.",
+      "hook": "Vuelve uno y cambia el reparto de minutos: mira el once antes de decidir.",
+      "formats": ["tiktok", "instagram_reels", "youtube_shorts"],
+      "score": 76,
+      "sources": [
+        {
+          "label": "AS — Alineación posible del Elche ante el Barcelona",
+          "url": "https://as.com/futbol/primera/alineacion-posible-del-elche-ante-el-barcelona-en-laliga-ea-sports-f202608-n/",
+          "publishedAt": "2026-08-23"
+        }
+      ],
+      "riskNotes": "No presentar el regreso como garantía de titularidad ni de minutos."
+    }
+  ]
+}
