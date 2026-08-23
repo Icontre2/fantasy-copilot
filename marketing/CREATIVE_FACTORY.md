@@ -15,6 +15,27 @@ Convertir oportunidades verificables en paquetes creativos listos para revisión
 ## Producción diaria
 Seleccionar 1 insight fuerte por defecto y un máximo absoluto de 3 oportunidades. Calidad > volumen.
 
+## Salud real de la cola
+No usar el número bruto de IDs de `marketing/editorial-queue.json` para decidir si hay backlog suficiente.
+
+Contar como **pieza utilizable para backlog** solo una entrada que:
+- no tenga `status: rejected`;
+- no incluya `REWRITE REQUIRED` en `note`;
+- no contradiga feedback humano vigente;
+- tenga una dirección creativa todavía válida, aunque esté en `draft` por un asset/captura pendiente.
+
+Una pieza bloqueada únicamente por asset real sí cuenta como backlog utilizable si el concepto ya está validado y el bloqueo está especificado. Una pieza heredada que necesita replanteamiento creativo no cuenta.
+
+**Umbral operativo:** mantener al menos 10 piezas utilizables. Si el conteo real baja de 10, el loop debe intentar reponer backlog con nuevas oportunidades evergreen o referencias válidas, pero nunca saltarse el Feedback Gate ni el Creative Reset para llenar el número artificialmente. Si no hay evidencia/referencias suficientes para crear algo digno, registrar el déficit y trabajar sobre el bloqueo en vez de generar copy de relleno.
+
+Siempre que se actualice la cola, mantener un resumen `queueHealth` con al menos:
+- `totalIds`
+- `usableBacklog`
+- `rejected`
+- `rewriteRequired`
+- `targetUsableBacklog`
+- `deficit`
+
 ## Feedback humano manda
 El feedback explícito del usuario invalida cualquier score o estado anterior de una pieza.
 
