@@ -158,14 +158,22 @@ export type PaqueteDeContexto = {
 /**
  * Los documentos mínimos por especialista (§10).
  *
- * Solo se listan ficheros que EXISTEN en el repo. El documento maestro
- * menciona además `brand/BRAND_SYSTEM.md`, `marketing/PRELAUNCH_CONTENT.md` y
- * `marketing/editorial-queue.json`, que hoy no existen: pedirle a un agente
- * que los lea le haría fallar la lectura o, peor, inventarse su contenido.
+ * Solo se listan ficheros que EXISTEN en el repo. El Strategist recibe además
+ * la cola editorial y el Creative Reset vigente: necesita ver IDs/temas ya
+ * usados y el feedback humano más reciente ANTES de proponer una dirección.
+ * Esto evita duplicados y evita resucitar la línea de copy rechazada.
+ *
+ * `marketing/PRELAUNCH_CONTENT.md` sigue citado en documentación histórica pero
+ * no existe actualmente; no se añade hasta que haya una fuente real que leer.
  * `agents-reales.test.ts` comprueba que cada ruta de aquí existe de verdad.
  */
 export const DOCUMENTOS_POR_ESPECIALISTA: Record<Especialista, string[]> = {
-  strategist: ['marketing/PRODUCT_TRUTH.md', 'marketing/STRATEGY.md', 'marketing/CONTENT_ENGINE.md'],
+  strategist: [
+    'marketing/PRODUCT_TRUTH.md',
+    'marketing/STRATEGY.md',
+    'marketing/editorial-queue.json',
+    'marketing/creative-reset-2026-08-22.md',
+  ],
   copywriter: ['brand/VOICE.md', 'brand/CONTENT_RULES.md'],
   'creative-director': ['brand/BRAND.md', 'marketing/IMAGE_PIPELINE.md', 'marketing/CREATIVE_FACTORY.md'],
   'video-director': ['marketing/SEEDANCE_PIPELINE.md'],
