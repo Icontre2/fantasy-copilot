@@ -11,6 +11,7 @@ Convertir oportunidades verificables en paquetes creativos listos para revisión
 - `marketing/CONTENT_ENGINE.md`
 - feedback humano más reciente sobre copies/creatividad
 - radar del día, si existe
+- referencias creativas observables registradas en `marketing/research/`
 
 ## Producción diaria
 Seleccionar 1 insight fuerte por defecto y un máximo absoluto de 3 oportunidades. Calidad > volumen.
@@ -48,6 +49,9 @@ Hasta disponer de evidencia creativa mejor:
 - priorizar investigación de referencias reales, observación de formatos y estructura visual antes de redactar nuevos hooks;
 - si una pieza heredada usa el enfoque rechazado, mantenerla en `draft` con una nota `REWRITE REQUIRED`; si la dirección fue rechazada explícitamente por revisión humana, usar `rejected`;
 - una frase corta no es automáticamente TikTok-native.
+
+## Evidencia creativa reciente
+`marketing/research/tiktok-creative-references-2026-08-23.md` registra evidencia de TikTok for Business y Newsroom. La búsqueda directa de TikTok para ejemplos específicos de LALIGA Fantasy está bloqueada por robots.txt en la ejecución del 2026-08-23; por tanto, no se deben inventar ejemplos de creadores, vídeos o lenguaje específico de Fantasy. Estas fuentes sirven para validar principios de producción y autenticidad, no para fabricar hooks.
 
 ## Flujo
 1. Feedback gate: comprobar que el concepto no repite una dirección rechazada.
