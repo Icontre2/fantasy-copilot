@@ -67,7 +67,14 @@ export function invocaVideoDirector(formato: SalidaStrategist['recommended_forma
 
 // ── PASS / FIX / BLOCK y la autocorrección única (Tests 4 y 5) ───────────────
 
+/**
+ * Resultado INTERNO de una ejecución. `blocked` y `review_pending` no son
+ * estados escribibles de la cola editorial: `marketing/automation.config.json`
+ * es la fuente de verdad para esos estados. Mantener ambos conceptos separados
+ * evita que un fallo de revisión invente un estado ad hoc en una pieza.
+ */
 export type EstadoFinal = 'pending_approval' | 'blocked' | 'review_pending';
+export type EstadoDeColaTrasRevision = 'draft' | 'pending_approval';
 
 export type RutaTrasRevision =
   | { accion: 'finalizar'; estado: EstadoFinal; motivo: string }
@@ -79,8 +86,10 @@ export type RutaTrasRevision =
  * `autocorreccionesYaUsadas` es lo que impide el loop, y por eso es un
  * parámetro y no un contador interno: la función no tiene memoria, así que no
  * puede «olvidar» que ya corrigió. Un segundo FIX no vuelve a corregir —
- * termina en `blocked` con el motivo, porque una pieza que sigue mal después
- * de una corrección es un problema real, no un detalle de gusto.
+ * termina en `blocked` como RESULTADO INTERNO con el motivo, porque una pieza
+ * que sigue mal después de una corrección es un problema real, no un detalle
+ * de gusto. Si llega a escribirse como paquete/cola, su estado sigue siendo
+ * `draft` y el motivo vive en QA/note.
  */
 export function rutaTrasRevision(revision: SalidaBrandReviewer, autocorreccionesYaUsadas: number): RutaTrasRevision {
   if (revision.verdict === 'PASS') {
@@ -101,10 +110,25 @@ export function rutaTrasRevision(revision: SalidaBrandReviewer, autocorrecciones
 
 /**
  * Si el Reviewer falla técnicamente NO se aprueba (§21): queda
- * `review_pending`. Aprobar por defecto convertiría una caída en un permiso.
+ * `review_pending` como resultado interno. No es un estado de cola.
  */
 export function rutaSinRevision(): RutaTrasRevision {
   return { accion: 'finalizar', estado: 'review_pending', motivo: 'El Brand Reviewer no ha devuelto veredicto.' };
+}
+
+/**
+ * Traduce el resultado interno de revisión al vocabulario escribible de la
+ * Creative Factory. Es la barrera que impide que `blocked`/`review_pending`
+ * terminen en `editorial-queue.json` o en un package generado.
+ *
+ * - PASS -> `pending_approval`.
+ * - BLOCK o segundo FIX -> `draft`, conservando la razón en QA/note.
+ * - Reviewer caído -> `draft` si ya existe un borrador; si todavía no se ha
+ *   escrito nada, el Orchestrator puede abortar sin crear paquete.
+ */
+export function estadoDeColaTrasRevision(ruta: RutaTrasRevision): EstadoDeColaTrasRevision {
+  if (ruta.accion === 'finalizar' && ruta.estado === 'pending_approval') return 'pending_approval';
+  return 'draft';
 }
 
 // ── Output pobre y caída de un especialista (Tests 9 y 10) ───────────────────
@@ -201,6 +225,7 @@ export type RegistroDeEjecucion = {
   reintentos: number;
   reviewer_verdict: SalidaBrandReviewer['verdict'] | null;
   autocorrection_used: boolean;
+  /** Resultado interno de la ejecución; no confundir con el status de la cola. */
   final_status: EstadoFinal;
   content_id: string | null;
 };
