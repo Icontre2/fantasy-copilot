@@ -3,6 +3,15 @@
   "mode": "prelaunch",
   "creativeFeedback": "Recent copy direction rejected by human review as artificial/not TikTok-native. Do not advance copy-led concepts until reworked from observed references and visual-first concepts.",
   "stateNote": "Queue status vocabulary aligned to marketing/automation.config.json. Blocking detail lives in note; no custom asset_blocked/needs_rewrite states. Rejected/needs-rewrite concepts carry no numeric score: human feedback invalidated previous scoring and stale scores must not influence prioritization.",
+  "queueHealth": {
+    "totalIds": 14,
+    "usableBacklog": 1,
+    "rejected": 2,
+    "rewriteRequired": 11,
+    "targetUsableBacklog": 10,
+    "deficit": 9,
+    "rule": "usableBacklog excludes rejected items and any item whose note contains REWRITE REQUIRED; an asset-blocked draft may count only when its creative direction is still valid. Do not fill the deficit with copy-led variants that violate the current Creative Reset."
+  },
   "items": [
     {"contentId":"LL-2026-002","series":"CASTIGO → LIGALAB","hook":"para que no te pase esto","status":"draft","needsCapture":true,"canvaDesignId":"DAHTAhHnih0","canvaEditUrl":"https://www.canva.com/d/7b1vCaWjJS09uNg","note":"VALIDATED DIRECTION, BLOCKED ON ASSETS. Storyboard + asset-plan ready. Castigo candidate A was re-verified on its original Pexels page on 2026-08-23: page active, marked Free to use / Free download; candidate remains candidate_not_approved pending human visual approval. Real-product capture is now operationally specified in marketing/generated/2026-08-23/LL-2026-002/capture-shotlist.md: record 5–8s raw and select 2–4s clean, preferably Alertas de cláusula, alternatively caja rival preserving ≈. Claim-risk guardrail remains mandatory. Old Canva design remains historical only. Do not advance to brand_review until both assets pass intake QA and claim-risk gate."},
     {"contentId":"LL-2026-003","series":"ANTES DE HACER X","hook":"ANTES DE PUJAR, MIRA LO QUE TE QUEDA","status":"draft","needsCapture":false,"canvaDesignId":"DAHTAgAII9o","canvaEditUrl":"https://www.canva.com/d/_sMMmOYmRqDlwk0","note":"REWRITE REQUIRED. Existing design preserved; do not advance without new visual-first creative direction."},
