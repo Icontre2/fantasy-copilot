@@ -1,0 +1,10 @@
+LL-2026-108 QA
+
+Product Truth: CalendarView is verified as working today.
+Source: marketing/PRODUCT_TRUTH.md.
+Real capture required: yes.
+No recreated UI: required.
+No invented teams, fixtures, odds, numbers or labels: required.
+No prediction or performance guarantee: required.
+No download/availability claim: required.
+Human approval required before generation: yes.
