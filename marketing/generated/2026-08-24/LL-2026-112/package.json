@@ -1,0 +1,32 @@
+{
+  "contentId": "LL-2026-112",
+  "date": "2026-08-24",
+  "mode": "prelaunch",
+  "status": "pending_approval",
+  "series": "ACTUALIDAD FANTASY",
+  "platforms": ["tiktok", "instagram_reels", "youtube_shorts"],
+  "durationSeconds": 9,
+  "needsCapture": false,
+  "radarOpportunityId": "LL-RADAR-2026-08-24-01",
+  "ratio": "9:16",
+  "creativeSplit": "actualidad_fantasy",
+  "factRevalidationRequiredBeforePublish": true,
+  "sources": [
+    {
+      "type": "radar",
+      "path": "marketing/radar/2026-08-24.json",
+      "opportunityId": "LL-RADAR-2026-08-24-01"
+    },
+    {
+      "type": "web",
+      "label": "AS — Alineación posible del Levante ante Osasuna",
+      "url": "https://as.com/futbol/primera/alineacion-posible-del-levante-ante-osasuna-en-laliga-ea-sports-f202608-n/",
+      "date": "2026-08-24"
+    }
+  ],
+  "claims": [
+    "Brugui vuelve tras cumplir sanción.",
+    "Su presencia en el once se trata como probable, no confirmada."
+  ],
+  "productMention": "LigaLab · en construcción"
+}
