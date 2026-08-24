@@ -1,0 +1,27 @@
+{
+  "contentId": "LL-2026-108",
+  "series": "CALENDARIO / DIFICULTAD",
+  "platforms": ["tiktok", "instagram_reels", "youtube_shorts"],
+  "status": "draft",
+  "format": "vertical_video",
+  "durationSeconds": {"min": 5, "max": 8},
+  "needsCapture": true,
+  "productSurface": "CalendarView",
+  "hook": null,
+  "copyMode": "minimal_visual_label_only",
+  "creativeDirection": "real product screen recording first; no copy-led hook",
+  "claims": [],
+  "assetRequirements": [
+    "real LigaLab CalendarView screen recording",
+    "no recreated UI",
+    "no invented data"
+  ],
+  "qaGates": [
+    "product_truth_verified",
+    "real_capture",
+    "no_prediction_claim",
+    "no_guarantee_claim",
+    "prelaunch_safe",
+    "human_approval_before_generation"
+  ]
+}
