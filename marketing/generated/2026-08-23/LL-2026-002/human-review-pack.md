@@ -6,6 +6,9 @@ Desbloquear la única dirección creativa validada sin reinterpretarla ni genera
 ## Concepto cerrado
 Vídeo de castigo de quien pierde una liga Fantasy → texto superior exacto: **“para que no te pase esto”** → captura REAL de LigaLab.
 
+## Comprobación 2026-08-24
+La pieza sigue bloqueada por los mismos dos assets. No se ha encontrado en el repositorio una aprobación posterior ni una captura real que permita cerrar el bloqueo.
+
 ## Lo que NO se cambia
 - No añadir hook, remate, emoji ni CTA publicitario.
 - No prometer que LigaLab evita quedar último o garantiza ganar.
