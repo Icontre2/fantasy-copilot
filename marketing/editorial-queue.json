@@ -3,15 +3,7 @@
   "mode": "prelaunch",
   "creativeFeedback": "Recent copy direction rejected by human review as artificial/not TikTok-native. Do not advance copy-led concepts until reworked from observed references and visual-first concepts.",
   "stateNote": "Queue status vocabulary aligned to marketing/automation.config.json. Blocking detail lives in note; no custom asset_blocked/needs_rewrite states. Rejected/needs-rewrite concepts carry no numeric score.",
-  "queueHealth": {
-    "totalIds": 17,
-    "usableBacklog": 4,
-    "rejected": 2,
-    "rewriteRequired": 11,
-    "targetUsableBacklog": 10,
-    "deficit": 6,
-    "rule": "usableBacklog excludes rejected items and items whose note contains REWRITE REQUIRED. A validated draft with an asset dependency counts. New evergreen concepts must be visual-first and must not recycle rejected copy-led directions."
-  },
+  "queueHealth": {"totalIds": 18,"usableBacklog": 5,"rejected": 2,"rewriteRequired": 11,"targetUsableBacklog": 10,"deficit": 5,"rule":"usableBacklog excludes rejected items and items whose note contains REWRITE REQUIRED. A validated draft with an asset dependency counts. New evergreen concepts must be visual-first and must not recycle rejected copy-led directions."},
   "items": [
     {"contentId":"LL-2026-002","series":"CASTIGO → LIGALAB","hook":"para que no te pase esto","status":"draft","needsCapture":true,"canvaDesignId":"DAHTAhHnih0","canvaEditUrl":"https://www.canva.com/d/7b1vCaWjJS09uNg","note":"VALIDATED DIRECTION, BLOCKED ON ASSETS. Real-product capture and castigo asset remain pending human intake approval."},
     {"contentId":"LL-2026-003","series":"ANTES DE HACER X","hook":"ANTES DE PUJAR, MIRA LO QUE TE QUEDA","status":"draft","needsCapture":false,"canvaDesignId":"DAHTAgAII9o","canvaEditUrl":"https://www.canva.com/d/_sMMmOYmRqDlwk0","note":"REWRITE REQUIRED. Existing design preserved; do not advance without new visual-first creative direction."},
