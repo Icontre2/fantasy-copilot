@@ -1,0 +1,175 @@
+{
+  "date": "2026-08-24",
+  "opportunities": [
+    {
+      "id": "LL-RADAR-2026-08-24-01",
+      "title": "Brugui vuelve y el Levante tiene una decisión de once",
+      "problem": "Tras cumplir sanción, Brugui aparece como opción para entrar en el once ante Osasuna; el manager necesita distinguir titularidad probable de banquillo.",
+      "whyNow": "Osasuna-Levante se juega el 24 de agosto y la información de previa sitúa a Brugui como posible titular.",
+      "feature": "Once probable propio y de cada rival",
+      "hook": "¿Brugui vuelve directo al once o todavía no?",
+      "formats": ["tiktok", "instagram_reels", "youtube_shorts"],
+      "score": 94,
+      "sources": [
+        {"label": "Cadena SER — lesionados y sancionados jornada 2", "url": "https://cadenaser.com/nacional/2026/08/18/laliga-fantasy-jugadores-sancionados-y-lesionados-para-la-jornada-2-y-posibles-sustitutos/", "publishedAt": "2026-08-18"},
+        {"label": "Cadena SER — onces probables jornada 2", "url": "https://cadenaser.com/nacional/2026/08/19/laliga-fantasy-alineaciones-probables-de-los-partidos-de-la-jornada-2-de-laliga-ea-sports/", "publishedAt": "2026-08-19"}
+      ],
+      "riskNotes": "La titularidad es una estimación de previa; debe conservarse como probable, no como hecho."
+    },
+    {
+      "id": "LL-RADAR-2026-08-24-02",
+      "title": "Osasuna: Boyomo puede perder sitio en el once",
+      "problem": "La previa más reciente plantea cambios respecto al once anterior, con Herrando entrando por delante de Boyomo.",
+      "whyNow": "Osasuna juega el 24 de agosto y la previa publicada el mismo día mantiene incertidumbre en defensa.",
+      "feature": "Once probable propio y de cada rival",
+      "hook": "¿Boyomo sigue siendo titular o cambia el central?",
+      "formats": ["tiktok", "instagram_reels"],
+      "score": 92,
+      "sources": [
+        {"label": "AS — posible alineación de Osasuna", "url": "https://as.com/futbol/alineacion-posible-de-osasuna-contra-el-levante-en-laliga-ea-sports-f202608-n/", "publishedAt": "2026-08-24"}
+      ],
+      "riskNotes": "No afirmar la suplencia como confirmada; es una lectura de once probable."
+    },
+    {
+      "id": "LL-RADAR-2026-08-24-03",
+      "title": "Levante: Sotelo pendiente de inscripción cambia el centro del campo",
+      "problem": "Varios jugadores del Levante siguen pendientes de inscripción y Oriol Rey aparece como alternativa si Sotelo no está disponible.",
+      "whyNow": "La previa del 24 de agosto señala expresamente que la disponibilidad de Sotelo y otros fichajes condiciona el once.",
+      "feature": "Once probable propio y de cada rival",
+      "hook": "El centro del campo del Levante depende de una inscripción",
+      "formats": ["tiktok", "instagram_reels", "youtube_shorts"],
+      "score": 91,
+      "sources": [
+        {"label": "AS — posible alineación del Levante", "url": "https://as.com/futbol/primera/alineacion-posible-del-levante-ante-osasuna-en-laliga-ea-sports-f202608-n/", "publishedAt": "2026-08-24"}
+      ],
+      "riskNotes": "La inscripción puede cambiar antes del partido; revisar el estado antes de cualquier pieza."
+    },
+    {
+      "id": "LL-RADAR-2026-08-24-04",
+      "title": "Getafe: rotaciones y dos bajas abren varias dudas",
+      "problem": "El desgaste europeo, la sanción de Kiko Femenía y la lesión de Uche complican el once y abren alternativas.",
+      "whyNow": "El Getafe afronta la segunda jornada tras jugar en Europa y con ausencias ya identificadas.",
+      "feature": "Once probable propio y de cada rival",
+      "hook": "¿A quién mete Bordalás después de Europa?",
+      "formats": ["tiktok", "instagram_reels", "youtube_shorts"],
+      "score": 90,
+      "sources": [
+        {"label": "AS — posible once del Getafe", "url": "https://as.com/futbol/primera/posible-once-del-getafe-en-la-jornada-2-de-laliga-ea-sports-f202608-n/", "publishedAt": "2026-08-23"},
+        {"label": "Cadena SER — bajas jornada 2", "url": "https://cadenaser.com/nacional/2026/08/18/laliga-fantasy-jugadores-sancionados-y-lesionados-para-la-jornada-2-y-posibles-sustitutos/", "publishedAt": "2026-08-18"}
+      ],
+      "riskNotes": "La rotación es una previsión, no una confirmación."
+    },
+    {
+      "id": "LL-RADAR-2026-08-24-05",
+      "title": "Sorloth: duda que cambia la delantera del Atlético",
+      "problem": "Sorloth figura como duda y su disponibilidad condiciona quién ocupa la referencia ofensiva.",
+      "whyNow": "La situación aparece entre las dudas de la jornada 2 y afecta directamente a la lectura del once.",
+      "feature": "Once probable propio y de cada rival",
+      "hook": "Si Sorloth no llega, ¿quién entra?",
+      "formats": ["tiktok", "instagram_reels"],
+      "score": 89,
+      "sources": [
+        {"label": "Cadena SER — bajas y dudas jornada 2", "url": "https://cadenaser.com/nacional/2026/08/18/laliga-fantasy-jugadores-sancionados-y-lesionados-para-la-jornada-2-y-posibles-sustitutos/", "publishedAt": "2026-08-18"}
+      ],
+      "riskNotes": "La disponibilidad debe verificarse de nuevo antes del partido."
+    },
+    {
+      "id": "LL-RADAR-2026-08-24-06",
+      "title": "Real Madrid: varias bajas dejan dudas defensivas",
+      "problem": "Militao, Asencio, Mendy, Thiago Pitarch y Rodrygo aparecen como bajas y la previa deja dudas en centrales y lateral derecho.",
+      "whyNow": "La situación sigue condicionando el once de la jornada 2.",
+      "feature": "Once probable propio y de cada rival",
+      "hook": "Cinco bajas y todavía dudas atrás",
+      "formats": ["tiktok", "instagram_reels", "youtube_shorts"],
+      "score": 88,
+      "sources": [
+        {"label": "Cadena SER — bajas jornada 2", "url": "https://cadenaser.com/nacional/2026/08/18/laliga-fantasy-jugadores-sancionados-y-lesionados-para-la-jornada-2-y-posibles-sustitutos/", "publishedAt": "2026-08-18"}
+      ],
+      "riskNotes": "No convertir una baja de fuente periodística en diagnóstico médico ni en certeza de alineación."
+    },
+    {
+      "id": "LL-RADAR-2026-08-24-07",
+      "title": "Espanyol: la sanción de Cabrera mueve la defensa",
+      "problem": "Leandro Cabrera está sancionado y obliga a buscar sustituto para el once del Espanyol.",
+      "whyNow": "La baja está identificada para la jornada 2 y afecta directamente a la composición defensiva.",
+      "feature": "Once probable propio y de cada rival",
+      "hook": "Cabrera no juega: ¿quién ocupa su sitio?",
+      "formats": ["tiktok", "instagram_reels"],
+      "score": 86,
+      "sources": [
+        {"label": "Cadena SER — bajas jornada 2", "url": "https://cadenaser.com/nacional/2026/08/18/laliga-fantasy-jugadores-sancionados-y-lesionados-para-la-jornada-2-y-posibles-sustitutos/", "publishedAt": "2026-08-18"}
+      ],
+      "riskNotes": "El sustituto concreto es una previsión y debe mostrarse como tal."
+    },
+    {
+      "id": "LL-RADAR-2026-08-24-08",
+      "title": "Valencia: Rioja y Foulquier llegan como dudas",
+      "problem": "La previa identifica dudas físicas en Rioja y Foulquier y alternativas ofensivas con Hugo Duro o Sadiq.",
+      "whyNow": "Las dudas afectan a un partido de jornada 2 y a varias posiciones del once.",
+      "feature": "Once probable propio y de cada rival",
+      "hook": "Dos dudas y una delantera que puede cambiar",
+      "formats": ["tiktok", "instagram_reels"],
+      "score": 84,
+      "sources": [
+        {"label": "Cadena SER — bajas jornada 2", "url": "https://cadenaser.com/nacional/2026/08/18/laliga-fantasy-jugadores-sancionados-y-lesionados-para-la-jornada-2-y-posibles-sustitutos/", "publishedAt": "2026-08-18"}
+      ],
+      "riskNotes": "No presentar la duda como lesión confirmada."
+    },
+    {
+      "id": "LL-RADAR-2026-08-24-09",
+      "title": "Sergio Martínez: interés de mercado y riesgo de perder protagonismo",
+      "problem": "El Racing recibe interés por Sergio Martínez mientras el club intenta retenerlo, añadiendo incertidumbre al contexto de mercado.",
+      "whyNow": "El mercado sigue abierto y el jugador ha despertado interés tras su debut.",
+      "feature": "Evolución de valor",
+      "hook": "Tu jugador acaba de debutar y ya tiene mercado fuera",
+      "formats": ["tiktok", "instagram_reels"],
+      "score": 80,
+      "sources": [
+        {"label": "AS — mercado del Racing", "url": "https://as.com/futbol/primera/8-posibles-fichajes-y-desenlace-final-con-salinas-puerta-y-sergio-martinez-f202608-n/", "publishedAt": "2026-08-24"}
+      ],
+      "riskNotes": "LigaLab puede mostrar evolución de valor oficial por jugador; no puede afirmar un cambio de valor futuro."
+    },
+    {
+      "id": "LL-RADAR-2026-08-24-10",
+      "title": "Aubameyang: subida diaria destacada y contexto de mercado",
+      "problem": "Aubameyang aparece entre las mayores subidas de valor reportadas hoy, creando una pregunta inmediata sobre cuánto ha cambiado su cotización.",
+      "whyNow": "La variación publicada el 24 de agosto es actual y concreta.",
+      "feature": "Evolución de valor",
+      "hook": "Aubameyang acaba de mover casi 1,8 M€",
+      "formats": ["tiktok", "instagram_reels", "youtube_shorts"],
+      "score": 79,
+      "sources": [
+        {"label": "GuiaFantasy — subidas y bajadas 24/08/2026", "url": "https://www.guiafantasy.com/noticias/341/subidas-y-bajadas-destacadas-del-d-iacutea-en-fantasy-laliga-de-relevo-20082026", "publishedAt": "2026-08-24"}
+      ],
+      "riskNotes": "La cifra procede de una fuente externa; para una pieza de producto debe verificarse en la cotización oficial de LigaLab antes de publicar."
+    },
+    {
+      "id": "LL-RADAR-2026-08-24-11",
+      "title": "Barrios: subida destacada para contrastar con su histórico",
+      "problem": "Barrios aparece entre las subidas destacadas del día; el dolor útil es comprobar la evolución oficial del jugador en vez de quedarse con una cifra aislada.",
+      "whyNow": "La fuente de mercado publica una subida de 1,32 M€ el 24 de agosto.",
+      "feature": "Evolución de valor",
+      "hook": "¿La subida de Barrios es un pico o viene de antes?",
+      "formats": ["tiktok", "instagram_reels"],
+      "score": 77,
+      "sources": [
+        {"label": "GuiaFantasy — subidas y bajadas 24/08/2026", "url": "https://www.guiafantasy.com/noticias/341/subidas-y-bajadas-destacadas-del-d-iacutea-en-fantasy-laliga-de-relevo-20082026", "publishedAt": "2026-08-24"}
+      ],
+      "riskNotes": "No anunciar que seguirá subiendo; la función disponible solo muestra histórico oficial."
+    },
+    {
+      "id": "LL-RADAR-2026-08-24-12",
+      "title": "Cláusula: el problema real es saber cuánto margen queda",
+      "problem": "Un manager necesita saber si un rival puede ser vulnerable a un clausulazo sin inventar su caja ni su cláusula.",
+      "whyNow": "Las reglas oficiales mantienen el clausulazo como mecanismo directo y el mercado sigue abierto.",
+      "feature": "Alertas de cláusula",
+      "hook": "¿Cuánto te falta para poder llevarte a ese jugador?",
+      "formats": ["tiktok", "instagram_reels", "youtube_shorts"],
+      "score": 75,
+      "sources": [
+        {"label": "LALIGA Fantasy — Reglamento", "url": "https://laligafantasy.zendesk.com/hc/es/articles/360025679853-Reglamento", "publishedAt": null}
+      ],
+      "riskNotes": "No afirmar dinero exacto de un rival salvo caja oficial; la caja reconstruida debe llevar ≈ cuando sea estimación."
+    }
+  ]
+}
