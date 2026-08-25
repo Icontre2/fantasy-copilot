@@ -4,7 +4,7 @@
 Evergreen prelaunch visual-first para jugadores que viven la liga como competición entre amigos. No demuestra producto; construye identificación social y deja la marca fuera de la explicación.
 
 ## Insight
-Las ligas privadas no son solo clasificación: el pique, las pujas y las consecuencias de quedar abajo forman parte de la experiencia social. La evidencia pública sobre Fantasy español muestra precisamente ese componente entre amigos y el uso de castigos como dinámica del grupo. citeturn1search0turn1reddit27
+Las ligas privadas no son solo clasificación: el pique, las pujas y las consecuencias de quedar abajo forman parte de la experiencia social. La evidencia pública sobre Fantasy español muestra ese componente entre amigos y el uso de castigos como dinámica del grupo.
 
 ## Concepto visual
 Tres microescenas físicas, rápidas y reconocibles:
