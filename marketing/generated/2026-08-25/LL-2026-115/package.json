@@ -1,0 +1,31 @@
+{
+  "contentId": "LL-2026-115",
+  "date": "2026-08-25",
+  "status": "pending_approval",
+  "mode": "prelaunch",
+  "series": "REGLAS NO ESCRITAS",
+  "platforms": ["tiktok", "instagram_reels", "youtube_shorts"],
+  "format": "9:16",
+  "durationSeconds": 9,
+  "needsCapture": false,
+  "creativeType": "evergreen_social",
+  "creativeDirection": "Visual-first social ritual of a private Fantasy league: competition, standings, consequence.",
+  "copyLevel": "minimal",
+  "productPresence": "end_card_only",
+  "cta": "none",
+  "claims": {
+    "currentFacts": false,
+    "productClaims": false,
+    "availabilityClaim": false
+  },
+  "evidence": [
+    "RTVE coverage of Fantasy leagues and punishment dynamics among friends",
+    "Recent public discussion in r/LaLigaFantasy about private leagues, group chat, competition and punishments"
+  ],
+  "review": {
+    "brand": "pass",
+    "productTruth": "pass",
+    "facts": "pass",
+    "humanApprovalRequired": true
+  }
+}
