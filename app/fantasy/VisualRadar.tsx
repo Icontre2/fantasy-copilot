@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { ArrowDownRight, ArrowUpRight, Flame, ShieldAlert, ShoppingBag } from "lucide-react";
+import { Children, useEffect, useMemo, useState } from "react";
+import { ArrowUpRight, ShieldAlert, ShoppingBag } from "lucide-react";
 import { getCacheado } from "./api";
 import { PlayerImage } from "./PlayerImage";
 import { millions } from "./format";
@@ -72,23 +72,11 @@ export function VisualRadar({ leagueId }: { leagueId: string }) {
       </div>
 
       <div className="grid gap-3 lg:grid-cols-2">
-        <RadarCard
-          eyebrow="SUBEN"
-          title="Los que más están creciendo"
-          icon={<ArrowUpRight size={18} />}
-          tone="up"
-          empty="No hay suficiente histórico actualizado para medir subidas."
-        >
+        <RadarCard eyebrow="SUBEN" title="Los que más están creciendo" icon={<ArrowUpRight size={18} />} tone="up" empty="No hay suficiente histórico actualizado para medir subidas.">
           {risers.map((alert, index) => <RiserRow key={alert.player.id} alert={alert} rank={index + 1} />)}
         </RadarCard>
 
-        <RadarCard
-          eyebrow="CLÁUSULAS"
-          title="Ojo con estos jugadores"
-          icon={<ShieldAlert size={18} />}
-          tone="danger"
-          empty="No hay alertas altas o críticas ahora mismo."
-        >
+        <RadarCard eyebrow="CLÁUSULAS" title="Ojo con estos jugadores" icon={<ShieldAlert size={18} />} tone="danger" empty="No hay alertas altas o críticas ahora mismo.">
           {clauseRisk.map((alert, index) => <ClauseRow key={alert.player.id} alert={alert} rank={index + 1} />)}
         </RadarCard>
       </div>
@@ -174,7 +162,7 @@ function RadarCard({ eyebrow, title, icon, tone, empty, children }: {
       </div>
       <div className="relative space-y-2">
         {children}
-        {React.Children.count(children) === 0 && <p className="rounded-2xl border border-dashed border-white/10 p-4 text-center text-xs text-white/35">{empty}</p>}
+        {Children.count(children) === 0 && <p className="rounded-2xl border border-dashed border-white/10 p-4 text-center text-xs text-white/35">{empty}</p>}
       </div>
     </article>
   );
