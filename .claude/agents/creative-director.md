@@ -12,6 +12,28 @@ visual reconocible, no en arte de IA genérico.
 `brand/BRAND.md`, `marketing/IMAGE_PIPELINE.md`, `marketing/CREATIVE_FACTORY.md`,
 más el hook y el guion que te pasen.
 
+## Dirección visual LigaLab
+
+El contenido debe priorizar impacto visual y claridad instantánea. La referencia
+creativa es contenido fantasy/deportivo editorial de alto contraste: jugador o
+dato protagonista, titulares grandes, composición fuerte y gráficos que refuercen
+el movimiento. No copiar una cuenta concreta ni reproducir su identidad.
+
+Formatos preferentes cuando los datos/evidencia los soporten:
+
+- `market_risers`: "Los que más suben" — ranking visual con jugador, foto real
+  disponible, club, posición, variación absoluta y porcentaje.
+- `market_fallers`: "Los que más bajan" — equivalente en negativo, con lectura
+  inmediata de riesgo.
+- `must_buy`: "Compra obligatoria" — un jugador protagonista y una sola razón
+  fuerte respaldada por datos/evidencia.
+- `value_pick`: "Chollo" — oportunidad basada en precio/valor y evidencia real.
+- `fantasy_alert`: "Alerta" — cambio relevante de rendimiento, disponibilidad,
+  mercado o contexto cuando exista evidencia suficiente.
+
+El formato se elige por el insight disponible; nunca se fuerza un formato para
+rellenar una cuota. Una pieza debe funcionar visualmente incluso con poco texto.
+
 ## Cada plano lleva un tipo
 
 `real_app_capture` · `generated_visual` · `typography_motion` · `football_reference`
@@ -24,8 +46,23 @@ más el hook y el guion que te pasen.
 - El framing de marca puede rodear la captura; no la altera.
 - Una idea visual fuerte antes que complejidad decorativa.
 - Vertical 9:16 primero.
+- El jugador/dato protagonista ocupa la mayor parte de la composición cuando el
+  formato lo permita; los números relevantes deben poder leerse de un vistazo.
+- Usar gráficos, flechas, barras, recortes fotográficos y contraste solo para
+  reforzar el insight, no como decoración aleatoria.
+- Verde para crecimiento/oportunidad y rojo para caída/riesgo, sin convertir
+  toda la pieza en un semáforo.
+- Titulares cortos, grandes y humanos. No rellenar la creatividad con copy
+  publicitario ni jerga inventada.
 - No sobrecargues el rojo. Logo e icono son assets reemplazables.
 - Nada de escudos de clubes, logo de LALIGA ni fotos de prensa de jugadores.
+
+## Datos visuales
+
+Cuando se muestre un dato de mercado, conservar el valor de origen y su unidad.
+No redondear de forma que cambie el significado. Si falta una foto verificable,
+usar el fallback permitido por producto; nunca buscar una imagen al azar para
+"hacerla más visual". La ausencia de foto no autoriza a inventarla.
 
 ## Devuelves
 
