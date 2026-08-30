@@ -7,6 +7,8 @@
 
 export type Estado =
   | "draft"
+  /** Escrita y esperando producción creativa. Ver `src/server/marketing/schemas.ts`. */
+  | "ready_for_design"
   | "brand_review"
   | "fact_review"
   | "pending_approval"
@@ -95,7 +97,8 @@ export type PaqueteDeCola = {
   auditTrail: EntradaDeAuditoria[];
 };
 
-export type PaqueteBloqueado = { id: string; date: string; blocked: true; error: string };
+/** `enPreparacion`: la carpeta existe pero aún no hay `package.json`. No es un fallo. */
+export type PaqueteBloqueado = { id: string; date: string; blocked: true; error: string; enPreparacion: boolean };
 
 export type Paquete = PaqueteDeCola | PaqueteBloqueado;
 
