@@ -84,26 +84,25 @@ export function LoginView({
           </p>
         )}
 
-        {social && social.proveedores.length > 0 && !social.identificado && (
-          <>
-            <div className="space-y-2.5">
-              {social.proveedores.map((proveedor) => <BotonProveedor key={proveedor} proveedor={proveedor} />)}
-            </div>
-            <div className="my-5 flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[.12em] text-[#9b96a5]">
-              <span className="h-px flex-1 bg-black/10" /> o con tu cuenta de LALIGA <span className="h-px flex-1 bg-black/10" />
-            </div>
-          </>
-        )}
+        <div className="space-y-2.5">
+          <BotonProveedor proveedor="google" />
+          <BotonProveedor proveedor="apple" />
+          <BotonProveedor proveedor="facebook" />
+        </div>
 
-        {social && social.proveedores.length === 0 && social.motivo && (
-          <p className="mb-4 rounded-2xl bg-black/[.04] p-3 text-[11px] leading-4 text-[#777180]">
-            <strong className="text-[#4b4653]">Acceso social sin configurar.</strong> {social.motivo}
-          </p>
-        )}
+        <div className="my-5 flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[.12em] text-[#9b96a5]">
+          <span className="h-px flex-1 bg-black/10" /> o con tu cuenta de LALIGA <span className="h-px flex-1 bg-black/10" />
+        </div>
 
         {social?.identificado && (
           <p className="mb-4 rounded-2xl bg-[#7c3aed]/10 p-3 text-[12px] leading-4 text-[#5b21b6]">
-            <strong>Ya te has identificado en LigaLab.</strong> Ahora conecta tu cuenta de LALIGA Fantasy.
+            <strong>Ya te has identificado en LigaLab.</strong> Puedes elegir ahora cómo conectar tu cuenta de LALIGA Fantasy.
+          </p>
+        )}
+
+        {social && social.proveedores.length === 0 && social.motivo && (
+          <p className="mb-4 rounded-2xl bg-amber-50 p-3 text-[11px] leading-4 text-amber-800">
+            <strong>Los botones sociales están visibles.</strong> Si alguno todavía no está configurado en el proveedor, mostrará el error correspondiente al pulsarlo.
           </p>
         )}
 
@@ -188,5 +187,5 @@ function LogoFacebook() {
 }
 
 function LogoGoogle() {
-  return <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden focusable="false"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.6 30.2 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.8 6.1C12.3 13.2 17.7 9.5 24 9.5z" /><path fill="#4285F4" d="M46.98 24.55c0-1.6-.15-3.15-.43-4.65H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.6 5.9c4.44-4.1 7.22-10.16 7.22-17.45z" /><path fill="#FBBC05" d="M10.4 28.7a14.4 14.4 0 0 1 0-9.4l-7.8-6.1a24 24 0 0 0 0 21.6l7.8-6.1z" /><path fill="#34A853" d="M24 48c6.5 0 11.95-2.15 15.93-5.85l-7.6-5.9c-2.12 1.42-4.84 2.25-8.33 2.25-6.3 0-11.7-3.7-13.6-9.8l-7.8 6.1C6.5 42.6 14.6 48 24 48z" /></svg>;
+  return <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden focusable="false"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.6 30.2 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.8 6.1C12.3 13.2 17.7 9.5 24 9.5z" /><path fill="#4285F4" d="M46.98 24.55c0-1.6-.15-3.15-.43-4.65H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.6 5.9c4.44-4.1 7.22-10.16 7.22-17.45z" /><path fill="#FBBC05" d="M10.4 28.7a14.4 14.4 0 0 1 0-9.4l-7.8-6.1c-2.1 3.6-3.3 7.8-3.3 12.3s1.2 8.7 3.3 12.3l7.8-6.1z" /><path fill="#34A853" d="M24 48c6.5 0 11.95-2.15 15.93-5.85l-7.6-5.9c-2.12 1.42-4.84 2.25-8.33 2.25-6.3 0-11.7-3.7-13.6-9.8l-7.8 6.1C6.5 42.6 14.6 48 24 48z" /></svg>;
 }
