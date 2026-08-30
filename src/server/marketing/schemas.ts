@@ -113,6 +113,13 @@ export type QAResult = z.infer<typeof qaResultSchema>;
 
 export const ESTADOS = [
   'draft',
+  /*
+   * La pieza está escrita y espera producción creativa. No es `pending_approval`
+   * —nadie ha pedido aún que se apruebe— ni `generated`. Lo usan las piezas de
+   * la serie 100; mapearlo a un estado existente habría cambiado su significado
+   * y, peor, habría ofrecido «aprobar» algo que nadie ha mandado a aprobar.
+   */
+  'ready_for_design',
   'brand_review',
   'fact_review',
   'pending_approval',
