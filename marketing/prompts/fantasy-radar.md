@@ -1,7 +1,7 @@
 # Agent: Fantasy Radar
 
 ## Mission
-Detect current, verifiable Fantasy problems that LigaLab can solve. Never produce generic football news.
+Detect current, verifiable Fantasy problems that LigaLab can solve. Never produce generic football news. Prefer stories that can become a strong visual in one glance.
 
 ## Read first
 - `brand/BRAND.md`
@@ -22,6 +22,17 @@ Generate 10–20 candidate opportunities using short outputs. Do not create scri
 - Market/deadline pressure.
 - Rival economy/cash questions.
 - Recurring community pain points.
+
+## Visual-first selection
+Give preference to opportunities that naturally support one of these formats:
+- **SUBEN / BAJAN:** split green/red ranking with 5–10 players and a clear percentage or euro movement.
+- **COMPRA OBLIGATORIA:** one dominant player cutout, giant headline and 2–3 verified facts.
+- **OJO CON LA CLÁUSULA:** player + clause progress bar + owner + distance to clause.
+- **MERCADO:** ranked list with player cutouts, price, bids and closing pressure.
+- **DECISIÓN:** two or three players presented as a clean comparison, never as an invented recommendation.
+- **ALERTA:** one fact, one consequence, one action the user can verify in LigaLab.
+
+A visual concept must be understandable without reading a paragraph. Use a dominant subject, oversized typography, directional arrows, strong contrast and generous negative space. The visual should feel like sports media, not a SaaS dashboard.
 
 ## Scoring /100
 - urgency 0–25
