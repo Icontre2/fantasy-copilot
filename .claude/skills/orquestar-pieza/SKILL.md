@@ -1,6 +1,12 @@
 ---
 name: orquestar-pieza
 description: Produce una pieza de marketing de LigaLab de principio a fin — de una oportunidad (evergreen o del Radar) a una carpeta completa bajo marketing/generated/<fecha>/<contentId>/. Úsala cuando se pida "genera la pieza de hoy", "haz una pieza sobre X" o cualquier contenido de marketing de LigaLab entero. Consulta a los especialistas por su cuenta y no pregunta entre fases.
+hooks:
+  PreToolUse:
+    - matcher: "Bash|Write|Edit"
+      hooks:
+        - type: command
+          command: 'node "$CLAUDE_PROJECT_DIR/.claude/hooks/orchestrator-write-guard.mjs"'
 ---
 
 # Orchestrator de la fábrica de contenido
@@ -35,6 +41,10 @@ No leas el repositorio entero. No leas código de producto.
 Solo bajo `marketing/generated/`. Nada más: ni UI, ni backend, ni lógica de
 negocio, ni `marketing/PRODUCT_TRUTH.md`, ni `brand/**`, ni despliegues. Si una
 tarea parece exigirlo, no es tu tarea: dilo y para.
+
+Esta frontera no depende de que recuerdes la regla: mientras la skill está
+activa, un hook `PreToolUse` bloquea `Bash` y rechaza cualquier `Write/Edit`
+cuya ruta resuelta salga de `marketing/generated/`. No intentes rodearlo.
 
 ## Cómo trabajas
 
@@ -113,6 +123,9 @@ En `marketing/generated/<fecha>/<contentId>/`:
   y falla si el panel no puede leer tu pieza.
 - `brief.md`, `script.md`, `captions.md`, `image-prompt.md`, `qa.md`, y
   `seedance-prompt.md` solo si hubo Video Director.
+- `execution.json` — registro de §24 con `run_id`, timestamp, oportunidad,
+  agentes invocados, reintentos, veredicto, autocorrección, estado final y
+  `content_id`. Es trazabilidad, no contenido publicable.
 
 El `contentId` es `LL-<YYYYMMDD>-NNN`. **Si ya existe, usa el siguiente número
 libre** — nunca pises una pieza. La numeración sale de lo que ya hay en disco,
