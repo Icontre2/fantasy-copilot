@@ -74,7 +74,8 @@ Verificado con `curl` el 2026-08-19:
 | **Avisos push** | `/api/fantasy/push/status` → `{"disponible": false}` | Claves VAPID + sesión persistente |
 | **Cron diario de alertas** | `/api/cron/alerts` → **501 `CRON_SECRET no está configurado`** | `CRON_SECRET` en Vercel |
 | **Entrar con Google** | ✅ **Funciona** — comprobar `social.motivo === null` antes de anunciarlo | Nada |
-| **Entrar con Apple / Facebook** | No aparecen: no están encendidos | Activarlos en Supabase → Providers |
+| **Entrar con Facebook** | ✅ **Funciona** — comprobado contra producción el 2026-08-30 | Nada |
+| **Entrar con Apple** | No aparece: no está encendido | Activarlo en Supabase → Providers |
 | **Sesión persistente de 30 días** | `modo: SOLO_COOKIE` — dura ~24 h | `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` + `SESSION_ENCRYPTION_KEY` |
 
 ### El caso raro de «Entrar con Google» — importa para el mensaje
@@ -111,6 +112,12 @@ fuera un botón**.
 > `/api/fantasy/auth/session`, `social.motivo === null` significa que funciona
 > entero. Si trae texto, dice exactamente qué falta. Comprobarlo antes de
 > escribir «entra con Google» en ningún sitio.
+>
+> **Y hacerlo de verdad, no leer esta tabla.** El 2026-08-30 esta misma tabla
+> decía que Facebook no estaba encendido, cuando llevaba días funcionando:
+> `proveedores` devolvía `["google","facebook"]`. Una tabla escrita a mano
+> caduca en silencio; el endpoint no. Un `curl` a `/api/fantasy/auth/session`
+> zanja la duda en dos segundos y es la única fuente que no envejece.
 
 **Sigue mereciendo la pena poner `SESSION_ENCRYPTION_KEY`**, aunque ya no
 bloquee: hoy `session.clave` sale `ninguna`, y eso significa que la sesión viaja
