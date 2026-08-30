@@ -1,0 +1,156 @@
+name: Android verify
+
+# El gemelo de `ios-verify.yml`. Existe por el mismo motivo: el proyecto nativo
+# NO se comitea —lo genera Capacitor— asi que sin esto el plugin de Android
+# seria codigo que nadie ha compilado nunca. Aqui se genera el proyecto, se
+# inyecta el plugin como haria un desarrollador y se compila.
+
+on:
+  pull_request:
+    paths:
+      - "mobile/**"
+      - "mobile-shell/**"
+      - "capacitor.config.json"
+      - ".github/workflows/android-verify.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gradle-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Use JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Install web dependencies
+        run: npm ci
+
+      - name: Install Capacitor for verification
+        run: npm install --no-save --package-lock=false @capacitor/core@8.5.0 @capacitor/android@8.5.0 @capacitor/cli@8.5.0
+
+      - name: Generate Android project
+        run: npx cap add android
+
+      # Lo que haria a mano quien monte el contenedor. Va aqui para que la CI
+      # compruebe el conjunto —plugin, registro, manifiesto y dependencia— y no
+      # solo que el fichero .kt tenga sintaxis valida.
+      - name: Wire the native LALIGA OAuth plugin
+        run: |
+          set -euo pipefail
+          PAQUETE_DIR=android/app/src/main/java/com/inigo/ligalab
+          mkdir -p "$PAQUETE_DIR"
+          cp mobile/android/LaligaOAuthPlugin.kt "$PAQUETE_DIR/LaligaOAuthPlugin.kt"
+
+          # 1. Registrar el plugin en MainActivity.
+          python3 - <<'PY'
+          import pathlib, re
+          ruta = pathlib.Path('android/app/src/main/java/com/inigo/ligalab/MainActivity.java')
+          if not ruta.exists():
+              ruta = pathlib.Path('android/app/src/main/java/com/inigo/ligalab/MainActivity.kt')
+          texto = ruta.read_text()
+          if 'LaligaOAuthPlugin' not in texto:
+              if ruta.suffix == '.java':
+                  texto = texto.replace(
+                      'public class MainActivity extends BridgeActivity {',
+                      'public class MainActivity extends BridgeActivity {\n'
+                      '    @Override\n'
+                      '    public void onCreate(android.os.Bundle savedInstanceState) {\n'
+                      '        registerPlugin(LaligaOAuthPlugin.class);\n'
+                      '        super.onCreate(savedInstanceState);\n'
+                      '    }\n')
+              else:
+                  texto = texto.replace(
+                      'class MainActivity : BridgeActivity()',
+                      'class MainActivity : BridgeActivity() {\n'
+                      '    override fun onCreate(savedInstanceState: android.os.Bundle?) {\n'
+                      '        registerPlugin(LaligaOAuthPlugin::class.java)\n'
+                      '        super.onCreate(savedInstanceState)\n'
+                      '    }\n'
+                      '}')
+              ruta.write_text(texto)
+              print(f'plugin registrado en {ruta.name}')
+          PY
+
+          # 2. Manifiesto: singleTask + el esquema del callback de LALIGA.
+          python3 - <<'PY'
+          import pathlib, re
+          ruta = pathlib.Path('android/app/src/main/AndroidManifest.xml')
+          xml = ruta.read_text()
+          xml = re.sub(r'android:launchMode="[^"]*"', 'android:launchMode="singleTask"', xml, count=1)
+          if 'authredirect' not in xml:
+              filtro = (
+                  '            <intent-filter>\n'
+                  '                <action android:name="android.intent.action.VIEW" />\n'
+                  '                <category android:name="android.intent.category.DEFAULT" />\n'
+                  '                <category android:name="android.intent.category.BROWSABLE" />\n'
+                  '                <data android:scheme="authredirect" android:host="com.lfp.laligafantasy" />\n'
+                  '            </intent-filter>\n'
+              )
+              xml = xml.replace('        </activity>', filtro + '        </activity>', 1)
+          ruta.write_text(xml)
+          print('manifiesto parcheado')
+          PY
+
+          # 3. Custom Tabs.
+          python3 - <<'PY'
+          import pathlib
+          ruta = pathlib.Path('android/app/build.gradle')
+          texto = ruta.read_text()
+          if 'androidx.browser' not in texto:
+              texto = texto.replace('dependencies {', 'dependencies {\n    implementation "androidx.browser:browser:1.8.0"', 1)
+              ruta.write_text(texto)
+              print('androidx.browser añadido')
+          PY
+
+      - name: Comprobar que el cableado quedó puesto
+        run: |
+          set -euo pipefail
+          grep -q "LaligaOAuthPlugin" android/app/src/main/java/com/inigo/ligalab/MainActivity.* \
+            || { echo "El plugin no quedó registrado en MainActivity"; exit 1; }
+          grep -q 'android:scheme="authredirect"' android/app/src/main/AndroidManifest.xml \
+            || { echo "Falta el intent-filter del callback"; exit 1; }
+          grep -q 'launchMode="singleTask"' android/app/src/main/AndroidManifest.xml \
+            || { echo "Sin singleTask el callback abriria otra instancia"; exit 1; }
+
+      - name: Build debug APK
+        shell: bash
+        run: |
+          set +e
+          set -o pipefail
+          ./android/gradlew -p android assembleDebug 2>&1 | tee gradle.log
+          status=${PIPESTATUS[0]}
+
+          if [ "$status" -ne 0 ]; then
+            {
+              echo '## gradle failure'
+              echo
+              echo '```text'
+              grep -E "(^e: |error:|FAILURE|LaligaOAuthPlugin)" gradle.log | tail -n 120
+              echo '```'
+              echo
+              echo '<details><summary>Last 180 lines</summary>'
+              echo
+              echo '```text'
+              tail -n 180 gradle.log
+              echo '```'
+              echo '</details>'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          exit "$status"
