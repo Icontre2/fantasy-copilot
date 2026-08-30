@@ -42,6 +42,7 @@ export function Empty({ children }: { children: ReactNode }) {
 
 const ESTILO_ESTADO: Record<Estado, string> = {
   draft: "bg-white/10 text-neutral-300",
+  ready_for_design: "bg-indigo-500/15 text-indigo-300",
   brand_review: "bg-amber-500/15 text-amber-300",
   fact_review: "bg-amber-500/15 text-amber-300",
   pending_approval: "bg-[#d84955]/25 text-[#ff9aa1]",
@@ -54,6 +55,7 @@ const ESTILO_ESTADO: Record<Estado, string> = {
 
 const ETIQUETA_ESTADO: Record<Estado, string> = {
   draft: "Borrador",
+  ready_for_design: "Listo para diseño",
   brand_review: "Revisión de marca",
   fact_review: "Revisión de hechos",
   pending_approval: "Pendiente de aprobar",
