@@ -3,13 +3,19 @@
 import { useEffect, useState } from "react";
 import { KeyRound, ShieldCheck } from "lucide-react";
 import { get } from "./api";
-import { hasNativeLaligaOAuth, loginWithLaligaOnIOS } from "./mobile-auth";
+import { hasNativeLaligaOAuth, loginWithLaligaNativo } from "./mobile-auth";
 
 type SessionState = { authenticated?: boolean };
 
 /**
- * Solo existe visualmente dentro del contenedor iOS que registra LaligaOAuth.
- * En Safari, PWA, escritorio y Android devuelve null y no altera el login web.
+ * Solo aparece dentro de un contenedor nativo que registre `LaligaOAuth` —hoy
+ * iPhone y Android. En Safari, Chrome, PWA y escritorio devuelve `null` y no
+ * altera el login web en nada.
+ *
+ * La comprobación es por CAPACIDAD (¿existe el plugin?) y no por sistema
+ * operativo: preguntar por el user agent obligaría a tocar esto cada vez que
+ * aparece un contenedor nuevo, y además mentiría en cuanto alguien abra la web
+ * normal desde el mismo móvil.
  */
 export default function NativeMobileLogin() {
   const [visible, setVisible] = useState(false);
@@ -37,7 +43,7 @@ export default function NativeMobileLogin() {
     setBusy(true);
     setError(null);
     try {
-      await loginWithLaligaOnIOS();
+      await loginWithLaligaNativo();
       // FantasyApp volverá a leer la cookie HttpOnly recién creada.
       window.location.reload();
     } catch (caught) {

@@ -10,5 +10,9 @@
   "ios": {
     "preferredContentMode": "mobile",
     "allowsLinkPreview": false
+  },
+  "android": {
+    "allowMixedContent": false,
+    "captureInput": true
   }
 }
