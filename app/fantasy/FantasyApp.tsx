@@ -16,6 +16,7 @@ import { LineupsView, type LineupsResponse } from "./LineupsView";
 import { DashboardView } from "./DashboardView";
 import { MySquadView } from "./MySquadView";
 import { MoreView } from "./MoreView";
+import { VisualRadar } from "./VisualRadar";
 import type { EstadoSocial } from "./CuentaView";
 import {
   SECTIONS,
@@ -137,16 +138,6 @@ export default function FantasyApp() {
   );
 }
 
-/**
- * El avatar de la cabecera, con la inicial de respaldo si la foto no carga.
- *
- * `mapManager` adivina el campo de la foto probando varios nombres posibles
- * —LALIGA no documenta cuál usa cada endpoint— sin verificarlo contra una
- * respuesta real. Si la URL que adivina no sirve, `next/image` sin más se
- * queda con el hueco roto en el sitio más visible de toda la app: tu propia
- * cabecera. `onError` cae a la inicial, que es lo que ya se enseña cuando no
- * hay foto ninguna.
- */
 function AvatarPropio({ url, inicial }: { url?: string; inicial: string }) {
   const [fallo, setFallo] = useState(false);
   if (!url || fallo) return inicial;
@@ -219,7 +210,7 @@ function SectionData({ section, leagueId, onSynced }: { section: DataSection; le
   if (!data) return null;
 
   switch (section) {
-    case "inicio": return <DashboardView data={data as DashboardResponse} />;
+    case "inicio": return <><DashboardView data={data as DashboardResponse} /><VisualRadar leagueId={leagueId} /></>;
     case "plantilla": return <MySquadView data={data as DashboardResponse} />;
     case "liga": return <LeagueView data={data as TeamsResponse} leagueId={leagueId} />;
     case "alertas": return <AlertsView data={data as AlertsResponse} onChanged={onSynced} />;
