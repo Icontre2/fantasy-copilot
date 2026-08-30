@@ -5,6 +5,7 @@ import { ArrowUpRight, Clock3, Search, ShieldCheck, ShieldOff, TriangleAlert } f
 import { post } from "./api";
 import { days, millions, percent, shortDateTime, signedMillions, UNKNOWN } from "./format";
 import type { AlertsResponse, ClauseAlert, Player } from "./types";
+import { conteoPorPosicion, POSICIONES, type FiltroDePosicion } from "./risers";
 import { DataNotes, Empty } from "./ui";
 import { PlayerDetails } from "./PlayerDetails";
 import { PlayerImage } from "./PlayerImage";
@@ -16,6 +17,15 @@ const FILTERS: Array<{ id: Filter; label: string }> = [
   { id: "DESBLOQUEADAS", label: "Abiertas" }, { id: "ALCANZABLES", label: "≤ 7 días" },
   { id: "BLOQUEADAS", label: "Bloqueadas" },
 ];
+/*
+ * El filtro de posición es OTRA dimensión, no un filtro más de la misma lista.
+ * Va en su propia fila y se combina con el de estado: «críticas» + «DEF» es una
+ * pregunta legítima —¿qué central estoy a punto de perder?— y meterlo todo en
+ * una sola fila de chips obligaría a elegir entre las dos.
+ */
+const ETIQUETA_DE_POSICION: Record<FiltroDePosicion, string> = {
+  TODAS: "Todas", POR: "Porteros", DEF: "Defensas", MED: "Medios", DEL: "Delanteros",
+};
 const LEVEL_STYLE: Record<ClauseAlert["level"], string> = {
   CRITICA: "bg-rose-500/15 text-rose-400 ring-1 ring-rose-500/30",
   ALTA: "bg-orange-500/15 text-orange-400 ring-1 ring-orange-500/30",
@@ -25,19 +35,25 @@ const LEVEL_STYLE: Record<ClauseAlert["level"], string> = {
 
 export function AlertsView({ data, onChanged }: { data: AlertsResponse; onChanged: () => void }) {
   const [filter, setFilter] = useState<Filter>("TODAS");
+  const [posicion, setPosicion] = useState<FiltroDePosicion>("TODAS");
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<Player | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  // Cuántos hay de cada posición, para no ofrecer un chip que solo puede dar
+  // una lista vacía. Se cuenta sobre TODAS las alertas, no sobre las visibles:
+  // si dependiera del filtro activo, los chips bailarían al pulsarlos.
+  const porPosicion = useMemo(() => conteoPorPosicion(data.alerts), [data.alerts]);
   const visible = useMemo(() => data.alerts.filter((alert) => {
     const text = `${alert.player.name} ${alert.player.team} ${alert.owner.managerName}`.toLowerCase();
     if (!text.includes(query.trim().toLowerCase())) return false;
+    if (posicion !== "TODAS" && alert.player.position !== posicion) return false;
     if (filter === "CRITICAS") return alert.level === "CRITICA";
     if (filter === "DESBLOQUEADAS") return !alert.official.isShielded;
     if (filter === "BLOQUEADAS") return alert.official.isShielded;
     if (filter === "ALCANZABLES") return alert.calculated.estimatedDays !== null && alert.calculated.estimatedDays <= 7;
     return true;
-  }), [data.alerts, filter, query]);
+  }), [data.alerts, filter, posicion, query]);
 
   async function buyout(alert: ClauseAlert) {
     if (!window.confirm(`Vas a pagar ${millions(alert.official.buyoutClause)} por ${alert.player.name}. Esta operación es irreversible. ¿Continuar?`)) return;
@@ -58,6 +74,10 @@ export function AlertsView({ data, onChanged }: { data: AlertsResponse; onChange
     </section>
     <label className="flex min-h-12 items-center gap-2 rounded-2xl glass px-4 text-neutral-500"><Search size={18}/><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar jugador, equipo o manager…" className="w-full bg-transparent text-sm text-white outline-none placeholder:text-neutral-600"/></label>
     <div className="flex flex-wrap gap-2" aria-label="Filtrar alertas">{FILTERS.map((option) => <button key={option.id} type="button" onClick={() => setFilter(option.id)} aria-pressed={filter === option.id} className={`min-h-11 grow rounded-2xl px-3 text-sm font-bold ${filter === option.id ? "bg-[#7c3aed] text-white" : "glass text-neutral-500"}`}>{option.label}</button>)}</div>
+    <div className="flex flex-wrap gap-2" aria-label="Filtrar por posición">{POSICIONES.map((option) => {
+      const vacia = porPosicion[option] === 0;
+      return <button key={option} type="button" disabled={vacia} onClick={() => setPosicion(option)} aria-pressed={posicion === option} className={`min-h-11 grow rounded-2xl px-3 text-sm font-bold disabled:opacity-40 ${posicion === option ? "bg-[#7c3aed] text-white" : "glass text-neutral-500"}`}>{ETIQUETA_DE_POSICION[option]}{option !== "TODAS" && !vacia ? <span className="ml-1.5 text-[11px] font-semibold opacity-60 tabular-nums">{porPosicion[option]}</span> : null}</button>;
+    })}</div>
     {message && <p className="rounded-2xl glass p-4 text-sm text-neutral-200" role="status">{message}</p>}
     {visible.length > 0 && <p className="px-1 text-[11px] leading-4 text-neutral-500">Primero las que puedes pagar ya; después, las bloqueadas de menos a más tiempo para abrirse.</p>}
     {visible.length === 0 ? <Empty>Ningún jugador cumple este criterio ahora mismo.</Empty> : <div className="space-y-3">{visible.map((alert) => <AlertCard key={`${alert.owner.teamId}-${alert.player.id}`} alert={alert} mine={alert.owner.managerId === data.myManagerId} cash={data.myTeamMoney} busy={busy === alert.player.id} onSelect={setSelected} onBuyout={buyout}/>)}</div>}
