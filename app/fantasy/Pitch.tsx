@@ -4,6 +4,7 @@ import type { PlayerWithProbability } from "./types";
 import { PlayerImage } from "./PlayerImage";
 import { puntosEnJornada } from "./jornadas";
 import { colorDeDificultad, useDificultad, type DificultadDeEquipo } from "./difficulty";
+import { projectPlayerPoints } from "./projection";
 
 export function Pitch({ starters, jornada, onSelect }: { starters: PlayerWithProbability[]; jornada: number | null; onSelect: (player: PlayerWithProbability) => void }) {
   const groups = groupByPosition(starters);
@@ -26,7 +27,7 @@ export function Pitch({ starters, jornada, onSelect }: { starters: PlayerWithPro
           ))}
         </div>
       </div>
-      {algunaDificultad && <p className="mt-2 text-[10px] leading-4 text-white/35">El color de dificultad acompaña a la información del rival; toca un jugador para ver el detalle completo.</p>}
+      {algunaDificultad && <p className="mt-2 text-[10px] leading-4 text-white/35">La dificultad usa el contexto del partido; la proyección combina rendimiento, contexto y titularidad.</p>}
     </>
   );
 }
@@ -40,15 +41,17 @@ function groupByPosition(players: PlayerWithProbability[]) {
 
 function PitchPlayer({ player, onSelect, jornada, dificultad }: { player: PlayerWithProbability; onSelect: (player: PlayerWithProbability) => void; jornada: number | null; dificultad?: DificultadDeEquipo }) {
   const puntos = jornada === null ? null : puntosEnJornada(player, jornada);
+  const projection = projectPlayerPoints(player, dificultad);
   return (
-    <button type="button" onClick={() => onSelect(player)} className="flex w-[74px] flex-col items-center text-center transition active:scale-95" aria-label={`Ver histórico de ${player.name}`}>
+    <button type="button" onClick={() => onSelect(player)} className="flex w-[74px] flex-col items-center text-center transition active:scale-95" aria-label={`Ver proyección e histórico de ${player.name}`}>
       <div className="relative rounded-full shadow-[0_8px_20px_rgba(0,0,0,.28)]">
         <PlayerImage player={player} size={54} />
         <Probability value={player.lineupProbability} expected={player.lineupExpectedStarter} />
         {puntos !== null && <span className="absolute -left-2 -top-1 rounded-full bg-[#7c3aed] px-1.5 py-0.5 text-[9px] font-black text-white shadow">{puntos}</span>}
       </div>
       <p className="mt-1.5 w-full truncate rounded-lg border border-white/5 bg-black/75 px-1.5 py-1 text-[10px] font-bold text-white shadow">{player.name}</p>
-      <p className="mt-1 text-[9px] font-semibold tabular-nums text-white/70">{(player.marketValue / 1_000_000).toFixed(1)} M€</p>
+      {projection && <p className="mt-1 text-[9px] font-black tabular-nums text-white">Proy. {projection.points.toFixed(1)} <span className="font-semibold text-white/45">pts</span></p>}
+      <p className="mt-0.5 text-[9px] font-semibold tabular-nums text-white/55">{(player.marketValue / 1_000_000).toFixed(1)} M€</p>
       {dificultad && <span className={`mt-1 w-full truncate text-[8px] font-bold ${colorDeDificultad(dificultad.probabilidadGanar)}`}>{dificultad.enCasa ? "vs" : "en"} {dificultad.rivalShortName}</span>}
     </button>
   );
