@@ -48,6 +48,25 @@ Full write-up: `src/server/marketing/pipeline/` (the code) and its tests (`*.tes
 
 A draft written by this step sets `needsCapture: false`, not `true`. Whether a real product capture is needed is derived by the Creative Director from its own shots (`creative.ts` → `necesitaCaptura`); a draft asserting it up front claims something nobody has decided yet, and cannot say *which* screen — which is exactly what the `paquetes-reales.test.ts` canary rejects.
 
+## Execution log
+
+Every `marketing:generate` run appends one JSONL line per piece to
+`marketing/runs/<date>.jsonl` — including the runs that fail, which are the ones
+worth diagnosing. Each line carries the run id, which engine produced it, the
+five stages with their duration and token cost, the QA outcome, the final status
+and the error if there was one.
+
+It appends rather than rewrites: two runs on the same day are two runs, and
+losing the first one when writing the second would destroy exactly what the file
+exists to keep. And it never throws — a log that takes down the run it was
+logging is worse than no log.
+
+Two fields are `null` for the pipeline on purpose: `reviewer_verdict` and
+`autocorrection_used`. This engine emits no PASS/FIX/BLOCK and has no
+self-correction, so `null` says «this engine has no such concept» — a default
+value would say «it didn't happen», which would be a lie. The Orchestrator skill
+fills them in for real.
+
 ## Human gate
 
 No publishing adapter is enabled by default. A package can reach `pending_approval`, but not `generated` or `published`, without explicit approval.
