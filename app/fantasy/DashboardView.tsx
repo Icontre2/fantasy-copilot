@@ -47,10 +47,11 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
   const rivalAbierto = competitors.find((rival) => rival.teamId === abierto);
   const alertEntries = Array.isArray(alerts?.alerts) ? alerts.alerts.slice(0, 3) : [];
   const alertCount = alerts?.alerts?.length ?? 0;
+  const myEconomy = economies.find((item) => item.managerId === data.me.manager.id);
+  const poderCompra = myEconomy?.cajaReconstruida;
 
   return (
     <div className="space-y-5">
-      {/* Tu situación: solo los KPIs que explican cómo estás. */}
       <section className="overflow-hidden rounded-[28px] bg-[linear-gradient(145deg,#101a39_0%,#172754_58%,#1f3767_100%)] p-5 text-white shadow-[0_24px_70px_rgba(12,22,52,.24)]">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
@@ -67,13 +68,11 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
             <p className="text-[10px] text-white/55">posición</p>
           </div>
         </div>
-        <div className="mt-4 grid grid-cols-2 gap-2">
-          <Metric icon={<Coins size={16} />} label="Caja" value={millions(data.me.teamMoney)} accent />
-          <Metric icon={<Trophy size={16} />} label="Puntos" value={data.me.points == null ? "—" : String(data.me.points)} />
+        <div className="mt-4">
+          <Metric icon={<Coins size={16} />} label="Poder de compra" value={poderCompra == null ? "—" : millions(poderCompra)} accent />
         </div>
       </section>
 
-      {/* Evolución: mantiene el histórico y todos sus periodos. */}
       <section className="overflow-hidden rounded-[28px] border border-white/[.08] bg-white/[.045] p-4">
         <div className="mb-3 flex items-center justify-between gap-3">
           <div><p className="text-xs font-semibold uppercase tracking-[.12em] text-neutral-400">Evolución</p><h2 className="mt-1 text-xl font-bold tracking-tight text-white">Valor de tu plantilla</h2></div>
@@ -83,7 +82,6 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
         <ValueChart points={total} cargando={cargando} error={error} delta={delta} />
       </section>
 
-      {/* Atención: solo alertas existentes y relevantes. */}
       <section className="rounded-[28px] border border-white/[.08] bg-white/[.045] p-4">
         <div className="mb-3 flex items-center justify-between">
           <div><p className="text-xs font-semibold uppercase tracking-[.12em] text-neutral-400">Atención</p><h2 className="mt-1 text-xl font-bold tracking-tight text-white">Lo que requiere atención</h2></div>
@@ -92,7 +90,6 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
         {alertEntries.length > 0 ? <div className="space-y-2">{alertEntries.map((alert, index) => <div key={index} className="flex items-center gap-3 rounded-2xl bg-orange-500/[.07] px-3 py-2.5"><span className="grid h-[38px] w-[38px] shrink-0 place-items-center rounded-full bg-orange-500/10"><BellRing size={16} className="text-orange-300" /></span><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-white">{(alert as any).playerName ?? "Jugador con alerta"}</p><p className="text-[10px] text-orange-200/70">Revisar alerta</p></div><ChevronRight size={16} className="text-neutral-500" /></div>)}</div> : <p className="rounded-2xl bg-white/[.05] px-3 py-3 text-xs leading-5 text-neutral-500">No hay alertas importantes ahora mismo.</p>}
       </section>
 
-      {/* Rivales: economía y posición, sin módulos accesorios. */}
       <section>
         <div className="mb-3 flex items-center justify-between"><div><p className="text-xs font-semibold uppercase tracking-[.12em] text-neutral-400">Tu liga</p><h2 className="mt-1 text-xl font-bold tracking-tight text-white">Competidores</h2></div><span className="flex items-center gap-1 rounded-full bg-white/[.06] px-3 py-1.5 text-xs font-semibold text-neutral-300"><Users size={14} /> {competitors.length + 1}</span></div>
         <div className="grid gap-3 sm:grid-cols-2">{competitors.map((competitor) => { const economy = economies.find((item) => item.managerId === competitor.manager.id); const cash = competitor.teamMoney ?? economy?.cajaOficial; const reconstructed = economy?.cajaReconstruida ?? competitor.estimatedCash; return <article key={competitor.teamId} className="overflow-hidden rounded-[26px] border border-white/[.08] bg-white/[.045]"><button type="button" onClick={() => setAbierto(competitor.teamId)} className="w-full p-4 text-left transition active:scale-[.99]" aria-label={`Ver la ficha de ${competitor.manager.name}`}><div className="flex items-center gap-3"><Avatar name={competitor.manager.name} image={competitor.manager.avatar} /><div className="min-w-0 flex-1"><p className="truncate font-semibold text-white">{competitor.manager.name}</p><p className="text-xs text-neutral-400">#{competitor.position ?? "—"} · {competitor.points ?? "—"} pts</p></div><div className="text-right"><p className="text-sm font-bold text-white">{millions(competitor.teamValue)}</p><p className="text-[9px] text-neutral-600">valor</p></div><ChevronRight size={16} className="text-neutral-500" /></div><div className="mt-3 grid grid-cols-3 gap-2 text-xs"><SmallMetric label={cash !== undefined ? "Caja" : "Caja aprox."} value={cash !== undefined ? millions(cash) : `≈ ${millions(reconstructed)}`} /><SmallMetric label="Cláusulas" value={economy ? millions(economy.gastoClausulasEstimado) : "—"} warning={Boolean(economy?.gastoClausulasEstimado)} /><SmallMetric label="Poder compra" value={economy ? millions(economy.cajaReconstruida) : `≈ ${millions(reconstructed)}`} /></div></button></article>; })}</div>
