@@ -2,65 +2,103 @@ import type { PlayerWithProbability } from "./types";
 import type { DificultadDeEquipo } from "./difficulty";
 
 /**
- * Proyección V1 de puntos esperados.
+ * Predictor V1 de puntos esperados.
  *
- * Está inspirada en las señales del análisis de Analítica Fantasy, pero NO se
- * presenta como un modelo entrenado: es una heurística transparente hasta que
- * podamos medir el error jornada a jornada con nuestros propios datos.
- *
- * Prioridad de señales:
- * 1) rendimiento histórico del jugador
- * 2) una pequeña corrección por forma reciente
- * 3) contexto casa/fuera
- * 4) fortaleza del rival a través de la probabilidad de victoria del equipo
- * 5) probabilidad de ser titular, que convierte la proyección en puntos esperados
+ * No es un modelo entrenado todavía: es una predicción transparente que usa
+ * señales que ya tenemos en la app. La BD guarda después predicción y resultado
+ * para poder calibrarlo con datos reales jornada a jornada.
  */
 export type Projection = {
   points: number;
+  low: number;
+  high: number;
   confidence: "Alta" | "Media" | "Baja";
   lineupProbability?: number;
+  factors: string[];
 };
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
+}
 
 export function projectPlayerPoints(
   player: PlayerWithProbability,
   dificultad?: DificultadDeEquipo,
 ): Projection | null {
-  const base = Number.isFinite(player.averagePoints) ? player.averagePoints : NaN;
-  if (!Number.isFinite(base) || base < 0) return null;
+  const historical = Number.isFinite(player.averagePoints) ? player.averagePoints : NaN;
+  if (!Number.isFinite(historical) || historical < 0) return null;
 
-  const recent = player.weekPoints?.filter((entry) => Number.isFinite(entry.puntos)).slice(-4) ?? [];
-  const recentAverage = recent.length > 0
+  const recent = (player.weekPoints ?? [])
+    .filter((entry) => Number.isFinite(entry.puntos))
+    .slice(-4);
+  const recentAverage = recent.length
     ? recent.reduce((sum, entry) => sum + entry.puntos, 0) / recent.length
     : null;
 
-  // La forma reciente tiene poco peso: el análisis muestra que por sí sola
-  // explica poco de la siguiente jornada.
-  let conditional = recentAverage === null ? base : base * 0.85 + recentAverage * 0.15;
+  // El histórico manda. La forma reciente solo corrige un poco la base.
+  let conditional = recentAverage === null
+    ? historical
+    : historical * 0.85 + recentAverage * 0.15;
 
-  // Efecto moderado de casa/fuera; nunca domina al rendimiento individual.
-  if (dificultad) conditional *= dificultad.enCasa ? 1.05 : 0.97;
+  const factors: string[] = [];
 
-  // Contexto del partido: la probabilidad de ganar del equipo actúa como una
-  // corrección suave alrededor de 50%, no como un multiplicador agresivo.
-  if (dificultad) conditional *= 0.9 + dificultad.probabilidadGanar * 0.2;
+  if (recentAverage !== null) {
+    if (recentAverage > historical + 1) factors.push("Forma reciente positiva");
+    else if (recentAverage < historical - 1) factors.push("Forma reciente negativa");
+  }
+
+  // Contexto local: ajuste deliberadamente pequeño para que no domine al jugador.
+  if (dificultad) {
+    conditional *= dificultad.enCasa ? 1.05 : 0.97;
+    factors.push(dificultad.enCasa ? "Juega en casa" : "Juega fuera");
+
+    // La probabilidad de victoria representa el contexto del partido, no una
+    // probabilidad directa de puntos. Por eso el ajuste queda limitado a ±10%.
+    const winAdjustment = 0.90 + clamp(dificultad.probabilidadGanar, 0, 1) * 0.20;
+    conditional *= winAdjustment;
+
+    if (dificultad.probabilidadGanar >= 0.60) factors.push("Contexto favorable");
+    else if (dificultad.probabilidadGanar <= 0.40) factors.push("Contexto desfavorable");
+    else factors.push("Partido equilibrado");
+  }
 
   const lineupProbability = player.lineupProbability;
-  // Si no conocemos la probabilidad de titularidad no inventamos un porcentaje:
-  // devolvemos una proyección condicional y la marcamos con confianza baja.
-  const expected = lineupProbability === undefined
-    ? conditional
-    : conditional * Math.max(0, Math.min(1, lineupProbability / 100));
+  let expected = conditional;
+
+  if (lineupProbability !== undefined) {
+    const p = clamp(lineupProbability, 0, 100) / 100;
+    // Los puntos esperados deben descontar el riesgo de no jugar.
+    expected *= p;
+    factors.push(
+      lineupProbability >= 80
+        ? "Titularidad probable alta"
+        : lineupProbability >= 50
+          ? "Titularidad con dudas"
+          : "Riesgo alto de no jugar",
+    );
+  } else if (player.lineupExpectedStarter) {
+    factors.push("Titular probable");
+  } else {
+    factors.push("Titularidad desconocida");
+  }
+
+  const points = Math.max(0, Math.round(expected * 10) / 10);
+
+  // Rango orientativo. No pretende ser un intervalo estadístico hasta que
+  // tengamos suficientes predicciones reales para estimar el error por posición.
+  const uncertainty = lineupProbability === undefined
+    ? 0.30
+    : lineupProbability >= 80 ? 0.22 : lineupProbability >= 50 ? 0.32 : 0.45;
+  const spread = Math.max(1, points * uncertainty);
+  const low = Math.max(0, Math.round((points - spread) * 10) / 10);
+  const high = Math.max(low, Math.round((points + spread) * 10) / 10);
 
   const confidence: Projection["confidence"] =
-    lineupProbability === undefined || recent.length < 2
-      ? "Baja"
-      : lineupProbability >= 80 && recent.length >= 4
-        ? "Alta"
-        : "Media";
+    lineupProbability !== undefined && lineupProbability >= 80 && recent.length >= 4
+      ? "Alta"
+      : lineupProbability !== undefined && lineupProbability >= 50 && recent.length >= 2
+        ? "Media"
+        : "Baja";
 
-  return {
-    points: Math.max(0, Math.round(expected * 10) / 10),
-    confidence,
-    lineupProbability,
-  };
+  return { points, low, high, confidence, lineupProbability, factors };
 }
