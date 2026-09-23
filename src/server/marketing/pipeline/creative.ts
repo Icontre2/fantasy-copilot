@@ -8,6 +8,8 @@ import { leerPaquete } from '../packages.ts';
 import { llamarClaude, type LlamadaClaude, type UsoDeTokens } from './claude.ts';
 import { leerDocs, rutaDeAgente } from './docs.ts';
 import { pedirJSON } from './json.ts';
+import type { EtapaMedida } from '../agents/registro.ts';
+import type { Especialista } from '../agents/contracts.ts';
 import {
   brandReviewerOutputSchema,
   copywriterOutputSchema,
@@ -46,7 +48,16 @@ async function leerOportunidad(raiz: string, fecha: string, sourceOpportunityId:
   return oportunidad;
 }
 
-export type ResultadoCreativo = { paquete: PaqueteCrudo; usage: UsoDeTokens };
+export type ResultadoCreativo = {
+  paquete: PaqueteCrudo;
+  usage: UsoDeTokens;
+  /**
+   * Lo que costó cada etapa, en orden. Se mide aquí porque es el único sitio
+   * que sabe dónde empieza y acaba cada agente; cualquier medición de más
+   * arriba solo vería el total y no diría cuál de los cinco se atascó (§24).
+   */
+  etapas: EtapaMedida[];
+};
 
 export type OpcionesCreativo = {
   /** Dónde vive el `package.json` y el `radar/<fecha>.json` de esta tanda — casi siempre el propio repo, un directorio temporal en los tests. */
@@ -78,60 +89,64 @@ export async function generarCreativo(fecha: string, contentId: string, opciones
   };
 
   const total: UsoDeTokens = { inputTokens: 0, outputTokens: 0 };
+  const etapas: EtapaMedida[] = [];
   const sumar = (u: UsoDeTokens) => {
     total.inputTokens += u.inputTokens;
     total.outputTokens += u.outputTokens;
   };
+  /** Ejecuta una etapa midiendo lo que tarda y lo que gasta. */
+  async function medir<T>(agente: Especialista, tarea: () => Promise<{ data: T; usage: UsoDeTokens }>) {
+    const desde = Date.now();
+    const resultado = await tarea();
+    etapas.push({ agente, ms: Date.now() - desde, inputTokens: resultado.usage.inputTokens, outputTokens: resultado.usage.outputTokens });
+    sumar(resultado.usage);
+    return resultado;
+  }
 
   // 1. Strategist
   const docsEstratega = await leerDocs(raizDocs, ['marketing/PRODUCT_TRUTH.md', 'marketing/STRATEGY.md', 'marketing/CONTENT_ENGINE.md', rutaDeAgente('strategist')]);
-  const estrategia = await pedirJSON(llamar, {
+  const estrategia = await medir('strategist', () => pedirJSON(llamar, {
     model: MODELO_CARO,
     system: `Eres el agente "Strategist" de LigaLab.\n\n${docsEstratega}`,
     prompt: promptEstratega(ctx),
     schema: strategyOutputSchema,
-  });
-  sumar(estrategia.usage);
+  }));
 
   // 2. Copywriter
   const docsCopy = await leerDocs(raizDocs, ['brand/VOICE.md', 'brand/CONTENT_RULES.md', rutaDeAgente('copywriter')]);
-  const copy = await pedirJSON(llamar, {
+  const copy = await medir('copywriter', () => pedirJSON(llamar, {
     model: MODELO_CARO,
     system: `Eres el agente "Copywriter" de LigaLab.\n\n${docsCopy}`,
     prompt: promptCopywriter(estrategia.data),
     schema: copywriterOutputSchema,
-  });
-  sumar(copy.usage);
+  }));
 
   // 3. Creative Director
   const docsCreativo = await leerDocs(raizDocs, ['brand/BRAND.md', 'marketing/IMAGE_PIPELINE.md', rutaDeAgente('creative-director')]);
-  const creativo = await pedirJSON(llamar, {
+  const creativo = await medir('creative-director', () => pedirJSON(llamar, {
     model: MODELO_CARO,
     system: `Eres el agente "Creative Director" de LigaLab.\n\n${docsCreativo}`,
     prompt: promptDirectorCreativo(estrategia.data, copy.data),
     schema: creativeDirectorOutputSchema,
-  });
-  sumar(creativo.usage);
+  }));
 
   // 4. Video Director
   const docsVideo = await leerDocs(raizDocs, ['marketing/SEEDANCE_PIPELINE.md', rutaDeAgente('video-director')]);
-  const video = await pedirJSON(llamar, {
+  const video = await medir('video-director', () => pedirJSON(llamar, {
     model: MODELO_CARO,
     system: `Eres el agente "Video Director" de LigaLab.\n\n${docsVideo}`,
     prompt: promptDirectorDeVideo(copy.data, creativo.data),
     schema: videoDirectorOutputSchema,
-  });
-  sumar(video.usage);
+  }));
 
   // 5. Brand Reviewer — el gate. Nunca publica; solo decide pass/fail.
   const docsRevisor = await leerDocs(raizDocs, ['marketing/PRODUCT_TRUTH.md', 'brand/BRAND.md', 'brand/VOICE.md', 'brand/CONTENT_RULES.md', rutaDeAgente('brand-reviewer')]);
-  const revision = await pedirJSON(llamar, {
+  const revision = await medir('brand-reviewer', () => pedirJSON(llamar, {
     model: MODELO_CARO,
     system: `Eres el agente "Brand Reviewer" de LigaLab.\n\n${docsRevisor}`,
     prompt: promptRevisorDeMarca(ctx, estrategia.data, copy.data, creativo.data, video.data),
     schema: brandReviewerOutputSchema,
-  });
-  sumar(revision.usage);
+  }));
 
   const ahora = new Date().toISOString();
   const necesitaCaptura = creativo.data.shots.some((plano) => plano.kind === 'real_app_capture');
@@ -160,7 +175,7 @@ export async function generarCreativo(fecha: string, contentId: string, opciones
   };
 
   const paquete = paqueteCrudoSchema.parse(paqueteSinValidar);
-  return { paquete, usage: total };
+  return { paquete, usage: total, etapas };
 }
 
 function seccion(titulo: string, cuerpo: string): string {

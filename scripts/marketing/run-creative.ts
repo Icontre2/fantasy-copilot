@@ -6,6 +6,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { z } from 'zod';
 import { generarYGuardarCreativo } from '../../src/server/marketing/pipeline/creative.ts';
+import { anotarTanda, etapaMasLenta, nuevoRunId, resumirTanda, type RegistroDeTanda } from '../../src/server/marketing/agents/registro.ts';
 
 /**
  * `npm run marketing:generate -- <fecha> [contentId]` — Etapas 2-6.
@@ -71,16 +72,60 @@ async function main(): Promise<void> {
   let totalSalida = 0;
   for (const item of items) {
     console.log(`→ ${item.contentId}…`);
+
+    /*
+     * El registro se escribe TAMBIÉN cuando la tanda falla, y sobre todo
+     * entonces: una ejecución que revienta es justo la que hay que poder
+     * diagnosticar después, y hasta ahora lo único que dejaba era una línea en
+     * la consola de quien la lanzó. Ver §24 del documento maestro.
+     */
+    const desde = Date.now();
+    const base = { run_id: nuevoRunId(), timestamp: new Date().toISOString(), motor: 'pipeline' as const, content_id: item.contentId };
+
     try {
-      const { paquete, usage } = await generarYGuardarCreativo(fecha, item.contentId, raiz);
+      const { paquete, usage, etapas } = await generarYGuardarCreativo(fecha, item.contentId, raiz);
       totalEntrada += usage.inputTokens;
       totalSalida += usage.outputTokens;
-      console.log(`  ${paquete.status} · QA ${paquete.qa?.pass ? 'PASA' : 'NO PASA'} · ${usage.inputTokens}/${usage.outputTokens} tokens`);
+
+      const registro: RegistroDeTanda = {
+        ...base,
+        opportunity_id: paquete.sourceOpportunityId ?? null,
+        etapas,
+        ms_total: Date.now() - desde,
+        input_tokens: usage.inputTokens,
+        output_tokens: usage.outputTokens,
+        // La pipeline no emite PASS/FIX/BLOCK ni autocorrige: `null` dice que
+        // este motor no tiene ese concepto, en vez de fingir que no pasó.
+        reviewer_verdict: null,
+        autocorrection_used: null,
+        qa_pass: paquete.qa?.pass ?? null,
+        final_status: paquete.status,
+        error: null,
+      };
+      await anotarTanda(raiz, fecha, registro);
+
+      const lenta = etapaMasLenta(registro);
+      console.log(`  ${paquete.status} · QA ${paquete.qa?.pass ? 'PASA' : 'NO PASA'} · ${usage.inputTokens}/${usage.outputTokens} tokens${lenta ? ` · más lenta: ${lenta.agente}` : ''}`);
     } catch (error) {
-      console.error(`  ERROR en ${item.contentId}: ${error instanceof Error ? error.message : error}`);
+      const mensaje = error instanceof Error ? error.message : String(error);
+      await anotarTanda(raiz, fecha, {
+        ...base,
+        opportunity_id: null,
+        etapas: [],
+        ms_total: Date.now() - desde,
+        input_tokens: 0,
+        output_tokens: 0,
+        reviewer_verdict: null,
+        autocorrection_used: null,
+        qa_pass: null,
+        final_status: 'error',
+        error: mensaje,
+      });
+      console.error(`  ERROR en ${item.contentId}: ${mensaje}`);
     }
   }
   console.log(`Total: ${totalEntrada} tokens de entrada, ${totalSalida} de salida.`);
+  console.log(`Registro de la tanda: marketing/runs/${fecha}.jsonl`);
   console.log('Ninguna pieza se publica sola: ábrela en /marketing para revisarla.');
 }
 
