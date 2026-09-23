@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Info } from "lucide-react";
 import type { DashboardResponse, Player, PlayerWithProbability } from "./types";
 import { Pitch } from "./Pitch";
+import { PrediccionCard } from "./PrediccionCard";
 import { PlayerDetails } from "./PlayerDetails";
 import { SquadValueHistory } from "./SquadValueHistory";
 import { jornadasDisponibles, puntosDelOnce } from "./jornadas";
@@ -27,6 +28,7 @@ export function MySquadView({ data }: { data: DashboardResponse }) {
 
   return (
     <div className="space-y-4">
+      <PrediccionCard data={data} />
       <section className="glass-strong rounded-[28px] p-4 text-white">
         <div className="mb-4 flex items-center justify-between">
           <div><p className="text-xs font-semibold uppercase tracking-[.14em] text-[#a78bfa]">Tu once más probable</p><h2 className="mt-1 text-xl font-bold">{data.lineup.formation}</h2></div>
