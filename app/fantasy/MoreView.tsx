@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarDays, Download, LogOut, Scale, TableProperties, Users, WalletCards } from "lucide-react";
+import { CalendarDays, Download, LogOut, Scale, TableProperties, TrendingUp, Users, WalletCards } from "lucide-react";
 import { post } from "./api";
 import type { Section } from "./types";
 
 const ITEMS: Array<{ id: Section; label: string; description: string; icon: React.ReactNode }> = [
   { id: "economia", label: "Economía", description: "Caja, ingresos y movimientos", icon: <WalletCards size={19}/> },
+  { id: "subidas", label: "Subidas", description: "Quién sube más al día, en € y en %", icon: <TrendingUp size={19}/> },
   { id: "onces", label: "Onces probables", description: "Fotos y porcentajes", icon: <Users size={19}/> },
   { id: "jornadas", label: "Jornadas", description: "Horarios y resultados", icon: <CalendarDays size={19}/> },
   { id: "comparar", label: "Comparar", description: "Jugador contra jugador", icon: <Scale size={19}/> },

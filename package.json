@@ -23,7 +23,7 @@
     "cheerio": "1.1.2",
     "drizzle-orm": "0.45.2",
     "lucide-react": "1.27.0",
-    "next": "16.2.12",
+    "next": "16.3.6",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "web-push": "^3.6.7",
@@ -41,7 +41,7 @@
     "@vitejs/plugin-rsc": "0.5.26",
     "drizzle-kit": "0.31.10",
     "eslint": "9.39.5",
-    "eslint-config-next": "16.2.12",
+    "eslint-config-next": "16.3.6",
     "react-server-dom-webpack": "19.2.8",
     "tailwindcss": "4.2.1",
     "typescript": "5.9.3",
@@ -52,7 +52,7 @@
   "overrides": {
     "nanoid": "3.3.18",
     "postcss": "8.5.23",
-    "sharp": "0.35.3",
+    "sharp": "0.35.4",
     "undici": "7.29.0"
   },
   "type": "module",

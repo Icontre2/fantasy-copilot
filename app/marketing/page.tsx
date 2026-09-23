@@ -77,15 +77,27 @@ function Cola() {
   );
 }
 
+/*
+ * Dos cosas distintas con la misma pinta hasta ahora: una pieza rota, que
+ * alguien tiene que arreglar, y una carpeta de trabajo sin `package.json`
+ * todavía, que no pide nada de nadie. Pintar las once que hay en curso de rojo
+ * y con «Bloqueado» convertía la alarma en ruido de fondo.
+ */
 function FilaBloqueada({ pieza }: { pieza: Extract<Paquete, { blocked: true }> }) {
+  const enCurso = pieza.enPreparacion;
   return (
     <div className="flex items-start gap-3">
-      <CircleAlert className="mt-0.5 h-5 w-5 shrink-0 text-rose-400" aria-hidden />
+      <CircleAlert
+        className={`mt-0.5 h-5 w-5 shrink-0 ${enCurso ? "text-neutral-500" : "text-rose-400"}`}
+        aria-hidden
+      />
       <div className="min-w-0">
         <p className="truncate font-mono text-xs text-neutral-500">
           {pieza.id} · {pieza.date}
         </p>
-        <p className="mt-1 text-sm font-semibold text-rose-300">Bloqueado</p>
+        <p className={`mt-1 text-sm font-semibold ${enCurso ? "text-neutral-400" : "text-rose-300"}`}>
+          {enCurso ? "En preparación" : "Bloqueado"}
+        </p>
         <p className="mt-1 text-sm text-neutral-400">{pieza.error}</p>
       </div>
     </div>

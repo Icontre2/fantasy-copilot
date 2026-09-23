@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -19,12 +19,15 @@ async function ficheroTemporal(contenido: string | null): Promise<{ ruta: string
   return { ruta, limpiar: () => rm(carpeta, { recursive: true, force: true }) };
 }
 
-test("leerPaquete: fichero que no existe → blocked, no lanza", async () => {
+test("leerPaquete: fichero que no existe → en preparación, no lanza", async () => {
   const { ruta, limpiar } = await ficheroTemporal(null);
   try {
     const resultado = await leerPaquete("2026-08-21", "LL-20260821-001", ruta);
     assert.equal(resultado.blocked, true);
-    if (resultado.blocked) assert.match(resultado.error, /no se ha podido leer/i);
+    if (resultado.blocked) {
+      assert.equal(resultado.enPreparacion, true);
+      assert.match(resultado.error, /en preparación/i);
+    }
   } finally {
     await limpiar();
   }
@@ -191,8 +194,8 @@ test("un QA antiguo que NO pasa se traduce con sus motivos, y la pieza no queda 
 });
 
 test("fusionarPaquete: un paquete bloqueado se enseña bloqueado, con su motivo", () => {
-  const vista = fusionarPaquete({ blocked: true, id: "LL-x", date: "2026-08-21", error: "boom" }, null);
-  assert.deepEqual(vista, { blocked: true, id: "LL-x", date: "2026-08-21", error: "boom" });
+  const vista = fusionarPaquete({ blocked: true, enPreparacion: false, id: "LL-x", date: "2026-08-21", error: "boom" }, null);
+  assert.deepEqual(vista, { blocked: true, enPreparacion: false, id: "LL-x", date: "2026-08-21", error: "boom" });
 });
 
 test("ordenDeCola: pending_approval primero, blocked después, el resto por fecha", () => {
@@ -235,7 +238,7 @@ test("ordenDeCola: pending_approval primero, blocked después, el resto por fech
 
   const draftViejo = base({ id: "draft-viejo", date: "2026-08-01" });
   const draftNuevo = base({ id: "draft-nuevo", date: "2026-08-10" });
-  const bloqueado: Vista = { id: "bloqueado", date: "2026-08-15", blocked: true, error: "roto" };
+  const bloqueado: Vista = { id: "bloqueado", date: "2026-08-15", blocked: true, error: "roto", enPreparacion: false };
   const pendiente = base({ id: "pendiente", date: "2026-08-05", status: "pending_approval" });
 
   const ordenado = ordenDeCola([draftViejo, bloqueado, draftNuevo, pendiente]);
@@ -243,4 +246,43 @@ test("ordenDeCola: pending_approval primero, blocked después, el resto por fech
     ordenado.map((v) => v.id),
     ["pendiente", "bloqueado", "draft-nuevo", "draft-viejo"],
   );
+});
+
+test("una carpeta sin package.json está en preparación, no rota", async () => {
+  const raiz = await mkdtemp(path.join(tmpdir(), "prep-"));
+  const carpeta = path.join(raiz, "LL-2026-999");
+  await mkdir(carpeta, { recursive: true });
+  // Como las once carpetas reales del repositorio: documentos de trabajo, y el
+  // `package.json` todavía por escribir.
+  await writeFile(path.join(carpeta, "qa.md"), "# QA\n");
+
+  const resultado = await leerPaquete("2026-08-24", "LL-2026-999", path.join(carpeta, "package.json"));
+
+  assert.equal(resultado.blocked, true);
+  assert.equal(resultado.blocked && resultado.enPreparacion, true, "no existe el fichero: es trabajo en curso");
+});
+
+test("un package.json presente pero ilegible SÍ está roto", async () => {
+  const raiz = await mkdtemp(path.join(tmpdir(), "roto-"));
+  await writeFile(path.join(raiz, "package.json"), "{ esto no es json");
+
+  const resultado = await leerPaquete("2026-08-24", "LL-2026-998", path.join(raiz, "package.json"));
+
+  assert.equal(resultado.blocked, true);
+  assert.equal(resultado.blocked && resultado.enPreparacion, false, "el fichero está: alguien tiene que arreglarlo");
+});
+
+test("lo que está en preparación va al final de la cola, detrás de lo roto", () => {
+  const legible = (id: string, status: Vista extends { blocked: false } ? never : string = "draft"): Vista =>
+    ({ ...estadoHumanoVacio(id, "2026-08-20"), blocked: false, id, date: "2026-08-20", status,
+       score: 0, problem: "", feature: "", hook: "", hooks: [], needsCapture: false, captureRequest: null,
+       strategy: null, script: null, captions: null, cta: null, shots: [], imagePrompt: null,
+       seedancePrompt: null, videoSequence: [], negativeConstraints: [], platforms: [], formats: [],
+       sources: [], qa: null } as unknown as Vista);
+
+  const enPreparacion: Vista = { id: "prep", date: "2026-08-20", blocked: true, error: "aún no", enPreparacion: true };
+  const roto: Vista = { id: "roto", date: "2026-08-20", blocked: true, error: "roto", enPreparacion: false };
+
+  const orden = ordenDeCola([enPreparacion, legible("otro"), roto, legible("pendiente", "pending_approval")]);
+  assert.deepEqual(orden.map((v) => v.id), ["pendiente", "roto", "otro", "prep"]);
 });
