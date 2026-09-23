@@ -65,15 +65,32 @@ son dos formas distintas a propósito, y la conversión es trabajo tuyo.
 
 ## Qué haces con el veredicto
 
-- **PASS** → escribes la carpeta y el estado queda `pending_approval`.
+Hay dos conceptos distintos y no se mezclan:
+
+- **resultado interno de ejecución**: puede ser `pending_approval`, `blocked` o
+  `review_pending`;
+- **estado escribible de la pieza**: usa exclusivamente los estados de
+  `marketing/automation.config.json`.
+
+La traducción la define `estadoDeColaTrasRevision()` en
+`src/server/marketing/agents/policy.ts`.
+
+- **PASS** → escribes la carpeta y `status: pending_approval`.
 - **FIX** → corriges tú los `required_fixes` y vuelves a pedir revisión **una
-  sola vez**. Si el segundo veredicto vuelve a ser FIX o BLOCK, el estado es
-  `blocked` con el motivo. Nunca una tercera vuelta.
-- **BLOCK** → `blocked`, guardando la razón exacta.
-- **El Reviewer falla técnicamente** → no escribas la pieza. `review_pending` no
-  es un estado válido de `estadoSchema`, así que no hay nada legal que poner en
-  `status`: una caída no es un permiso, y tampoco una excusa para inventarse un
-  estado.
+  sola vez**. Si el segundo veredicto vuelve a ser FIX o BLOCK, el resultado
+  interno es `blocked`; si ya existe borrador, su `status` sigue siendo `draft`
+  y el motivo exacto se guarda en QA/note. Nunca escribas `status: blocked`.
+- **BLOCK** → resultado interno `blocked`. Si conservas un borrador, sigue en
+  `draft` con `qa.pass=false` y la razón exacta. Si no hay nada útil que
+  conservar, aborta sin crear paquete.
+- **El Reviewer falla técnicamente** → resultado interno `review_pending`; no
+  apruebes. Si ya hay borrador, queda `draft`; si todavía no se escribió nada,
+  aborta sin crear pieza.
+
+`blocked` y `review_pending` **no son estados editoriales** y jamás deben acabar
+en `marketing/editorial-queue.json`. El `blocked` que existe en
+`src/server/marketing/schemas.ts` está reservado al panel para paquetes que no
+se pueden leer, no para decisiones creativas del Orchestrator.
 
 Los avisos menores del Reviewer que puedas aplicar tú, aplícalos antes de
 escribir en vez de dejarlos anotados. Un `PASS` con cuatro avisos que nadie
@@ -110,7 +127,8 @@ propio id y `score` un entero justificado, no un número decorativo.
 exacta hace falta y qué NO debe verse en ella.
 
 Al terminar, di qué agentes invocaste, si usaste la autocorrección, el veredicto
-y el estado final (§24 del documento maestro).
+y el resultado interno. Si escribiste paquete, informa también del `status`
+editorial por separado.
 
 ## Lo que no haces nunca
 

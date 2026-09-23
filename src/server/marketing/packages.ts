@@ -19,7 +19,25 @@ import { estadoHumanoVacio, type EstadoHumano } from './state.ts';
 
 const CARPETA_GENERADOS = path.join(process.cwd(), 'marketing', 'generated');
 
-export type PaqueteBloqueado = { blocked: true; id: string; date: string; error: string };
+/**
+ * Un paquete que el panel no puede pintar.
+ *
+ * `enPreparacion` separa dos cosas que este tipo confundía y que NO son la
+ * misma: una carpeta que todavía no tiene `package.json` es trabajo en curso —
+ * hoy hay once así, con su `qa.md`, su `asset-plan.md` y su entrada en
+ * `marketing/editorial-queue.json`—, mientras que un `package.json` presente
+ * pero ilegible sí es un fallo que alguien tiene que arreglar. Enseñar las once
+ * en rojo como «Bloqueado» convertía el estado de alarma en ruido de fondo, que
+ * es la forma más rápida de que deje de mirarse.
+ */
+export type PaqueteBloqueado = {
+  blocked: true;
+  id: string;
+  date: string;
+  error: string;
+  /** La carpeta existe, pero aún no hay `package.json` que leer. */
+  enPreparacion: boolean;
+};
 export type PaqueteLeido = { blocked: false; crudo: PaqueteCrudo };
 export type ResultadoDeLectura = PaqueteBloqueado | PaqueteLeido;
 
@@ -70,6 +88,37 @@ export function normalizarPaquete(crudo: Record<string, unknown>): Record<string
   const normalizado = { ...crudo };
   const estrategia = (normalizado.strategy ?? null) as Record<string, unknown> | null;
 
+  /*
+   * ── La TERCERA convención ─────────────────────────────────────────────────
+   * Después de la del motor (`LL-YYYYMMDD-NNN`, camelCase) y la de las piezas
+   * escritas a mano (`LL-YYYY-NNN`, snake_case), ha aparecido una más: la que
+   * usan las piezas de la serie 100 (`contentId`, `format` en singular,
+   * `productSurface`, `statusGate`). Cinco paquetes reales del repositorio se
+   * bloqueaban en el panel por esto — no porque estuvieran mal, sino porque
+   * nadie le había enseñado al lector a leerlos.
+   *
+   * Traducir es más barato que reescribir cinco ficheros y discutir cuál es la
+   * convención buena. Cada traducción actúa solo si el campo destino falta, así
+   * que un paquete de cualquiera de las tres formas sigue leyéndose igual.
+   */
+  if (normalizado.id === undefined) normalizado.id = primeraCadena(normalizado.contentId);
+  if (normalizado.status === undefined) normalizado.status = primeraCadena(normalizado.statusGate);
+  if (normalizado.formats === undefined && typeof normalizado.format === 'string') {
+    normalizado.formats = [normalizado.format];
+  }
+  if (normalizado.needsCapture === undefined && typeof normalizado.requiresRealProductCapture === 'boolean') {
+    normalizado.needsCapture = normalizado.requiresRealProductCapture;
+  }
+  if (normalizado.feature === undefined) {
+    // `productSurface` es la pantalla que demuestra la pieza («CalendarView»),
+    // que es exactamente lo que este campo significa: qué se está enseñando.
+    // `productMention` es lo que una pieza prelaunch dice del producto («LigaLab ·
+    // en construcción»): no es una capacidad, pero es la mención real, y es lo
+    // que hay que poder leer en la cola.
+    normalizado.feature = primeraCadena(normalizado.productSurface, normalizado.productProof, normalizado.productMention);
+  }
+  if (normalizado.problem === undefined) normalizado.problem = primeraCadena(normalizado.concept, normalizado.series);
+
   // Identidad y procedencia.
   if (normalizado.sourceOpportunityId === undefined) {
     const origen = primeraCadena(normalizado.radarId, normalizado.radar_id, normalizado.sourceOpportunity);
@@ -96,7 +145,17 @@ export function normalizarPaquete(crudo: Record<string, unknown>): Record<string
 
   // El hook y el insight son cosas distintas: el insight NO se pisa encima del
   // hook cuando los dos existen — se guarda en la estrategia, que es su sitio.
-  if (normalizado.hook === undefined) normalizado.hook = primeraCadena(normalizado.insight) ?? '';
+  /*
+   * El hook, resuelto UNA sola vez para las tres convenciones y en este orden:
+   * el propio, el `insight` de la convención antigua, y el concepto o la serie
+   * de la nueva. `hook: null` es deliberado en las piezas visual-first —su
+   * `copyMode` es «minimal_visual_label_only», o sea que NO llevan gancho de
+   * copy— así que se cae a algo que la cola pueda enseñar en vez de fabricar
+   * una frase que nadie ha escrito.
+   */
+  if (normalizado.hook === undefined || normalizado.hook === null) {
+    normalizado.hook = primeraCadena(normalizado.insight, normalizado.concept, normalizado.creativeDirection, normalizado.series) ?? '';
+  }
   if (typeof normalizado.insight === 'string' && estrategia?.insight === undefined) {
     normalizado.strategy = { ...(estrategia ?? {}), insight: normalizado.insight };
   }
@@ -107,7 +166,18 @@ export function normalizarPaquete(crudo: Record<string, unknown>): Record<string
     normalizado.needsCapture = normalizado.needs_capture;
   }
   if (normalizado.captureRequest === undefined) {
-    normalizado.captureRequest = primeraCadena(normalizado.capture_request) ?? null;
+    /*
+     * Las tres convenciones dicen QUÉ captura hace falta en sitios distintos:
+     * `captureRequest`, `capture_request` (la antigua) y `assetRequirements`
+     * (la nueva, como lista). Perder la última dejaría a esas piezas diciendo
+     * «hace falta una captura» sin decir de cuál, que es justo lo que la fase 5
+     * no puede permitirse.
+     */
+    const requisitos = Array.isArray(normalizado.assetRequirements)
+      ? normalizado.assetRequirements.filter((r): r is string => typeof r === 'string' && r.trim() !== '')
+      : [];
+    normalizado.captureRequest =
+      primeraCadena(normalizado.capture_request) ?? (requisitos.length > 0 ? requisitos.join(' · ') : null);
   }
   const assets = (normalizado.assets ?? null) as Record<string, unknown> | null;
   if (normalizado.captures === undefined && Array.isArray(assets?.realCaptures)) {
@@ -118,9 +188,40 @@ export function normalizarPaquete(crudo: Record<string, unknown>): Record<string
   if (normalizado.sources === undefined && normalizado.source && typeof normalizado.source === 'object') {
     normalizado.sources = [normalizado.source];
   }
+  /*
+   * La convención nueva mezcla dos cosas en `sources`: enlaces web con
+   * `label`+`url`, y referencias internas al Radar con `path`+`opportunityId`.
+   * El panel enseña fuentes CITABLES —lo que alguien puede abrir y comprobar—,
+   * así que las referencias internas se convierten en una fuente legible en vez
+   * de descartarse: perderlas ocultaría de dónde salió la pieza.
+   */
+  if (Array.isArray(normalizado.sources)) {
+    normalizado.sources = normalizado.sources.map((fuente) => {
+      if (!fuente || typeof fuente !== 'object') return fuente;
+      const f = fuente as Record<string, unknown>;
+      if (typeof f.label === 'string' && typeof f.url === 'string') return f;
+      const ruta = primeraCadena(f.path);
+      const oportunidad = primeraCadena(f.opportunityId);
+      if (ruta === undefined && oportunidad === undefined) return f;
+      return {
+        ...f,
+        label: primeraCadena(f.label) ?? (oportunidad !== undefined ? `Radar · ${oportunidad}` : 'Radar'),
+        url: primeraCadena(f.url, ruta) ?? '',
+      };
+    });
+  }
 
   // El CTA vive dentro de la estrategia en la convención antigua.
   if (normalizado.cta === undefined) normalizado.cta = primeraCadena(estrategia?.cta) ?? null;
+
+  /*
+   * `approval` como texto libre («human review required before generated/
+   * published»): eso es exactamente `required: true`, así que se traduce sin
+   * interpretar nada de más. No se inventa un `status`: nadie ha decidido aún.
+   */
+  if (typeof normalizado.approval === 'string') {
+    normalizado.approval = { required: true };
+  }
 
   // QA: tres booleanos → un `pass` con sus notas como avisos.
   const qaViejo = normalizado.qa as Record<string, unknown> | null | undefined;
@@ -149,23 +250,37 @@ export async function leerPaquete(fecha: string, id: string, ruta: string): Prom
   let texto: string;
   try {
     texto = await readFile(ruta, 'utf8');
-  } catch {
-    return { blocked: true, id, date: fecha, error: 'No se ha podido leer el fichero package.json.' };
+  } catch (error) {
+    // Que el fichero no exista todavía no es un fallo: es una pieza que aún se
+    // está preparando. Cualquier otro error de lectura (permisos, un directorio
+    // donde debería haber un fichero) sí lo es, y se distingue.
+    const noExiste = (error as NodeJS.ErrnoException)?.code === 'ENOENT';
+    return noExiste
+      ? { blocked: true, enPreparacion: true, id, date: fecha, error: 'Todavía no tiene package.json: la pieza está en preparación.' }
+      : { blocked: true, enPreparacion: false, id, date: fecha, error: 'No se ha podido leer el fichero package.json.' };
   }
 
   let json: unknown;
   try {
     json = JSON.parse(texto);
   } catch {
-    return { blocked: true, id, date: fecha, error: 'El fichero package.json no es JSON válido.' };
+    return { blocked: true, enPreparacion: false, id, date: fecha, error: 'El fichero package.json no es JSON válido.' };
   }
 
-  const conAlias = json && typeof json === 'object' ? normalizarPaquete(json as Record<string, unknown>) : json;
+  /*
+   * La fecha la sabe la CARPETA (`marketing/generated/<fecha>/…`), y hay
+   * paquetes que no la repiten dentro. Tomarla de la ruta no es adivinar: es
+   * leer el dato donde de verdad está, y evita bloquear una pieza entera por un
+   * campo que el sistema de ficheros ya declara.
+   */
+  const conAlias = json && typeof json === 'object'
+    ? normalizarPaquete({ date: fecha, ...(json as Record<string, unknown>) })
+    : json;
   const validado = paqueteCrudoSchema.safeParse(conAlias);
   if (!validado.success) {
     const primerError = validado.error.issues[0];
     const detalle = primerError ? `${primerError.path.join('.') || '(raíz)'}: ${primerError.message}` : 'formato inválido';
-    return { blocked: true, id, date: fecha, error: `El paquete no cumple el esquema (${detalle}).` };
+    return { blocked: true, enPreparacion: false, id, date: fecha, error: `El paquete no cumple el esquema (${detalle}).` };
   }
 
   return { blocked: false, crudo: validado.data };
@@ -219,12 +334,12 @@ export type VistaDePaquete = {
   auditTrail: EstadoHumano['auditTrail'];
 };
 
-export type VistaBloqueada = { id: string; date: string; blocked: true; error: string };
+export type VistaBloqueada = { id: string; date: string; blocked: true; error: string; enPreparacion: boolean };
 export type Vista = VistaDePaquete | VistaBloqueada;
 
 /** Junta el fichero estático con el estado humano. El humano gana si existe. */
 export function fusionarPaquete(resultado: ResultadoDeLectura, humano: EstadoHumano | null): Vista {
-  if (resultado.blocked) return { id: resultado.id, date: resultado.date, blocked: true, error: resultado.error };
+  if (resultado.blocked) return { id: resultado.id, date: resultado.date, blocked: true, error: resultado.error, enPreparacion: resultado.enPreparacion };
 
   const { crudo } = resultado;
   const efectivo = humano ?? estadoHumanoVacio(crudo.id, crudo.date);
@@ -283,7 +398,10 @@ export function fusionarPaquete(resultado: ResultadoDeLectura, humano: EstadoHum
  */
 export function ordenDeCola(vistas: Vista[]): Vista[] {
   const prioridad = (v: Vista): number => {
-    if (v.blocked) return 1;
+    // Lo que hay que decidir primero; después lo roto, que alguien tiene que
+    // arreglar; luego el resto; y al final lo que aún se está preparando,
+    // porque todavía no pide nada de nadie.
+    if (v.blocked) return v.enPreparacion ? 3 : 1;
     if (v.status === 'pending_approval') return 0;
     return 2;
   };

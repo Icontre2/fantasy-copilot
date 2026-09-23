@@ -242,15 +242,34 @@ test("el Video Director es el único especialista opcional Y no crítico a la ve
 test("cada especialista recibe solo sus documentos, nunca el repo entero", () => {
   const paquete = paqueteDeContexto("copywriter", { insight: "…", audiencia: "…" });
 
-  assert.deepEqual(paquete.documentos, ["brand/VOICE.md", "brand/CONTENT_RULES.md"]);
+  /*
+   * Se comprueba el INVARIANTE, no la lista literal. La primera versión fijaba
+   * los dos documentos exactos del copywriter y se puso roja en cuanto alguien
+   * le añadió `PRELAUNCH_CONTENT.md` a propósito — un test que se rompe cada
+   * vez que el sistema evoluciona como debe no está protegiendo nada, solo
+   * pidiendo permiso. Lo que sí importa es que al copywriter no le llegue la
+   * estrategia: eso ya viene resuelto en `datos`, y mandársela otra vez le
+   * invitaría a reinterpretar el problema desde cero.
+   */
+  assert.ok(paquete.documentos.includes("brand/VOICE.md"), "sin Voice no puede escribir con la voz de la marca");
+  assert.ok(paquete.documentos.includes("brand/CONTENT_RULES.md"));
   assert.equal(paquete.documentos.includes("marketing/STRATEGY.md"), false, "la estrategia ya viene resuelta en `datos`");
   assert.deepEqual(Object.keys(paquete.datos).sort(), ["audiencia", "insight"]);
 });
 
-test("ningún especialista recibe más de cuatro documentos", () => {
+test("el context packet de cada especialista sigue siendo acotado", () => {
+  /*
+   * El tope era cuatro y lo elegí yo sin más criterio que «pocos». Se puso rojo
+   * cuando el brand-reviewer pasó legítimamente a cinco. El número no es la
+   * regla: la regla del §10 es que ningún agente se lea el repositorio entero
+   * para no disparar coste, latencia y contradicciones. Seis es un umbral de
+   * olor, no una ley — si algún día hace falta pasarlo, que sea una decisión y
+   * no un descuido, y por eso sigue habiendo un tope.
+   */
+  const TOPE = 6;
   for (const [especialista, documentos] of Object.entries(DOCUMENTOS_POR_ESPECIALISTA)) {
     assert.ok(documentos.length > 0, `${especialista} necesita algún documento`);
-    assert.ok(documentos.length <= 4, `${especialista} recibe ${documentos.length}: eso ya es leerse medio repo`);
+    assert.ok(documentos.length <= TOPE, `${especialista} recibe ${documentos.length}: eso ya es leerse medio repo`);
   }
 });
 

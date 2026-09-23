@@ -1,0 +1,19 @@
+{
+  "contentId": "LL-2026-016",
+  "series": "RIVAL / CAJA",
+  "platforms": ["tiktok", "instagram_reels", "youtube_shorts"],
+  "format": "9:16 short-form video",
+  "durationSeconds": {"target": 8, "usableProof": "2-4"},
+  "concept": "Real Fantasy market context -> real LigaLab rival profile -> reconstructed rival cash.",
+  "text": "No hook required. Optional neutral label only if comprehension needs it.",
+  "productProof": "Caja de rivales reconstruida",
+  "requiresRealProductCapture": true,
+  "assetRequirements": ["live LigaLab production capture", "live Fantasy market context"],
+  "claims": {
+    "cashType": "estimated",
+    "approximationMarkerRequired": true,
+    "forbidden": ["exact rival balance", "prediction of affordability", "automatic alert/push claim"]
+  },
+  "statusGate": "draft",
+  "approval": "human review required before generated/published"
+}

@@ -116,7 +116,7 @@ export type ScheduleStatus = {
   message: string;
 };
 
-export type Section = "inicio" | "plantilla" | "liga" | "alertas" | "economia" | "mercado" | "onces" | "comparar" | "exportar" | "jornadas" | "mas";
+export type Section = "inicio" | "plantilla" | "liga" | "alertas" | "subidas" | "economia" | "mercado" | "onces" | "comparar" | "exportar" | "jornadas" | "mas";
 
 export const SECTIONS: { id: Section; label: string }[] = [
   { id: "inicio", label: "Inicio" },
