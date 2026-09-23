@@ -21,9 +21,18 @@
  * sesión: guardarlos en el disco del navegador es un problema de seguridad,
  * y servir una respuesta vieja en una pantalla que mueve dinero es peor todavía.
  *
- * Va aparte de `sw-push.js` a propósito: cada uno con su ámbito, para que una
- * rotura de caché no se lleve por delante los avisos ni al revés.
+ * El código de los avisos va en `sw-push.js`, en fichero aparte, para que un
+ * cambio de caché no toque los avisos ni al revés; se carga con importScripts.
  */
+
+/*
+ * Los avisos push viven en su propio fichero, pero los atiende ESTE worker, el
+ * que controla la app en `/`. En iPhone las notificaciones de una app
+ * instalada llegan por el worker de la app; uno aparte con otro ámbito es la
+ * vía menos probada, y era la que se usaba. El código sigue separado: si este
+ * fichero se rompe, `sw-push.js` no cambia.
+ */
+importScripts("/sw-push.js");
 
 const CACHE = "ligalab-offline-v1";
 const OFFLINE = "/offline.html";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BellRing, BellOff } from "lucide-react";
+import { BellRing, BellOff, Send } from "lucide-react";
 import { get, post } from "./api";
 
 /**
@@ -30,7 +30,7 @@ export function PushToggle({ leagueId }: { leagueId: string }) {
 
     async function inicial() {
       if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
-        if (!cancelado) { setEstado("no_disponible"); setMotivo("Este navegador no admite notificaciones push."); }
+        if (!cancelado) { setEstado("no_disponible"); setMotivo(motivoSinPush()); }
         return;
       }
       if (Notification.permission === "denied") {
@@ -88,6 +88,29 @@ export function PushToggle({ leagueId }: { leagueId: string }) {
     }
   }
 
+  const [probando, setProbando] = useState(false);
+  const [prueba, setPrueba] = useState<string | null>(null);
+
+  /**
+   * Manda un aviso AHORA por el mismo camino que el repaso automático. Es la
+   * única forma de saber que funciona sin esperar a que cambie algo en la liga.
+   */
+  async function probar() {
+    setProbando(true);
+    setPrueba(null);
+    setError(null);
+    try {
+      const r = await post<{ enviados: number; fallidos: number }>("/api/fantasy/push/test", { leagueId });
+      setPrueba(r.enviados > 0
+        ? "Enviado. Debería llegarte en unos segundos, aunque tengas la app abierta."
+        : "No había ningún dispositivo que respondiera. Apaga y vuelve a encender los avisos.");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "No se pudo mandar el aviso de prueba.");
+    } finally {
+      setProbando(false);
+    }
+  }
+
   async function apagar() {
     setEstado("trabajando");
     setError(null);
@@ -106,7 +129,20 @@ export function PushToggle({ leagueId }: { leagueId: string }) {
   }
 
   if (estado === "cargando") return null; // Un hueco que aparece solo, sin parpadeo de "desactivado" de mentira.
-  if (estado === "no_disponible") return null; // No se enseña un interruptor que no puede funcionar.
+  /*
+   * Antes aquí se devolvía `null`: sin push, el interruptor desaparecía sin
+   * decir por qué. En iPhone con Safari —donde push NO existe hasta instalar
+   * la app— eso significaba no ver nunca la opción y no saber que había que
+   * instalarla. Ahora se dice.
+   */
+  if (estado === "no_disponible") {
+    return (
+      <p className="flex gap-2 rounded-2xl border border-amber-500/25 bg-amber-500/[.06] px-4 py-3 text-xs leading-4 text-amber-200">
+        <BellOff size={15} className="mt-px shrink-0" />
+        <span>{motivo ?? "Los avisos no están disponibles aquí."}</span>
+      </p>
+    );
+  }
 
   if (estado === "bloqueado") {
     return (
@@ -133,6 +169,17 @@ export function PushToggle({ leagueId }: { leagueId: string }) {
         {encendido ? <BellRing size={17} /> : <BellOff size={17} />}
         {trabajando ? "Un momento…" : encendido ? "Te avisará sola de esta liga" : "Que me avise sola de esta liga"}
       </button>
+      {encendido && (
+        <button
+          type="button"
+          onClick={probar}
+          disabled={probando}
+          className="flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[.03] px-4 text-xs font-bold text-neutral-300 disabled:opacity-60"
+        >
+          <Send size={14} /> {probando ? "Enviando…" : "Mandarme un aviso de prueba"}
+        </button>
+      )}
+      {prueba && <p className="px-1 text-xs text-neutral-400">{prueba}</p>}
       {error && <p className="px-1 text-xs text-rose-400">{error}</p>}
       {motivo && <p className="px-1 text-xs text-neutral-500">{motivo}</p>}
     </div>
@@ -140,28 +187,26 @@ export function PushToggle({ leagueId }: { leagueId: string }) {
 }
 
 /**
- * El service worker de los avisos, activo y listo para suscribir.
+ * El service worker de la app (`/sw-app.js`, ámbito `/`), activo y listo para
+ * suscribir. Atiende los avisos porque importa `sw-push.js`.
  *
- * ── Por qué esto no puede ser `navigator.serviceWorker.ready` ────────────────
- * Aquí había `await navigator.serviceWorker.ready`, y era un cuelgue seguro.
- * `ready` espera a la registración cuyo ÁMBITO CUBRE LA PÁGINA ACTUAL, y este
- * worker se registra en `/sw-push/` mientras la app vive en `/`. Ese ámbito no
- * cubre `/`, así que la promesa no se resolvía nunca: el botón se quedaba en
- * "Un momento…" para siempre, sin error y sin manera de saber por qué.
- *
- * No saltó en las pruebas porque el navegador de pruebas no deja usar push de
- * verdad y el guion sustituía `ready` por una promesa ya resuelta: el simulacro
- * tapaba justo la línea que fallaba. Ahora se usa la registración concreta, que
- * además es lo correcto habiendo dos service workers —este y el de la pantalla
- * sin conexión, que sí vive en `/`—: con `ready` se habría cogido el otro, que
- * no sabe pintar un aviso, y las notificaciones habrían dejado de llegar sin
- * que nada diera error.
+ * Antes los avisos iban en un worker aparte con ámbito `/sw-push/`, que no
+ * controla la app. En iPhone, las notificaciones de una app instalada llegan
+ * por el worker que la controla; el otro camino es el menos probado y los
+ * avisos no llegaban. Se usa la registración concreta y no
+ * `navigator.serviceWorker.ready` para no quedarse esperando si aún no hay
+ * ninguna.
  *
  * `register` devuelve la registración enseguida, pero suscribirse exige un
  * worker ACTIVO; la primera vez todavía está instalándose, así que se espera.
  */
 async function registroDeAvisos(): Promise<ServiceWorkerRegistration> {
-  const registro = await navigator.serviceWorker.register("/sw-push.js", { scope: "/sw-push/" });
+  // El worker antiguo solo de avisos (ámbito `/sw-push/`) ya no hace falta: los
+  // avisos los atiende el de la app. Se retira para que no haya dos.
+  const viejo = await navigator.serviceWorker.getRegistration("/sw-push/").catch(() => undefined);
+  if (viejo && viejo.scope.endsWith("/sw-push/")) await viejo.unregister().catch(() => undefined);
+
+  const registro = await navigator.serviceWorker.register("/sw-app.js", { scope: "/" });
   if (registro.active) return registro;
 
   const worker = registro.installing ?? registro.waiting;
@@ -194,4 +239,22 @@ function base64UrlABytes(base64Url: string): ArrayBuffer {
   const base64 = (base64Url + relleno).replace(/-/g, "+").replace(/_/g, "/");
   const cruda = window.atob(base64);
   return Uint8Array.from([...cruda].map((c) => c.charCodeAt(0))).buffer as ArrayBuffer;
+}
+
+/**
+ * Por qué no hay push en este navegador, dicho de forma que se pueda arreglar.
+ *
+ * El caso que importa es iPhone: Safari solo ofrece notificaciones a las apps
+ * añadidas a la pantalla de inicio (iOS 16.4 o posterior) y abiertas desde el
+ * icono. En una pestaña normal `PushManager` no existe.
+ */
+function motivoSinPush(): string {
+  const ua = navigator.userAgent;
+  const esIos = /iPhone|iPad|iPod/.test(ua) || (ua.includes("Macintosh") && navigator.maxTouchPoints > 1);
+  const instalada = window.matchMedia?.("(display-mode: standalone)").matches || (navigator as { standalone?: boolean }).standalone === true;
+  if (esIos && !instalada) {
+    return "En iPhone los avisos solo funcionan con la app instalada: en Safari toca Compartir → Añadir a pantalla de inicio, y ábrela desde ese icono. Luego vuelve aquí y actívalos.";
+  }
+  if (esIos) return "Tu versión de iOS no admite avisos para apps instaladas. Hace falta iOS 16.4 o posterior.";
+  return "Este navegador no admite notificaciones push.";
 }
