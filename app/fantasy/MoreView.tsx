@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarDays, Download, LogOut, Scale, ShieldAlert, TableProperties, TrendingUp, Users, WalletCards } from "lucide-react";
+import { CalendarDays, Crosshair, Download, LogOut, Scale, ShieldAlert, TableProperties, TrendingUp, Users, WalletCards } from "lucide-react";
 import { post } from "./api";
 import type { Section } from "./types";
 
 const ITEMS: Array<{ id: Section; label: string; description: string; icon: React.ReactNode }> = [
   { id: "defensa", label: "Defensa", description: "Quién puede pagar tus cláusulas hoy", icon: <ShieldAlert size={19}/> },
+  { id: "ataque", label: "Ataque", description: "Cláusulas rivales que puedes pagar ya", icon: <Crosshair size={19}/> },
   { id: "economia", label: "Economía", description: "Caja, ingresos y movimientos", icon: <WalletCards size={19}/> },
   { id: "subidas", label: "Subidas", description: "Quién sube más al día, en € y en %", icon: <TrendingUp size={19}/> },
   { id: "onces", label: "Onces probables", description: "Fotos y porcentajes", icon: <Users size={19}/> },

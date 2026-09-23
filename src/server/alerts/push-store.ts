@@ -1,6 +1,7 @@
 import { supabaseAdmin } from '@/src/server/storage/supabase-admin';
 import type { AlertLevel } from '../laliga/alerts/clause-alerts.ts';
 import type { EstadoAlertas } from './notify-diff.ts';
+import { estadoAFilas, filasAEstado, PREFIJO_DEFENSA, type EstadoDefensa } from './defensa-diff.ts';
 
 /**
  * Todo lo que este sistema guarda en la base de datos: suscripciones push y el
@@ -65,7 +66,8 @@ export async function leerEstadoDeAlertas(sessionId: string, leagueId: string): 
   const { data, error } = await supabaseAdmin()
     .from('fantasy_alert_state')
     .select('player_id, level')
-    .match({ session_id: sessionId, league_id: leagueId });
+    .match({ session_id: sessionId, league_id: leagueId })
+    .not('player_id', 'like', `${PREFIJO_DEFENSA}%`);
   if (error) throw new Error(`No se pudo leer el estado de alertas: ${error.message}`);
   return new Map((data ?? []).map((fila) => [fila.player_id, fila.level as AlertLevel]));
 }
@@ -88,7 +90,9 @@ export async function guardarEstadoDeAlertas(
   const { error: delError } = await db
     .from('fantasy_alert_state')
     .delete()
-    .match({ session_id: sessionId, league_id: leagueId });
+    .match({ session_id: sessionId, league_id: leagueId })
+    // Las filas de Defensa comparten tabla y tienen su propio ciclo.
+    .not('player_id', 'like', `${PREFIJO_DEFENSA}%`);
   if (delError) throw new Error(`No se pudo limpiar el estado de alertas: ${delError.message}`);
 
   if (estado.size === 0) return;
@@ -112,4 +116,29 @@ export async function sesionesActivas(): Promise<string[]> {
     .gt('expires_at', new Date().toISOString());
   if (error) throw new Error(`No se pudo listar las sesiones: ${error.message}`);
   return (data ?? []).map((fila) => fila.id as string);
+}
+
+/** Qué rivales podían pagar cada jugador tuyo en el último repaso. */
+export async function leerEstadoDeDefensa(sessionId: string, leagueId: string): Promise<EstadoDefensa> {
+  const { data, error } = await supabaseAdmin()
+    .from('fantasy_alert_state')
+    .select('player_id, level')
+    .match({ session_id: sessionId, league_id: leagueId })
+    .like('player_id', `${PREFIJO_DEFENSA}%`);
+  if (error) throw new Error(`No se pudo leer el estado de defensa: ${error.message}`);
+  return filasAEstado(data ?? []);
+}
+
+export async function guardarEstadoDeDefensa(sessionId: string, leagueId: string, estado: EstadoDefensa): Promise<void> {
+  const db = supabaseAdmin();
+  const { error: delError } = await db
+    .from('fantasy_alert_state')
+    .delete()
+    .match({ session_id: sessionId, league_id: leagueId })
+    .like('player_id', `${PREFIJO_DEFENSA}%`);
+  if (delError) throw new Error(`No se pudo limpiar el estado de defensa: ${delError.message}`);
+  const filas = estadoAFilas(estado).map((fila) => ({ ...fila, session_id: sessionId, league_id: leagueId, notified_at: new Date().toISOString() }));
+  if (filas.length === 0) return;
+  const { error } = await db.from('fantasy_alert_state').insert(filas);
+  if (error) throw new Error(`No se pudo guardar el estado de defensa: ${error.message}`);
 }

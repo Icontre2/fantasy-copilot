@@ -97,12 +97,26 @@ export function costeDeSubida(actual: number, objetivo: number): number {
   return Math.ceil((objetivo - actual) / EUROS_DE_CLAUSULA_POR_EURO);
 }
 
-function blindajeVigente(player: PlayerWithProbability, ahora: Date): string | null {
-  if (!player.isShielded) return null;
+type ConBlindaje = { isShielded?: boolean; shieldedUntil?: string };
+
+/**
+ * La misma regla que aplica el servidor antes de pagar (`isClauseShielded`):
+ * si LALIGA publica fecha de fin, manda la fecha; si no, manda la bandera.
+ * Tenerla igual aquí evita ofrecer como pagable algo que el servidor rechazará.
+ */
+export function estaBlindado(player: ConBlindaje, ahora: Date): boolean {
+  if (player.shieldedUntil) {
+    const fin = Date.parse(player.shieldedUntil);
+    if (!Number.isNaN(fin)) return fin > ahora.getTime();
+  }
+  return player.isShielded === true;
+}
+
+/** Fecha de fin del blindaje, solo si es futura. */
+export function blindajeVigente(player: ConBlindaje, ahora: Date): string | null {
   if (!player.shieldedUntil) return null;
-  const fin = new Date(player.shieldedUntil);
-  if (Number.isNaN(fin.getTime()) || fin.getTime() <= ahora.getTime()) return null;
-  return player.shieldedUntil;
+  const fin = Date.parse(player.shieldedUntil);
+  return !Number.isNaN(fin) && fin > ahora.getTime() ? player.shieldedUntil : null;
 }
 
 export function analizarJugador(
@@ -117,9 +131,7 @@ export function analizarJugador(
   }
 
   const blindadoHasta = blindajeVigente(player, ahora);
-  // `isShielded` sin fecha: LALIGA dice que está blindado pero no hasta cuándo.
-  // Se respeta el dato oficial en vez de suponer que ya se levantó.
-  const blindado = blindadoHasta !== null || (player.isShielded === true && !player.shieldedUntil);
+  const blindado = estaBlindado(player, ahora);
   const pueden = quienesPueden(clausula, compradores);
   const masRico = compradores[0]?.poder ?? null;
 
