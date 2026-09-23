@@ -48,6 +48,50 @@ Tres conclusiones incómodas y una buena:
 - Descargo: *«aplicación independiente… no está afiliada, asociada ni respaldada
   por LALIGA Fantasy»*.
 
+### Revisión del 2026-08-30 — lo nuevo y lo que sigue sin poder verse
+
+**Google Play sigue siendo ilegible desde aquí, y ahora está comprobado en vez
+de supuesto.** La revisión del 19 de agosto lo atribuyó a que la ficha es
+JavaScript. Se ha vuelto a intentar con un navegador real (Chromium headless a
+través del proxy de salida), que sí ejecuta ese JavaScript: Google corta la
+conexión (`ERR_CONNECTION_RESET`, y el proxy registra el túnel cerrado a mitad
+contra `www.google.com:443`). No es un problema de renderizado — es que no nos
+dejan entrar. Valoración, reseñas y descargas **reales de Play siguen sin
+verificar**, y desde este entorno no hay forma de conseguirlas.
+
+**Lo que sí se ha podido leer, de UNA sola fuente espejo (apkcombo) y sin
+contrastar con ninguna otra** — apkpure y appbrain devuelven 403:
+
+| | |
+| --- | --- |
+| Versión | 2.0.0 (build 41) |
+| Publicada | 11 de mayo de 2026 |
+| Tamaño | 33 MB · requiere Android 7.0+ |
+| Desarrollador que declara el espejo | «StatsFantasy» |
+| Descargas según el espejo | «50+» |
+| Valoración según el espejo | 4/5 sobre **1** reseña |
+
+> **Estos dos últimos números NO se dan por buenos.** Los contadores de un
+> espejo miden descargas del propio espejo, no instalaciones de Play, y una
+> muestra de 1 reseña no dice nada de nadie. Si fueran ciertos cambiarían la
+> lectura competitiva entera —FantasyStats sería casi irrelevante en volumen—,
+> y precisamente por eso no se apoya ninguna decisión en ellos hasta
+> confirmarlos a mano en Play.
+
+**El cambio que sí importa, y que la ficha del 19 de agosto no recogía:** la
+descripción actual se presenta como **«Asistente IA para La Liga Fantasy,
+Fantasy Marca y Biwenger»**. Dos cosas nuevas ahí:
+
+1. **Ya no es solo LaLiga Fantasy.** Cubre también Fantasy Marca y Biwenger, el
+   mismo movimiento multi-liga que hace Analítica Fantasy. LigaLab es
+   monoplataforma.
+2. **Se posiciona como «IA»** de forma explícita, que es un reclamo de tienda
+   que nosotros no usamos.
+
+Que solo conste una versión publicada (mayo de 2026) sugiere una app joven o
+con poco ritmo de release, pero el espejo tampoco guarda historial completo, así
+que **no se concluye nada de eso**.
+
 **Solape con LigaLab:** casi total en la parte de cláusulas y mercado.
 
 **Dónde LigaLab gana:** caja reconstruida de rivales; ejecutar la cláusula y la
@@ -140,8 +184,13 @@ Queda pendiente y **no debe rellenarse a ojo**:
 
 **Cómo cerrarlo (30-45 min, manual):** abrir cada ficha en el móvil, ordenar
 reseñas por «más recientes» y por «más críticas», y copiar 20-30 literales a
-`PAIN_POINTS.md`. Es la tarea de investigación de mayor retorno que queda, y no
-se puede automatizar de forma fiable desde aquí.
+`PAIN_POINTS.md`. Es la tarea de investigación de mayor retorno que queda.
+
+**Y tiene que ser a mano, con un móvil de verdad.** El 2026-08-30 se intentó
+automatizar con un navegador real y Google corta la conexión (ver la revisión de
+esa fecha, arriba). No es que falte una librería o un truco de scraping: es que
+desde un servidor no se entra. Cualquier intento futuro de resolverlo por
+programa va a chocar con lo mismo.
 
 ---
 
