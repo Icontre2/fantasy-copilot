@@ -7,6 +7,7 @@ import { get, olvidarCache } from "./api";
 import { AlertsView } from "./AlertsView";
 import { RisersView } from "./RisersView";
 import { DefensaView } from "./DefensaView";
+import { AtaqueView } from "./AtaqueView";
 import { EconomyView } from "./EconomyView";
 import { ExportView } from "./ExportView";
 import { CalendarView } from "./CalendarView";
@@ -51,6 +52,8 @@ export default function FantasyApp() {
   const [leaguesLoading, setLeaguesLoading] = useState(true);
   const [leaguesError, setLeaguesError] = useState<string | null>(null);
   const [section, setSection] = useState<Section>("inicio");
+  // Lo que pide el enlace de una notificación: `/?league=…&section=…`.
+  const [destino] = useState(() => leerDestino());
 
   useEffect(() => {
     get<{ authenticated: boolean; manager?: Manager; session?: DiagnosticoDeSesion; social?: { proveedores: Proveedor[]; identificado: boolean; motivo?: string | null }; authError?: string | null; authAviso?: string | null }>("/api/fantasy/auth/session")
@@ -70,7 +73,11 @@ export default function FantasyApp() {
     get<LeaguesResponse>("/api/fantasy/leagues")
       .then((data) => {
         setLeagues(data.leagues);
-        setLeagueId((current) => current ?? data.leagues[0]?.id ?? null);
+        const pedida = destino.league && data.leagues.some((league) => league.id === destino.league) ? destino.league : null;
+        setLeagueId((current) => current ?? pedida ?? data.leagues[0]?.id ?? null);
+        if (destino.section) setSection(destino.section);
+        // Se limpia la dirección para que recargar no vuelva a saltar ahí.
+        if (destino.league || destino.section) window.history.replaceState(null, "", window.location.pathname);
       })
       .catch((error: unknown) => {
         setLeagues([]);
@@ -78,7 +85,7 @@ export default function FantasyApp() {
         setLeaguesError(error instanceof Error ? error.message : "No se pudieron cargar tus ligas.");
       })
       .finally(() => setLeaguesLoading(false));
-  }, [manager]);
+  }, [manager, destino]);
 
   if (checkingSession) return <Shell><Spinner label="Comprobando sesión…" /></Shell>;
   if (!manager) return <Shell login><LoginView onLogin={setManager} sesion={sesion} social={social} errorDeAcceso={errorDeAcceso} avisoDeAcceso={avisoDeAcceso} /></Shell>;
@@ -103,6 +110,18 @@ export default function FantasyApp() {
       <BottomNav section={section} onSelect={setSection} />
     </Shell>
   );
+}
+
+const SECCIONES_VALIDAS: readonly Section[] = ["inicio", "plantilla", "liga", "alertas", "defensa", "ataque", "subidas", "economia", "mercado", "onces", "comparar", "exportar", "jornadas", "mas"];
+
+function leerDestino(): { league: string | null; section: Section | null } {
+  if (typeof window === "undefined") return { league: null, section: null };
+  const params = new URLSearchParams(window.location.search);
+  const section = params.get("section");
+  return {
+    league: params.get("league"),
+    section: section && (SECCIONES_VALIDAS as readonly string[]).includes(section) ? (section as Section) : null,
+  };
 }
 
 function AvatarPropio({ url, inicial }: { url?: string; inicial: string }) {
@@ -132,8 +151,8 @@ function SectionContent({ section, leagueId, onNavigate, social }: { section: Se
 }
 
 type DataSection = Exclude<Section, "exportar" | "mas" | "jornadas">;
-const ENDPOINT: Record<DataSection, (leagueId: string) => string> = { inicio: (id) => `/api/fantasy/leagues/${id}/dashboard`, plantilla: (id) => `/api/fantasy/leagues/${id}/dashboard`, liga: (id) => `/api/fantasy/leagues/${id}/teams`, alertas: (id) => `/api/fantasy/leagues/${id}/alerts`, economia: (id) => `/api/fantasy/leagues/${id}/economy`, mercado: (id) => `/api/fantasy/leagues/${id}/market`, subidas: (id) => `/api/fantasy/leagues/${id}/alerts`, defensa: (id) => `/api/fantasy/leagues/${id}/dashboard`, comparar: (id) => `/api/fantasy/leagues/${id}/teams`, onces: () => `/api/fantasy/lineups`, };
-const LOADING_LABEL: Record<DataSection, string> = { inicio: "Preparando tu resumen…", plantilla: "Montando tu once probable…", liga: "Cargando plantillas de la liga…", alertas: "Calculando alertas de cláusula…", subidas: "Midiendo quién sube más…", defensa: "Revisando las cláusulas de tu plantilla…", economia: "Reconstruyendo la contabilidad…", mercado: "Cargando el mercado…", comparar: "Cargando jugadores…", onces: "Consultando onces probables…", };
+const ENDPOINT: Record<DataSection, (leagueId: string) => string> = { inicio: (id) => `/api/fantasy/leagues/${id}/dashboard`, plantilla: (id) => `/api/fantasy/leagues/${id}/dashboard`, liga: (id) => `/api/fantasy/leagues/${id}/teams`, alertas: (id) => `/api/fantasy/leagues/${id}/alerts`, economia: (id) => `/api/fantasy/leagues/${id}/economy`, mercado: (id) => `/api/fantasy/leagues/${id}/market`, subidas: (id) => `/api/fantasy/leagues/${id}/alerts`, defensa: (id) => `/api/fantasy/leagues/${id}/dashboard`, ataque: (id) => `/api/fantasy/leagues/${id}/teams`, comparar: (id) => `/api/fantasy/leagues/${id}/teams`, onces: () => `/api/fantasy/lineups`, };
+const LOADING_LABEL: Record<DataSection, string> = { inicio: "Preparando tu resumen…", plantilla: "Montando tu once probable…", liga: "Cargando plantillas de la liga…", alertas: "Calculando alertas de cláusula…", subidas: "Midiendo quién sube más…", defensa: "Revisando las cláusulas de tu plantilla…", ataque: "Buscando cláusulas a tu alcance…", economia: "Reconstruyendo la contabilidad…", mercado: "Cargando el mercado…", comparar: "Cargando jugadores…", onces: "Consultando onces probables…", };
 
 function SectionData({ section, leagueId, onSynced, onNavigate }: { section: DataSection; leagueId: string; onSynced: () => void; onNavigate: (section: Section) => void }) {
   const [data, setData] = useState<unknown>(null);
@@ -150,6 +169,7 @@ function SectionData({ section, leagueId, onSynced, onNavigate }: { section: Dat
     case "alertas": return <AlertsView data={data as AlertsResponse} onChanged={onSynced} />;
     case "subidas": return <RisersView data={data as AlertsResponse} />;
     case "defensa": return <DefensaView data={data as DashboardResponse} />;
+    case "ataque": return <AtaqueView data={data as TeamsResponse} leagueId={leagueId} onChanged={onSynced} />;
     case "economia": return <EconomyView data={data as EconomyResponse} />;
     case "mercado": return <MarketView data={data as MarketResponse} leagueId={leagueId} onChanged={onSynced} />;
     case "comparar": return <CompareView data={data as TeamsResponse} />;

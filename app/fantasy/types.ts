@@ -1,12 +1,12 @@
 /** Formas que devuelven las rutas `/api/fantasy/*`, tal cual las consume la UI. */
 
-import type { League, LeagueTeam, Manager, MarketEntry, MarketValuePoint, Player, StandingRow } from "@/src/domain/fantasy";
+import type { League, LeagueTeam, Manager, MarketEntry, MarketValuePoint, Player, Position, SquadPlayer, StandingRow } from "@/src/domain/fantasy";
 import type { ClauseAlert } from "@/src/server/laliga/alerts/clause-alerts";
 import type { ManagerEconomy } from "@/src/server/laliga/economy/activity";
 import type { DiagnosticoDeSesion } from "@/src/server/laliga/session-mode";
 import type { Proveedor } from "@/src/server/auth/providers";
 
-export type { ClauseAlert, DiagnosticoDeSesion, League, LeagueTeam, Manager, ManagerEconomy, MarketEntry, MarketValuePoint, Player, Proveedor, StandingRow };
+export type { ClauseAlert, DiagnosticoDeSesion, League, LeagueTeam, Manager, ManagerEconomy, MarketEntry, MarketValuePoint, Player, Position, Proveedor, SquadPlayer, StandingRow };
 
 export type LeaguesResponse = { leagues: League[] };
 
@@ -118,7 +118,7 @@ export type ScheduleStatus = {
   message: string;
 };
 
-export type Section = "inicio" | "plantilla" | "liga" | "alertas" | "defensa" | "subidas" | "economia" | "mercado" | "onces" | "comparar" | "exportar" | "jornadas" | "mas";
+export type Section = "inicio" | "plantilla" | "liga" | "alertas" | "defensa" | "ataque" | "subidas" | "economia" | "mercado" | "onces" | "comparar" | "exportar" | "jornadas" | "mas";
 
 export const SECTIONS: { id: Section; label: string }[] = [
   { id: "inicio", label: "Inicio" },
