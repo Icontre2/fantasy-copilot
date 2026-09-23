@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ArrowDownRight, ArrowUpRight, BellRing, Coins, Trophy, Users, ChevronRight } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, BellRing, Coins, ShieldAlert, ShieldCheck, Trophy, Users, ChevronRight } from "lucide-react";
 import Image from "next/image";
-import type { AlertsResponse, DashboardResponse, MarketValuePoint, ManagerEconomy } from "./types";
+import type { AlertsResponse, DashboardResponse, MarketValuePoint, ManagerEconomy, Section } from "./types";
+import { analizarDefensa, compradoresDeLiga, resumirDefensa } from "./defensa";
+import { ShareCardButton } from "./ShareCard";
 import { getCacheado } from "./api";
 import { millions } from "./format";
 import { ManagerSheet } from "./ManagerSheet";
@@ -15,13 +17,14 @@ import { ErrorBox } from "./ui";
 type ValueHistoryResponse = { teamId: string; from: string; histories: Record<string, MarketValuePoint[]>; failedPlayerIds: string[] };
 type EconomyResponse = { leagueId: string; saldoInicial: number; actividadDesde: string | null; actividadHasta: string | null; operaciones: number; economies: ManagerEconomy[]; dataNotes: string[] };
 
-export function DashboardView({ data }: { data: DashboardResponse }) {
+export function DashboardView({ data, onNavigate }: { data: DashboardResponse; onNavigate?: (section: Section) => void }) {
   const [range, setRange] = useState<HistoryRange>("AUG1");
   const [abierto, setAbierto] = useState<string | null>(null);
   const [economies, setEconomies] = useState<ManagerEconomy[]>([]);
   const [alerts, setAlerts] = useState<AlertsResponse | null>(null);
   const competitors = Array.isArray(data.competitors) ? data.competitors : [];
   const { histories, cargando, error } = useSquadHistory(data.league?.id, data.me?.teamId);
+  const [economiaCargada, setEconomiaCargada] = useState(false);
 
   useEffect(() => {
     if (!data.league?.id) return;
@@ -33,6 +36,7 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
     ]).then(([economyResult, alertsResult]) => {
       if (cancelled) return;
       if (economyResult.status === "fulfilled") setEconomies(Array.isArray(economyResult.value.economies) ? economyResult.value.economies : []);
+      setEconomiaCargada(true);
       if (alertsResult.status === "fulfilled") setAlerts(alertsResult.value);
     });
     return () => { cancelled = true; };
@@ -49,6 +53,7 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
   const alertCount = alerts?.alerts?.length ?? 0;
   const myEconomy = economies.find((item) => item.managerId === data.me.manager.id);
   const poderCompra = myEconomy?.cajaReconstruida;
+  const defensa = economiaCargada ? resumirDefensa(analizarDefensa(Array.isArray(data.me.players) ? data.me.players : [], compradoresDeLiga(competitors, economies), data.me.teamMoney ?? poderCompra ?? null, new Date())) : null;
 
   return (
     <div className="space-y-5">
@@ -71,6 +76,12 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
         <div className="mt-4">
           <Metric icon={<Coins size={16} />} label="Poder de compra" value={poderCompra == null ? "—" : millions(poderCompra)} accent />
         </div>
+        <div className="mt-3 flex justify-end">
+          <ShareCardButton
+            entrada={{ managerName: data.me.manager.name, leagueName: data.league?.name ?? "", teamValue: data.me.teamValue, delta, periodo: typeof range === "number" ? `en ${range} ${range === 1 ? "día" : "días"}` : "desde el 1 de agosto", position: data.me.position, totalManagers: competitors.length + 1, points: data.me.points }}
+            serie={total.map((p) => p.marketValue)}
+          />
+        </div>
       </section>
 
       <section className="overflow-hidden rounded-[28px] border border-white/[.08] bg-white/[.045] p-4">
@@ -82,12 +93,22 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
         <ValueChart points={total} cargando={cargando} error={error} delta={delta} />
       </section>
 
+      {defensa && <button type="button" onClick={() => onNavigate?.("defensa")} className={`flex w-full items-center gap-3 rounded-[28px] border p-4 text-left transition active:scale-[.99] ${defensa.expuestos > 0 ? "border-rose-500/25 bg-rose-500/[.08]" : "border-emerald-500/20 bg-emerald-500/[.06]"}`}>
+        <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl ${defensa.expuestos > 0 ? "bg-rose-500/15 text-rose-300" : "bg-emerald-500/15 text-emerald-300"}`}>{defensa.expuestos > 0 ? <ShieldAlert size={20} /> : <ShieldCheck size={20} />}</span>
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-semibold uppercase tracking-[.12em] text-neutral-400">Defensa</p>
+          <p className="mt-0.5 font-bold text-white">{defensa.expuestos > 0 ? `${defensa.expuestos} ${defensa.expuestos === 1 ? "jugador tuyo está" : "jugadores tuyos están"} al alcance de un rival` : "Ningún rival puede pagar tus cláusulas hoy"}</p>
+          <p className="text-[11px] text-neutral-500">{defensa.expuestos > 0 ? `${millions(defensa.valorExpuesto)} en juego · mira cuánto cuesta protegerlos` : `${defensa.blindados} blindados · ${defensa.seguros} fuera de alcance`}</p>
+        </div>
+        <ChevronRight size={16} className="text-neutral-500" />
+      </button>}
+
       <section className="rounded-[28px] border border-white/[.08] bg-white/[.045] p-4">
         <div className="mb-3 flex items-center justify-between">
           <div><p className="text-xs font-semibold uppercase tracking-[.12em] text-neutral-400">Atención</p><h2 className="mt-1 text-xl font-bold tracking-tight text-white">Lo que requiere atención</h2></div>
           <div className="flex items-center gap-2 rounded-full bg-orange-500/10 px-3 py-1.5 text-xs font-bold text-orange-300"><BellRing size={14} /> {alertCount}</div>
         </div>
-        {alertEntries.length > 0 ? <div className="space-y-2">{alertEntries.map((alert) => <div key={alert.player.id} className="flex items-center gap-3 rounded-2xl bg-orange-500/[.07] px-3 py-2.5"><span className="grid h-[38px] w-[38px] shrink-0 place-items-center rounded-full bg-orange-500/10"><BellRing size={16} className="text-orange-300" /></span><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-white">{alert.player.name}</p><p className="text-[10px] text-orange-200/70">Revisar alerta</p></div><ChevronRight size={16} className="text-neutral-500" /></div>)}</div> : <p className="rounded-2xl bg-white/[.05] px-3 py-3 text-xs leading-5 text-neutral-500">No hay alertas importantes ahora mismo.</p>}
+        {alertEntries.length > 0 ? <div className="space-y-2">{alertEntries.map((alert) => <button type="button" key={alert.player.id} onClick={() => onNavigate?.("alertas")} className="flex w-full items-center gap-3 rounded-2xl bg-orange-500/[.07] px-3 py-2.5 text-left transition active:scale-[.99]"><span className="grid h-[38px] w-[38px] shrink-0 place-items-center rounded-full bg-orange-500/10"><BellRing size={16} className="text-orange-300" /></span><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-white">{alert.player.name}</p><p className="truncate text-[10px] text-orange-200/70">{alert.owner.managerName} · cláusula {millions(alert.official.buyoutClause)}</p></div><ChevronRight size={16} className="text-neutral-500" /></button>)}</div> : <p className="rounded-2xl bg-white/[.05] px-3 py-3 text-xs leading-5 text-neutral-500">No hay alertas importantes ahora mismo.</p>}
       </section>
 
       <section>
