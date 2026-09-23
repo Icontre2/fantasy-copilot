@@ -16,6 +16,38 @@ Convertir oportunidades verificables en paquetes creativos listos para revisión
 ## Producción diaria
 Seleccionar 1 insight fuerte por defecto y un máximo absoluto de 3 oportunidades. Calidad > volumen.
 
+## Biblioteca visual prioritaria
+
+La creatividad de LigaLab debe ser **visual-first**: primero se decide qué imagen,
+movimiento o dato detiene el scroll y después se escribe el mínimo texto necesario.
+Las referencias aportadas por el usuario muestran una preferencia clara por
+composiciones deportivas editoriales, jugador protagonista, titulares enormes y
+gráficos de movimiento. Se usan como aprendizaje de estructura, no como identidad
+a copiar.
+
+Formatos que el sistema debe reconocer y reutilizar cuando la evidencia los soporte:
+
+| Formato | Trigger | Estructura visual |
+| --- | --- | --- |
+| `market_risers` | Variaciones positivas verificadas | Portada/hook → ranking de subidas → CTA/contexto |
+| `market_fallers` | Variaciones negativas verificadas | Portada/hook → ranking de bajadas → contexto |
+| `must_buy` | Un jugador destaca por señales verificables | Jugador protagonista → dato/razón principal → evidencia |
+| `value_pick` | Diferencia de valor/precio respaldada | Jugador + comparación visual → dato → conclusión |
+| `fantasy_alert` | Cambio relevante con evidencia | Señal visual de alerta → jugador → qué cambió |
+
+Reglas comunes:
+- 9:16 primero.
+- Una sola idea por pieza.
+- El jugador o dato protagonista debe dominar la composición cuando sea pertinente.
+- Tipografía grande y legible a tamaño móvil.
+- Verde = crecimiento/oportunidad; rojo = caída/riesgo.
+- Flechas, barras, gráficos y efectos solo si explican el dato.
+- No usar texto para describir lo que la imagen ya comunica.
+- No convertir el contenido en un dashboard vertical.
+- Nunca inventar cifras, fotos, pantallas o contexto para completar una composición.
+- Si la pieza depende de una pantalla del producto, usar `real_app_capture` y mantener
+  `needsCapture=true` hasta disponer de la captura real.
+
 ## Salud real de la cola
 No usar el número bruto de IDs de `marketing/editorial-queue.json` para decidir si hay backlog suficiente.
 
