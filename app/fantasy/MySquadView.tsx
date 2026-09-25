@@ -4,14 +4,25 @@ import { useMemo, useState } from "react";
 import { Info } from "lucide-react";
 import type { DashboardResponse, Player, PlayerWithProbability } from "./types";
 import { Pitch } from "./Pitch";
-import { PrediccionCard } from "./PrediccionCard";
+import { PrediccionResumen, usePrediccion } from "./PrediccionCard";
 import { PlayerDetails } from "./PlayerDetails";
-import { SquadValueHistory } from "./SquadValueHistory";
 import { jornadasDisponibles, puntosDelOnce } from "./jornadas";
-import { millions, UNKNOWN } from "./format";
+import { UNKNOWN } from "./format";
+
+/**
+ * Plantilla = el predictor de la jornada.
+ *
+ * Arriba, los puntos ≈ que hará tu mejor once y qué cambiar para llegar a él.
+ * Debajo, ese once en el campo con los puntos previstos de cada uno. Solo el
+ * once: la plantilla entera no aporta nada a la decisión de a quién alinear.
+ * Los puntos reales de jornadas pasadas quedan en la otra pestaña.
+ */
+type Modo = "PREDICCION" | "JORNADAS";
 
 export function MySquadView({ data }: { data: DashboardResponse }) {
   const [selected, setSelected] = useState<Player | null>(null);
+  const [modo, setModo] = useState<Modo>("PREDICCION");
+  const prediccion = usePrediccion(data);
   const jornadas = useMemo(
     () => jornadasDisponibles(data.me.players, data.currentWeek),
     [data.me.players, data.currentWeek],
@@ -25,56 +36,62 @@ export function MySquadView({ data }: { data: DashboardResponse }) {
     data.currentWeek ?? jornadas.at(-1) ?? null,
   );
   const elegida = jornada !== null && jornadas.includes(jornada) ? jornada : null;
+  const entran = useMemo(() => new Set(prediccion.cambios.map((c) => c.entra.player.id)), [prediccion.cambios]);
+  const optimo = prediccion.optimo;
 
   return (
     <div className="space-y-4">
-      <PrediccionCard data={data} />
-      <section className="glass-strong rounded-[28px] p-4 text-white">
-        <div className="mb-4 flex items-center justify-between">
-          <div><p className="text-xs font-semibold uppercase tracking-[.14em] text-[#a78bfa]">Tu once más probable</p><h2 className="mt-1 text-xl font-bold">{data.lineup.formation}</h2></div>
-          <div className="rounded-2xl bg-white/[.06] px-3 py-2 text-right"><p className="text-[10px] text-white/45">Valor equipo</p><p className="font-bold text-white">{millions(data.me.teamValue)}</p></div>
-        </div>
+      <PrediccionResumen prediccion={prediccion} />
 
-        <SelectorDeJornada
-          jornadas={jornadas}
-          elegida={elegida}
-          enCurso={data.currentWeek}
-          onElegir={setJornada}
-        />
-        {elegida !== null && (
-          <ResumenJornada
-            players={data.lineup.starters}
-            jornada={elegida}
-            enJuego={data.weekIsLive && elegida === data.currentWeek}
+      <div className="grid grid-cols-2 gap-1 rounded-2xl bg-white/[.05] p-1" role="tablist" aria-label="Qué ver en el campo">
+        {([["PREDICCION", "Próxima jornada"], ["JORNADAS", "Jornadas pasadas"]] as const).map(([id, label]) => (
+          <button key={id} type="button" role="tab" aria-selected={modo === id} onClick={() => setModo(id)} className={`min-h-11 rounded-xl text-sm font-bold transition-colors duration-200 ${modo === id ? "bg-[#7c3aed] text-white shadow-[0_6px_18px_rgba(124,58,237,.35)]" : "text-white/50"}`}>{label}</button>
+        ))}
+      </div>
+
+      {modo === "PREDICCION" ? (
+        <section key="prediccion" className="ll-enter space-y-3">
+          {optimo ? (
+            <Pitch
+              starters={optimo.titulares.map((j) => j.player)}
+              proyecciones={prediccion.proyecciones}
+              destacados={entran}
+              onSelect={setSelected}
+            />
+          ) : (
+            <p className="rounded-2xl glass p-6 text-center text-sm text-neutral-400">Tu plantilla no llena ninguna formación válida.</p>
+          )}
+          <p className="flex gap-2 px-1 text-[11px] leading-4 text-white/45">
+            <Info size={14} className="shrink-0" />
+            <span>
+              El número verde son los puntos previstos: combina la media, la forma reciente, si juega en casa, las cuotas del
+              partido y la probabilidad de titular (el %). Con aro, los que entran respecto a tu once más probable. Es una
+              estimación y no cambia tu alineación en LALIGA.
+            </span>
+          </p>
+        </section>
+      ) : (
+        <section key="jornadas" className="ll-enter glass-strong rounded-[28px] p-4 text-white">
+          <SelectorDeJornada
+            jornadas={jornadas}
+            elegida={elegida}
+            enCurso={data.currentWeek}
+            onElegir={setJornada}
           />
-        )}
+          {elegida !== null && (
+            <ResumenJornada
+              players={data.lineup.starters}
+              jornada={elegida}
+              enJuego={data.weekIsLive && elegida === data.currentWeek}
+            />
+          )}
+          <Pitch starters={data.lineup.starters} jornada={elegida} onSelect={setSelected} />
+          <p className="mt-3 text-[11px] leading-4 text-white/45">
+            Tu once más probable ({data.lineup.formation}). El número morado son los puntos reales de la jornada elegida.
+          </p>
+        </section>
+      )}
 
-        <Pitch starters={data.lineup.starters} jornada={elegida} onSelect={setSelected} />
-
-        {/*
-          Las dos cifras que lleva cada jugador encima se leen distinto y hasta
-          ahora la pantalla no lo decía en ninguna parte: el porcentaje es una
-          previsión de la PRÓXIMA alineación y no cambia al elegir jornada; el
-          número morado son los puntos REALES de la jornada seleccionada.
-        */}
-        <p className="mt-3 flex gap-2 text-[11px] leading-4 text-white/45">
-          <Info size={14} className="shrink-0" />
-          <span>
-            El <strong className="text-white/70">%</strong> de cada jugador es su probabilidad de ser
-            titular en el próximo partido, según FútbolFantasy: mira hacia delante y no cambia al
-            elegir jornada. El número morado sí son los puntos que hizo en la jornada elegida. El
-            once es un cálculo dentro de una formación válida y no toca tu alineación oficial.
-          </span>
-        </p>
-      </section>
-
-      <SquadValueHistory
-        leagueId={data.league.id}
-        teamId={data.me.teamId}
-        players={data.me.players}
-        title="Toda tu plantilla"
-        onPlayer={setSelected}
-      />
       {selected ? <PlayerDetails player={selected} onClose={() => setSelected(null)} /> : null}
     </div>
   );

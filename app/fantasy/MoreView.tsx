@@ -41,7 +41,7 @@ export function MoreView({ onSelect }: { onSelect: (section: Section) => void; s
           <h2 className="mt-1 text-2xl font-black tracking-[-.035em] text-white">Más herramientas</h2>
           <p className="mt-1 text-sm text-neutral-500">Accesos secundarios de tu liga.</p>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="ll-stagger grid grid-cols-2 gap-3">
           {ITEMS.map((item, index) => (
             <button
               key={item.id}

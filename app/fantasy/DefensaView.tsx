@@ -79,7 +79,7 @@ export function DefensaView({ data }: { data: DashboardResponse }) {
 
     {defensas.length === 0
       ? <Empty>Tu plantilla está vacía.</Empty>
-      : <div className="space-y-3">{defensas.map((d) => <DefensaCard key={d.player.id} defensa={d} compradores={compradores} miCaja={miCaja} onSelect={setSelected} />)}</div>}
+      : <div className="ll-stagger space-y-3">{defensas.map((d) => <DefensaCard key={d.player.id} defensa={d} compradores={compradores} miCaja={miCaja} onSelect={setSelected} />)}</div>}
 
     <p className="rounded-2xl glass px-4 py-3 text-xs leading-5 text-neutral-500">
       La cláusula y el blindaje son oficiales. La caja de los rivales es <strong>estimada</strong> (≈) salvo que LALIGA la publique:

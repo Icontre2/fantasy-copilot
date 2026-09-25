@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
 import { BellRing, CircleEllipsis, House, ShieldCheck, ShoppingBag, TriangleAlert, UsersRound } from "lucide-react";
-import { get, olvidarCache } from "./api";
+import { get, getCacheado, olvidarCache } from "./api";
 import { AlertsView } from "./AlertsView";
 import { RisersView } from "./RisersView";
 import { DefensaView } from "./DefensaView";
@@ -51,7 +51,13 @@ export default function FantasyApp() {
   const [leagueId, setLeagueId] = useState<string | null>(null);
   const [leaguesLoading, setLeaguesLoading] = useState(true);
   const [leaguesError, setLeaguesError] = useState<string | null>(null);
-  const [section, setSection] = useState<Section>("inicio");
+  const [section, setSectionState] = useState<Section>("inicio");
+  // Cambiar de sección vuelve arriba: si no, la pantalla nueva aparece a media
+  // altura, donde se había quedado la anterior.
+  const setSection = useCallback((next: Section) => {
+    setSectionState(next);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
   // Lo que pide el enlace de una notificación: `/?league=…&section=…`.
   const [destino] = useState(() => leerDestino());
 
@@ -75,7 +81,7 @@ export default function FantasyApp() {
         setLeagues(data.leagues);
         const pedida = destino.league && data.leagues.some((league) => league.id === destino.league) ? destino.league : null;
         setLeagueId((current) => current ?? pedida ?? data.leagues[0]?.id ?? null);
-        if (destino.section) setSection(destino.section);
+        if (destino.section) setSectionState(destino.section);
         // Se limpia la dirección para que recargar no vuelva a saltar ahí.
         if (destino.league || destino.section) window.history.replaceState(null, "", window.location.pathname);
       })
@@ -144,10 +150,13 @@ function BottomNav({ section, onSelect }: { section: Section; onSelect: (section
 function SectionContent({ section, leagueId, onNavigate, social }: { section: Section; leagueId: string; onNavigate: (section: Section) => void; social: EstadoSocial | null }) {
   const [reloadToken, setReloadToken] = useState(0);
   const reload = useCallback(() => { olvidarCache(); setReloadToken((value) => value + 1); }, []);
-  if (section === "exportar") return <ExportView leagueId={leagueId} />;
-  if (section === "jornadas") return <CalendarView />;
-  if (section === "mas") return <MoreView onSelect={onNavigate} social={social} />;
-  return <SectionData key={`${section}-${leagueId}-${reloadToken}`} section={section} leagueId={leagueId} onSynced={reload} onNavigate={onNavigate} />;
+  return <div key={section} className="ll-enter">{contenido()}</div>;
+  function contenido() {
+    if (section === "exportar") return <ExportView leagueId={leagueId} />;
+    if (section === "jornadas") return <CalendarView />;
+    if (section === "mas") return <MoreView onSelect={onNavigate} social={social} />;
+    return <SectionData key={`${section}-${leagueId}-${reloadToken}`} section={section} leagueId={leagueId} onSynced={reload} onNavigate={onNavigate} />;
+  }
 }
 
 type DataSection = Exclude<Section, "exportar" | "mas" | "jornadas">;
@@ -158,7 +167,7 @@ function SectionData({ section, leagueId, onSynced, onNavigate }: { section: Dat
   const [data, setData] = useState<unknown>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  useEffect(() => { let cancelled = false; get<unknown>(ENDPOINT[section](leagueId)).then((result) => { if (!cancelled) setData(result); }).catch((caught: unknown) => { if (!cancelled) setError(caught instanceof Error ? caught.message : "No se pudo cargar."); }).finally(() => { if (!cancelled) setLoading(false); }); return () => { cancelled = true; }; }, [section, leagueId]);
+  useEffect(() => { let cancelled = false; getCacheado<unknown>(ENDPOINT[section](leagueId)).then((result) => { if (!cancelled) setData(result); }).catch((caught: unknown) => { if (!cancelled) setError(caught instanceof Error ? caught.message : "No se pudo cargar."); }).finally(() => { if (!cancelled) setLoading(false); }); return () => { cancelled = true; }; }, [section, leagueId]);
   if (loading) return <Spinner label={LOADING_LABEL[section]} />;
   if (error) return <ErrorBox message={error} />;
   if (!data) return null;

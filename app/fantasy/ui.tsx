@@ -56,11 +56,20 @@ export function ErrorBox({ message }: { message: string }) {
   );
 }
 
+/**
+ * Mientras carga: la forma de lo que viene (una cabecera y tres tarjetas) con
+ * un brillo que pasa, y debajo qué se está haciendo. Antes era un círculo que
+ * giraba en mitad de la nada, y el salto al aparecer los datos se notaba.
+ */
 export function Spinner({ label }: { label: string }) {
   return (
-    <p className="grid min-h-48 place-items-center p-6 text-center text-sm text-neutral-400" role="status">
-      <span><span className="mx-auto mb-3 block h-8 w-8 animate-spin rounded-full border-2 border-white/10 border-t-[#8b5cf6]"/>{label}</span>
-    </p>
+    <div className="space-y-3" role="status" aria-live="polite">
+      <div className="ll-skeleton h-36 rounded-[28px]" />
+      <div className="ll-skeleton h-24 rounded-[26px]" />
+      <div className="ll-skeleton h-24 rounded-[26px]" />
+      <div className="ll-skeleton h-24 rounded-[26px] opacity-60" />
+      <p className="pt-1 text-center text-xs text-neutral-500">{label}</p>
+    </div>
   );
 }
 

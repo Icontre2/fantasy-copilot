@@ -72,7 +72,7 @@ export function RisersView({ data }: { data: AlertsResponse }) {
 
     {filas.length === 0
       ? <Empty>Ningún jugador vigilado sube de valor con este criterio.</Empty>
-      : <div className="space-y-3">{filas.map((fila, indice) => <RiserCard key={`${fila.alert.owner.teamId}-${fila.alert.player.id}`} fila={fila} puesto={indice + 1} orden={orden} onSelect={setSelected}/>)}</div>}
+      : <div className="ll-stagger space-y-3">{filas.map((fila, indice) => <RiserCard key={`${fila.alert.owner.teamId}-${fila.alert.player.id}`} fila={fila} puesto={indice + 1} orden={orden} onSelect={setSelected}/>)}</div>}
 
     {/*
       El aviso de cobertura no es letra pequeña: sin él, un ranking que solo mira
