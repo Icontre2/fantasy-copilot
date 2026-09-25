@@ -296,3 +296,48 @@
  * repositorio a proposito (ver la cabecera de `fantasy-app.tsx`); simplemente
  * viajan con ella en vez de con todo el mundo.
  */
+
+/*
+ * Movimiento: que la app se sienta de una pieza y no a saltos.
+ *
+ * - `.ll-enter`: cada pantalla entra con un fundido corto hacia arriba al
+ *   cambiar de sección, en vez de aparecer de golpe.
+ * - `.ll-stagger`: los hijos entran uno detrás de otro (tarjetas, líneas del
+ *   campo). Solo los ocho primeros llevan retraso: una lista larga no puede
+ *   tardar en terminar de aparecer.
+ * - `.ll-skeleton`: el hueco de lo que se está cargando, con un brillo que
+ *   pasa. Sustituye al círculo que gira: se ve la forma de lo que viene.
+ *
+ * Todo cae a nada con `prefers-reduced-motion`.
+ */
+@keyframes ll-enter {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes ll-shimmer {
+  from { background-position: -200% 0; }
+  to { background-position: 200% 0; }
+}
+.ll-enter { animation: ll-enter 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.ll-stagger > * { animation: ll-enter 0.36s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.ll-stagger > *:nth-child(2) { animation-delay: 40ms; }
+.ll-stagger > *:nth-child(3) { animation-delay: 80ms; }
+.ll-stagger > *:nth-child(4) { animation-delay: 120ms; }
+.ll-stagger > *:nth-child(5) { animation-delay: 160ms; }
+.ll-stagger > *:nth-child(6) { animation-delay: 200ms; }
+.ll-stagger > *:nth-child(7) { animation-delay: 240ms; }
+.ll-stagger > *:nth-child(n + 8) { animation-delay: 280ms; }
+.ll-skeleton {
+  background: linear-gradient(100deg, rgba(255, 255, 255, 0.04) 30%, rgba(255, 255, 255, 0.1) 50%, rgba(255, 255, 255, 0.04) 70%);
+  background-size: 200% 100%;
+  animation: ll-shimmer 1.4s linear infinite;
+}
+html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
+button { -webkit-tap-highlight-color: transparent; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ll-enter,
+  .ll-stagger > *,
+  .ll-skeleton { animation: none; }
+  html { scroll-behavior: auto; }
+}

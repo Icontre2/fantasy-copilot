@@ -90,7 +90,7 @@ export function AtaqueView({ data, leagueId, onChanged }: { data: TeamsResponse;
 
     {resultado.ya.length === 0
       ? <Empty>Con tu caja de hoy no llegas a ninguna cláusula libre con estos filtros.</Empty>
-      : <div className="space-y-3">{resultado.ya.map((o) => <ObjetivoCard key={o.player.id} o={o} busy={busy === o.player.id} onPagar={() => pagar(o)} onSelect={setSelected} />)}</div>}
+      : <div className="ll-stagger space-y-3">{resultado.ya.map((o) => <ObjetivoCard key={o.player.id} o={o} busy={busy === o.player.id} onPagar={() => pagar(o)} onSelect={setSelected} />)}</div>}
 
     {resultado.pronto.length > 0 && <section className="space-y-3">
       <h3 className="px-1 text-sm font-bold text-white">Blindados que podrás pagar</h3>

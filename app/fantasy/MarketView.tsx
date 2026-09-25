@@ -114,7 +114,7 @@ export function MarketView({ data, leagueId, onChanged }: { data: MarketResponse
   }
 
   return (
-    <div className="space-y-3">
+    <div className="ll-stagger space-y-3">
       <div><p className="text-xs font-semibold uppercase tracking-[.14em] text-neutral-500">En vivo</p><h2 className="text-2xl font-bold tracking-tight text-white">Mercado · {visible.length}</h2></div>
       <label className="flex min-h-12 items-center gap-2 rounded-2xl glass px-4 text-neutral-400"><Search size={18}/><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar jugador o equipo…" className="w-full bg-transparent text-sm text-white outline-none placeholder:text-neutral-600"/></label>
       <div className="grid grid-cols-5 gap-1.5">{(["TODAS","POR","DEF","MED","DEL"] as PositionFilter[]).map((item) => <button key={item} type="button" onClick={() => setPosition(item)} aria-pressed={position === item} className={`min-h-11 rounded-xl px-1 text-[11px] font-bold ${position === item ? "bg-[#7c3aed] text-white" : "glass text-neutral-400"}`}>{item}</button>)}</div>
