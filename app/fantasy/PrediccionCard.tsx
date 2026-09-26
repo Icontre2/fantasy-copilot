@@ -17,7 +17,11 @@ export type Prediccion = {
   actual: Once;
   cambios: Cambio[];
   proyecciones: Map<string, Projection | null>;
+  /** Jugadores cuyo número ya es real (partido jugado). */
+  reales: Set<string>;
   jornada: number | null;
+  /** `true` cuando ya llegó el contexto de los partidos: el número es el definitivo. */
+  listo: boolean;
 };
 
 export function usePrediccion(data: DashboardResponse): Prediccion {
@@ -25,8 +29,9 @@ export function usePrediccion(data: DashboardResponse): Prediccion {
   const jugadores = data.me?.players;
   const lineup = data.lineup;
   const porEquipo = dificultad?.byTeam ?? null;
+  const jornada = dificultad?.week ?? data.currentWeek;
   const calculo = useMemo(() => {
-    const predichos = predecirJugadores(Array.isArray(jugadores) ? jugadores : [], porEquipo);
+    const predichos = predecirJugadores(Array.isArray(jugadores) ? jugadores : [], porEquipo, jornada);
     const optimo = onceOptimo(predichos);
     const actual = onceDado(lineup?.formation ?? "", (lineup?.starters ?? []).map((p) => p.id), predichos);
     return {
@@ -34,9 +39,10 @@ export function usePrediccion(data: DashboardResponse): Prediccion {
       actual,
       cambios: optimo ? cambiosSugeridos(actual, optimo) : [],
       proyecciones: new Map(predichos.map((j) => [j.player.id, j.proyeccion])),
+      reales: new Set(predichos.filter((j) => j.real !== null).map((j) => j.player.id)),
     };
-  }, [jugadores, lineup, porEquipo]);
-  return { ...calculo, jornada: dificultad?.week ?? data.currentWeek };
+  }, [jugadores, lineup, porEquipo, jornada]);
+  return { ...calculo, jornada, listo: dificultad !== null };
 }
 
 export function PrediccionResumen({ prediccion }: { prediccion: Prediccion }) {
@@ -51,6 +57,7 @@ export function PrediccionResumen({ prediccion }: { prediccion: Prediccion }) {
         <p className="text-xs font-semibold uppercase tracking-[.16em] text-white/55">Tu predicción{jornada ? ` · jornada ${jornada}` : ""}</p>
         <p className="mt-2 text-[44px] font-bold leading-none tracking-[-.04em] tabular-nums">≈ {fmt(total)} <span className="text-lg font-semibold text-white/60">pts</span></p>
         <p className="mt-1.5 text-sm text-white/60">entre {fmt(optimo.bajo)} y {fmt(optimo.alto)} · {optimo.formacion}</p>
+        {optimo.yaJugaron > 0 && <p className="mt-1 text-xs font-semibold text-[#c4b5fd]">{optimo.yaJugaron} ya {optimo.yaJugaron === 1 ? "jugó" : "jugaron"}: sus puntos son reales</p>}
       </div>
       <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white/10 text-[#d6ff75]"><Sparkles size={22} /></span>
     </div>

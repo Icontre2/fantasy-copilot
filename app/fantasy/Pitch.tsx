@@ -24,12 +24,15 @@ export function Pitch({
   starters,
   jornada = null,
   proyecciones,
+  reales,
   destacados,
   onSelect,
 }: {
   starters: PlayerWithProbability[];
   jornada?: number | null;
   proyecciones?: Map<string, Projection | null>;
+  /** Jugadores cuyo número ya son puntos reales (su partido se jugó). */
+  reales?: Set<string>;
   /** Jugadores que entran respecto al once probable: se marcan. */
   destacados?: Set<string>;
   onSelect: (player: PlayerWithProbability) => void;
@@ -52,6 +55,7 @@ export function Pitch({
                 jornada={jornada}
                 proyeccion={proyecciones?.get(player.id)}
                 modoPrediccion={proyecciones !== undefined}
+                esReal={reales?.has(player.id) ?? false}
                 destacado={destacados?.has(player.id) ?? false}
                 dificultad={delJugador(player)}
               />
@@ -71,13 +75,14 @@ function groupByPosition(players: PlayerWithProbability[]) {
 }
 
 function PitchPlayer({
-  player, onSelect, jornada, proyeccion, modoPrediccion, destacado, dificultad,
+  player, onSelect, jornada, proyeccion, modoPrediccion, esReal, destacado, dificultad,
 }: {
   player: PlayerWithProbability;
   onSelect: (player: PlayerWithProbability) => void;
   jornada: number | null;
   proyeccion?: Projection | null;
   modoPrediccion: boolean;
+  esReal: boolean;
   destacado: boolean;
   dificultad?: DificultadDeEquipo;
 }) {
@@ -86,19 +91,29 @@ function PitchPlayer({
     <button type="button" onClick={() => onSelect(player)} className="flex w-[74px] flex-col items-center text-center transition-transform duration-150 active:scale-95" aria-label={`Ver ficha de ${player.name}`}>
       <div className={`relative rounded-full shadow-[0_8px_20px_rgba(0,0,0,.28)] ${destacado ? "ring-2 ring-[#d6ff75] ring-offset-2 ring-offset-[#0b3f27]" : ""}`}>
         <PlayerImage player={player} size={52} />
-        <Probability value={player.lineupProbability} expected={player.lineupExpectedStarter} />
+        {ESTADO[player.status]
+          ? <span className={`absolute -bottom-1 -right-2 rounded-full border-2 border-[#0b3f27] px-1.5 py-0.5 text-[9px] font-black ${ESTADO[player.status]!.tono}`}>{ESTADO[player.status]!.texto}</span>
+          : <Probability value={player.lineupProbability} expected={player.lineupExpectedStarter} />}
         {puntos !== null && <span className="absolute -left-2 -top-1 rounded-full bg-[#7c3aed] px-1.5 py-0.5 text-[10px] font-black text-white shadow">{puntos}</span>}
       </div>
       <p className="mt-1.5 w-full truncate rounded-lg border border-white/5 bg-black/70 px-1.5 py-1 text-[10px] font-bold text-white shadow">{player.name}</p>
       {modoPrediccion && (
-        <p className={`mt-1 rounded-full px-2 py-0.5 text-[11px] font-black tabular-nums ${proyeccion ? "bg-[#d6ff75] text-[#101a39]" : "bg-white/10 text-white/60"}`}>
-          {proyeccion ? proyeccion.points.toFixed(1).replace(".", ",") : "—"}
+        <p className={`mt-1 rounded-full px-2 py-0.5 text-[11px] font-black tabular-nums ${esReal ? "bg-[#7c3aed] text-white" : proyeccion ? "bg-[#d6ff75] text-[#101a39]" : "bg-white/10 text-white/60"}`}>
+          {proyeccion ? `${esReal ? "✓ " : ""}${esReal ? proyeccion.points : proyeccion.points.toFixed(1).replace(".", ",")}` : "—"}
         </p>
       )}
       {dificultad && <span className={`mt-1 w-full truncate text-[9px] font-bold ${colorDeDificultad(dificultad.probabilidadGanar)}`}>{dificultad.enCasa ? "vs" : "en"} {dificultad.rivalShortName}</span>}
     </button>
   );
 }
+
+/** Lo que pesa más que cualquier porcentaje: si LALIGA dice que no juega, se ve. */
+const ESTADO: Partial<Record<string, { texto: string; tono: string }>> = {
+  injured: { texto: "LES", tono: "bg-rose-500 text-white" },
+  suspended: { texto: "SAN", tono: "bg-rose-500 text-white" },
+  out_of_league: { texto: "FUERA", tono: "bg-neutral-500 text-white" },
+  doubtful: { texto: "DUDA", tono: "bg-amber-300 text-amber-950" },
+};
 
 function Probability({ value, expected }: { value?: number; expected?: boolean }) {
   const tone = expected || (value !== undefined && value >= 70) ? "bg-emerald-400 text-emerald-950" : value === undefined ? "bg-neutral-600 text-white" : value >= 40 ? "bg-amber-300 text-amber-950" : "bg-rose-400 text-rose-950";

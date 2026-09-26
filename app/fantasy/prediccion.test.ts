@@ -69,3 +69,25 @@ test("cambios sugeridos: si hay uno de su línea, sale ese y no otro", () => {
   const cambios = cambiosSugeridos(onceDado("4-4-2", actualIds, predichos), optimo);
   assert.deepEqual(cambios.map((c) => [c.entra.player.id, c.sale?.player.id]), [["DEF5", "DEF7"]]);
 });
+
+test("partido ya jugado con puntos publicados: cuentan los reales, no la previsión", () => {
+  const players = plantilla().map((p) => ({ ...p, teamId: p.position === "DEL" ? "T1" : "T2", weekPoints: p.position === "DEL" ? [{ jornada: 6, puntos: 15 }] : [] }));
+  const dificultad = {
+    T1: { jugado: true, enCasa: true, probabilidadGanar: 0.5 },
+    T2: { jugado: false, enCasa: true, probabilidadGanar: 0.5 },
+  } as never;
+  const predichos = predecirJugadores(players, dificultad, 6);
+  const delantero = predichos.find((j) => j.player.position === "DEL")!;
+  assert.equal(delantero.real, 15);
+  assert.equal(delantero.proyeccion?.points, 15);
+  const medio = predichos.find((j) => j.player.position === "MED")!;
+  assert.equal(medio.real, null);
+  const once = onceOptimo(predichos)!;
+  assert.ok(once.yaJugaron >= 1);
+});
+
+test("partido jugado pero sin puntos publicados todavía: se sigue prediciendo", () => {
+  const players = plantilla().map((p) => ({ ...p, teamId: "T1", weekPoints: [] }));
+  const predichos = predecirJugadores(players, { T1: { jugado: true, enCasa: true, probabilidadGanar: 0.5 } } as never, 6);
+  assert.ok(predichos.every((j) => j.real === null && j.proyeccion !== null));
+});
