@@ -1,4 +1,5 @@
 import { FORMATIONS } from "../../src/server/laliga/lineup.ts";
+import { puntosEnJornada } from "./jornadas.ts";
 import { projectPlayerPoints, type Projection } from "./projection.ts";
 import type { DificultadDeEquipo } from "./difficulty";
 import type { PlayerWithProbability } from "./types";
@@ -16,7 +17,12 @@ import type { PlayerWithProbability } from "./types";
  * oficial: eso se cambia en LALIGA Fantasy.
  */
 
-export type JugadorPredicho = { player: PlayerWithProbability; proyeccion: Projection | null };
+export type JugadorPredicho = {
+  player: PlayerWithProbability;
+  proyeccion: Projection | null;
+  /** Puntos REALES si su partido de esta jornada ya se jugó y LALIGA los publicó. */
+  real: number | null;
+};
 
 export type Once = {
   formacion: string;
@@ -27,16 +33,37 @@ export type Once = {
   alto: number;
   /** Titulares sin media publicada: cuentan 0 y se dice. */
   sinDatos: number;
+  /** Titulares cuyo partido ya se jugó: su parte del total es real, no prevista. */
+  yaJugaron: number;
 };
 
 const puntos = (j: JugadorPredicho) => j.proyeccion?.points ?? 0;
 const redondear = (n: number) => Math.round(n * 10) / 10;
 
-export function predecirJugadores(players: PlayerWithProbability[], dificultad: Record<string, DificultadDeEquipo> | null): JugadorPredicho[] {
-  return players.map((player) => ({
-    player,
-    proyeccion: projectPlayerPoints(player, player.teamId && dificultad ? dificultad[player.teamId] : undefined),
-  }));
+/**
+ * La predicción de cada jugador para la jornada `jornada`.
+ *
+ * Si su partido ya se jugó y LALIGA ya publicó sus puntos, no se predice nada:
+ * se usan los reales. Así, con la jornada en marcha, el total es «lo que ya
+ * llevas + lo que falta por jugar», que es lo que de verdad se quiere saber.
+ */
+export function predecirJugadores(
+  players: PlayerWithProbability[],
+  dificultad: Record<string, DificultadDeEquipo> | null,
+  jornada: number | null = null,
+): JugadorPredicho[] {
+  return players.map((player) => {
+    const partido = player.teamId && dificultad ? dificultad[player.teamId] : undefined;
+    const real = partido?.jugado && jornada !== null ? puntosEnJornada(player, jornada) : null;
+    if (real !== null) {
+      return {
+        player,
+        real,
+        proyeccion: { points: real, low: real, high: real, confidence: "Alta", lineupProbability: player.lineupProbability, factors: ["Ya jugó: puntos reales"] },
+      };
+    }
+    return { player, real: null, proyeccion: projectPlayerPoints(player, partido) };
+  });
 }
 
 function resumir(formacion: string, titulares: JugadorPredicho[], todos: JugadorPredicho[]): Once {
@@ -49,6 +76,7 @@ function resumir(formacion: string, titulares: JugadorPredicho[], todos: Jugador
     bajo: redondear(titulares.reduce((s, j) => s + (j.proyeccion?.low ?? 0), 0)),
     alto: redondear(titulares.reduce((s, j) => s + (j.proyeccion?.high ?? 0), 0)),
     sinDatos: titulares.filter((j) => j.proyeccion === null).length,
+    yaJugaron: titulares.filter((j) => j.real !== null).length,
   };
 }
 

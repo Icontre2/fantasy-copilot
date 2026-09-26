@@ -21,12 +21,33 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
 
+/**
+ * Estados de LALIGA con los que un jugador no va a jugar la jornada.
+ *
+ * Antes no se miraban: si FútbolFantasy no publicaba su probabilidad, un
+ * lesionado contaba como titular con su media entera, y el «mejor once» lo
+ * metía en el campo. Ahora cuenta cero, y se dice por qué.
+ */
+const NO_JUEGA: Partial<Record<string, string>> = {
+  injured: "Lesionado",
+  suspended: "Sancionado",
+  out_of_league: "Fuera de la liga",
+};
+
+/** Si no hay probabilidad publicada, «en duda» se toma como media probabilidad. */
+const FACTOR_DUDA_SIN_PROBABILIDAD = 0.5;
+
 export function projectPlayerPoints(
   player: PlayerWithProbability,
   dificultad?: DificultadDeEquipo,
 ): Projection | null {
   const historical = Number.isFinite(player.averagePoints) ? player.averagePoints : NaN;
   if (!Number.isFinite(historical) || historical < 0) return null;
+
+  const motivo = NO_JUEGA[player.status];
+  if (motivo) {
+    return { points: 0, low: 0, high: 0, confidence: "Alta", lineupProbability: player.lineupProbability, factors: [motivo] };
+  }
 
   const recent = (player.weekPoints ?? [])
     .filter((entry) => Number.isFinite(entry.puntos))
@@ -64,6 +85,8 @@ export function projectPlayerPoints(
 
   const lineupProbability = player.lineupProbability;
   let expected = conditional;
+  const enDuda = player.status === "doubtful";
+  if (enDuda) factors.push("En duda");
 
   if (lineupProbability !== undefined) {
     const p = clamp(lineupProbability, 0, 100) / 100;
@@ -78,8 +101,10 @@ export function projectPlayerPoints(
     );
   } else if (player.lineupExpectedStarter) {
     factors.push("Titular probable");
+    if (enDuda) expected *= FACTOR_DUDA_SIN_PROBABILIDAD;
   } else {
     factors.push("Titularidad desconocida");
+    if (enDuda) expected *= FACTOR_DUDA_SIN_PROBABILIDAD;
   }
 
   const points = Math.max(0, Math.round(expected * 10) / 10);

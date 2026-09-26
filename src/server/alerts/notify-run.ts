@@ -9,10 +9,19 @@ import {
   guardarEstadoDeDefensa,
   leerEstadoDeAlertas,
   leerEstadoDeDefensa,
+  marcarAvisado,
   suscripcionesDe,
+  yaAvisado,
   type Suscripcion,
 } from './push-store.ts';
-import { getLeagueActivity, getLeagueSnapshot, getMyProfile } from '../laliga/read.ts';
+import { getCalendar, getCurrentWeekPublic, getLeagueActivity, getLeagueSnapshot, getMyProfile, getPlayerCatalog } from '../laliga/read.ts';
+import { conProbabilidades } from '../laliga/probable-lineup.ts';
+import { bestEleven } from '../laliga/lineup.ts';
+import { getCuotas } from '../odds/football-data.ts';
+import { dificultadPorEquipo } from '../odds/team-difficulty.ts';
+import { FALLBACK_TEAMS } from '../laliga/teams.ts';
+import { cambiosSugeridos, onceDado, onceOptimo, predecirJugadores } from '../../../app/fantasy/prediccion.ts';
+import { clavePrevia, mensajeDePrevia, primerPartido, tocaPrevia } from './previa.ts';
 import { buildEconomy } from '../laliga/economy/activity.ts';
 import { analizarDefensa, compradoresDeLiga } from '../../../app/fantasy/defensa.ts';
 import { diferenciarDefensa, mensajeDeDefensa } from './defensa-diff.ts';
@@ -66,7 +75,7 @@ export async function evaluarYAvisar(sessionId: string, leagueId: string): Promi
     defensa = null;
   }
 
-  const { enviosOk, enviosFallidos } = await enviarATodas(vapid, sessionId, leagueId, suscripciones, mensajes);
+  const primero = await enviarATodas(vapid, sessionId, leagueId, suscripciones, mensajes);
 
   // El estado se guarda SIEMPRE, avise o no: es lo que permite detectar la
   // próxima subida de nivel, y también lo que olvida a los jugadores que ya no
@@ -74,7 +83,77 @@ export async function evaluarYAvisar(sessionId: string, leagueId: string): Promi
   await guardarEstadoDeAlertas(sessionId, leagueId, estadoNuevo);
   if (defensa) await guardarEstadoDeDefensa(sessionId, leagueId, defensa.estadoNuevo);
 
-  return { estado: 'EVALUADO', avisos: mensajes.length, enviosOk, enviosFallidos };
+  /*
+   * La víspera va DESPUÉS de mandar lo anterior, y aparte: si algo de aquí se
+   * alarga o falla, las alertas de cláusula y de defensa ya han salido.
+   */
+  let previa = { enviosOk: 0, enviosFallidos: 0, avisos: 0 };
+  try {
+    const p = await evaluarPrevia(token, sessionId, leagueId);
+    if (p) {
+      const r = await enviarATodas(vapid, sessionId, leagueId, suscripciones, [p.mensaje]);
+      if (r.enviosOk > 0) await marcarAvisado(sessionId, leagueId, clavePrevia(p.jornada));
+      previa = { ...r, avisos: 1 };
+    }
+  } catch {
+    // Sin víspera esta hora; el repaso de la próxima hora lo vuelve a intentar.
+  }
+
+  return {
+    estado: 'EVALUADO',
+    avisos: mensajes.length + previa.avisos,
+    enviosOk: primero.enviosOk + previa.enviosOk,
+    enviosFallidos: primero.enviosFallidos + previa.enviosFallidos,
+  };
+}
+
+/**
+ * La víspera de la jornada: el mejor once con sus puntos ≈ y qué cambiar.
+ * `null` si no toca (fuera de la ventana o ya avisada).
+ *
+ * Usa las MISMAS piezas que la pantalla Plantilla —probabilidad de titular,
+ * cuotas de la jornada, `predecirJugadores`, `onceOptimo`— para que el aviso
+ * y la pantalla digan lo mismo.
+ */
+async function evaluarPrevia(token: string, sessionId: string, leagueId: string) {
+  const ahora = new Date();
+  const actual = await getCurrentWeekPublic();
+
+  // La jornada que viene: la actual si aún no ha empezado; si ya empezó, la siguiente.
+  let jornada = actual.weekNumber;
+  let partidos = await getCalendar(jornada);
+  let inicio = primerPartido(partidos.map((p) => p.kickoff));
+  if (inicio === null || inicio <= ahora.getTime()) {
+    jornada += 1;
+    partidos = await getCalendar(jornada).catch(() => []);
+    inicio = primerPartido(partidos.map((p) => p.kickoff));
+  }
+  if (inicio === null || !tocaPrevia(inicio, ahora)) return null;
+  if (await yaAvisado(sessionId, leagueId, clavePrevia(jornada))) return null;
+
+  const [snapshot, perfil, catalogo, cuotas] = await Promise.all([
+    getLeagueSnapshot(token, leagueId),
+    getMyProfile(token),
+    getPlayerCatalog(),
+    getCuotas(Object.values(FALLBACK_TEAMS)),
+  ]);
+  const mio = snapshot.teams.find((team) => team.manager.id === perfil.id);
+  if (!mio) return null;
+
+  const jugadores = await conProbabilidades(mio.players, catalogo);
+  const dificultad = dificultadPorEquipo(partidos.map((partido) => ({
+    ...partido,
+    odds: cuotas?.find((c) => c.localId === partido.local?.id && c.visitorId === partido.visitor?.id) ?? null,
+  })));
+  const predichos = predecirJugadores(jugadores, dificultad, jornada);
+  const optimo = onceOptimo(predichos);
+  if (!optimo) return null;
+  const probable = bestEleven(jugadores);
+  const actualOnce = onceDado(probable.formation, probable.starters.map((p) => p.id), predichos);
+  return {
+    jornada,
+    mensaje: mensajeDePrevia({ jornada, inicio, ahora, optimo, actual: actualOnce, cambios: cambiosSugeridos(actualOnce, optimo), leagueId }),
+  };
 }
 
 async function enviarATodas(

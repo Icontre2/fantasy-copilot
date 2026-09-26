@@ -9,7 +9,9 @@ import type { MarketResponse } from "./types";
 import { Empty } from "./ui";
 import { PlayerDetails } from "./PlayerDetails";
 import { PlayerImage } from "./PlayerImage";
-import type { Player } from "./types";
+import { useDificultad } from "./difficulty";
+import { projectPlayerPoints } from "./projection";
+import type { Player, PlayerWithProbability } from "./types";
 
 type PositionFilter = "TODAS" | "POR" | "DEF" | "MED" | "DEL";
 type SourceFilter = "TODOS" | "MERCADO" | "MANAGER";
@@ -17,15 +19,17 @@ type SourceFilter = "TODOS" | "MERCADO" | "MANAGER";
 /**
  * Criterios de orden. Cada uno es una METRICA REAL publicada por LALIGA.
  *
- * No hay "mejor fichaje" ni "puntos esperados": ordenar por algo obliga a tener
- * ese algo medido, y esas dos no existen. Ordenar por una cifra inventada seria
- * peor que no ordenar, porque el orden se lee como un ranking de calidad.
+ * «Proy.» ordena por los puntos previstos para la jornada, con el mismo modelo
+ * que tu plantilla (`projection.ts`): media, forma, casa/fuera, cuotas y
+ * titularidad. Es una estimación y se marca con ≈ en cada tarjeta.
  */
-type Orden = "CIERRE" | "SALIDA" | "VALOR" | "MEDIA";
+type Orden = "CIERRE" | "SALIDA" | "PROY" | "MEDIA";
+/** Lesionado, sancionado o fuera de la liga: su previsión es cero y se dice con palabras. */
+const NO_JUEGA = new Set(["injured", "suspended", "out_of_league"]);
 const ORDENES: Array<{ id: Orden; label: string }> = [
   { id: "CIERRE", label: "Cierra antes" },
   { id: "SALIDA", label: "Precio" },
-  { id: "VALOR", label: "Valor" },
+  { id: "PROY", label: "Proy." },
   { id: "MEDIA", label: "Media" },
 ];
 
@@ -74,6 +78,12 @@ export function MarketView({ data, leagueId, onChanged }: { data: MarketResponse
     const id = setInterval(() => setNow(Date.now()), 60_000);
     return () => clearInterval(id);
   }, []);
+  const dificultad = useDificultad();
+  const porEquipo = dificultad?.byTeam;
+  const proyeccion = useMemo(() => new Map(data.market.map((entry) => {
+    const player = entry.player as PlayerWithProbability;
+    return [entry.marketId, projectPlayerPoints(player, player.teamId ? porEquipo?.[player.teamId] : undefined)?.points ?? null] as const;
+  })), [data.market, porEquipo]);
   const visible = useMemo(() => data.market.filter((entry) => {
     const matchesText = `${entry.player.name} ${entry.player.team}`.toLowerCase().includes(query.trim().toLowerCase());
     const matchesPosition = position === "TODAS" || entry.player.position === position;
@@ -82,7 +92,7 @@ export function MarketView({ data, leagueId, onChanged }: { data: MarketResponse
     return matchesText && matchesPosition && matchesSource;
   }).sort((a, b) => {
     if (orden === "SALIDA") return a.salePrice - b.salePrice;
-    if (orden === "VALOR") return b.player.marketValue - a.player.marketValue;
+    if (orden === "PROY") return (proyeccion.get(b.marketId) ?? -1) - (proyeccion.get(a.marketId) ?? -1);
     if (orden === "MEDIA") return b.player.averagePoints - a.player.averagePoints;
     // Por cierre: primero lo que expira antes. Lo que no tiene fecha va al final,
     // no al principio: sin fecha no es urgente, es desconocido.
@@ -92,7 +102,7 @@ export function MarketView({ data, leagueId, onChanged }: { data: MarketResponse
     if (ha === null) return 1;
     if (hb === null) return -1;
     return ha - hb;
-  }), [data.market, position, query, source, orden, now]);
+  }), [data.market, position, query, source, orden, now, proyeccion]);
   async function act(entry: MarketResponse["market"][number], action: "create" | "modify" | "cancel") {
     let amount: number | undefined;
     if (action !== "cancel") {
@@ -129,8 +139,8 @@ export function MarketView({ data, leagueId, onChanged }: { data: MarketResponse
       </div>
       {message && <p className="rounded-2xl glass p-4 text-sm text-neutral-200" role="status">{message}</p>}
       {visible.length === 0 ? <Empty>No hay jugadores que coincidan con estos filtros.</Empty> : visible.map((entry) => <article key={entry.marketId} className="rounded-[26px] glass p-4">
-        <button type="button" onClick={() => setSelected(entry.player)} className="flex w-full items-center gap-3 text-left"><PlayerImage player={entry.player} size={58}/><div className="min-w-0 flex-1"><p className="truncate font-bold text-white">{entry.player.name}</p><p className="text-xs text-neutral-500">{entry.player.position} · {entry.player.team} · {pujas(entry.numberOfBids)}</p></div><div className="text-right"><p className="text-[10px] uppercase text-neutral-500">Salida</p><p className="font-bold text-white">{millions(entry.salePrice)}</p></div></button>
-        <div className="mt-3 grid grid-cols-4 gap-2 text-center text-xs"><MarketMetric label="Valor" value={millions(entry.player.marketValue)}/><MarketMetric label="Media" value={entry.player.averagePoints > 0 ? entry.player.averagePoints.toFixed(1) : UNKNOWN}/><MarketMetric label="Tu puja" value={entry.myBid ? millions(entry.myBid.amount) : UNKNOWN}/><MarketMetric label="Expira" value={shortDate(entry.expiresAt)}/></div>
+        <button type="button" onClick={() => setSelected(entry.player)} className="flex w-full items-center gap-3 text-left"><PlayerImage player={entry.player} size={58}/><div className="min-w-0 flex-1"><p className="truncate font-bold text-white">{entry.player.name}</p><p className="text-xs text-neutral-500">{entry.player.position} · {entry.player.team} · media {entry.player.averagePoints > 0 ? entry.player.averagePoints.toFixed(1).replace(".", ",") : UNKNOWN} · {pujas(entry.numberOfBids)}</p></div><div className="text-right"><p className="text-[10px] uppercase text-neutral-500">Salida</p><p className="font-bold text-white">{millions(entry.salePrice)}</p></div></button>
+        <div className="mt-3 grid grid-cols-4 gap-2 text-center text-xs"><MarketMetric label="Valor" value={millions(entry.player.marketValue)}/><MarketMetric label="Proy." value={NO_JUEGA.has(entry.player.status) ? "No juega" : proyeccion.get(entry.marketId) == null ? UNKNOWN : `≈ ${proyeccion.get(entry.marketId)!.toFixed(1).replace(".", ",")}`} accent/><MarketMetric label="Tu puja" value={entry.myBid ? millions(entry.myBid.amount) : UNKNOWN}/><MarketMetric label="Expira" value={shortDate(entry.expiresAt)}/></div>
         <Cierre horas={horasParaCierre(entry.expiresAt, now)}/>
         <div className="mt-3 flex gap-2">{entry.myBid ? <><button disabled={busy === entry.marketId} type="button" onClick={() => act(entry, "modify")} className="min-h-11 flex-1 rounded-2xl bg-[#7c3aed] px-3 text-sm font-bold text-white">Cambiar puja</button><button disabled={busy === entry.marketId} type="button" onClick={() => act(entry, "cancel")} className="min-h-11 rounded-2xl border border-red-500/30 px-4 text-sm font-semibold text-red-400">Cancelar</button></> : <button disabled={busy === entry.marketId} type="button" onClick={() => act(entry, "create")} className="min-h-12 w-full rounded-2xl bg-[#7c3aed] px-4 text-sm font-black text-white">Pujar ahora</button>}</div>
       </article>)}
@@ -143,7 +153,7 @@ export function MarketView({ data, leagueId, onChanged }: { data: MarketResponse
   );
 }
 
-function MarketMetric({ label, value }: { label: string; value: string }) { return <div className="glass-soft rounded-2xl px-2 py-2"><p className="text-[10px] text-neutral-500">{label}</p><p className="mt-0.5 truncate font-bold text-white">{value}</p></div>; }
+function MarketMetric({ label, value, accent = false }: { label: string; value: string; accent?: boolean }) { return <div className={`rounded-2xl px-2 py-2 ${accent ? "bg-[#d6ff75]/12 ring-1 ring-[#d6ff75]/25" : "glass-soft"}`}><p className="truncate text-[10px] text-neutral-500">{label}</p><p className={`mt-0.5 truncate font-bold ${accent ? "text-[#d6ff75]" : "text-white"}`}>{value}</p></div>; }
 
 /**
  * Aviso de cierre proximo.

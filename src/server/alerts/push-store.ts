@@ -67,7 +67,7 @@ export async function leerEstadoDeAlertas(sessionId: string, leagueId: string): 
     .from('fantasy_alert_state')
     .select('player_id, level')
     .match({ session_id: sessionId, league_id: leagueId })
-    .not('player_id', 'like', `${PREFIJO_DEFENSA}%`);
+    .not('player_id', 'like', '%:%');
   if (error) throw new Error(`No se pudo leer el estado de alertas: ${error.message}`);
   return new Map((data ?? []).map((fila) => [fila.player_id, fila.level as AlertLevel]));
 }
@@ -91,8 +91,9 @@ export async function guardarEstadoDeAlertas(
     .from('fantasy_alert_state')
     .delete()
     .match({ session_id: sessionId, league_id: leagueId })
-    // Las filas de Defensa comparten tabla y tienen su propio ciclo.
-    .not('player_id', 'like', `${PREFIJO_DEFENSA}%`);
+    // Las filas internas (`defensa:…`, `previa:…`) comparten tabla y tienen
+    // su propio ciclo; los ids de jugador nunca llevan «:».
+    .not('player_id', 'like', '%:%');
   if (delError) throw new Error(`No se pudo limpiar el estado de alertas: ${delError.message}`);
 
   if (estado.size === 0) return;
@@ -141,4 +142,26 @@ export async function guardarEstadoDeDefensa(sessionId: string, leagueId: string
   if (filas.length === 0) return;
   const { error } = await db.from('fantasy_alert_state').insert(filas);
   if (error) throw new Error(`No se pudo guardar el estado de defensa: ${error.message}`);
+}
+
+/** ¿Ya se mandó este aviso único (p. ej. `previa:7`)? */
+export async function yaAvisado(sessionId: string, leagueId: string, clave: string): Promise<boolean> {
+  const { data, error } = await supabaseAdmin()
+    .from('fantasy_alert_state')
+    .select('player_id')
+    .match({ session_id: sessionId, league_id: leagueId, player_id: clave })
+    .maybeSingle();
+  if (error) throw new Error(`No se pudo leer el estado de avisos: ${error.message}`);
+  return data !== null;
+}
+
+export async function marcarAvisado(sessionId: string, leagueId: string, clave: string): Promise<void> {
+  const { error } = await supabaseAdmin().from('fantasy_alert_state').upsert({
+    session_id: sessionId,
+    league_id: leagueId,
+    player_id: clave,
+    level: 'enviado',
+    notified_at: new Date().toISOString(),
+  });
+  if (error) throw new Error(`No se pudo guardar el aviso: ${error.message}`);
 }

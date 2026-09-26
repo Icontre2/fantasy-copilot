@@ -6,6 +6,7 @@ import type { DashboardResponse, Player, PlayerWithProbability } from "./types";
 import { Pitch } from "./Pitch";
 import { PrediccionResumen, usePrediccion } from "./PrediccionCard";
 import { PlayerDetails } from "./PlayerDetails";
+import { Precision } from "./Precision";
 import { jornadasDisponibles, puntosDelOnce } from "./jornadas";
 import { UNKNOWN } from "./format";
 
@@ -55,6 +56,7 @@ export function MySquadView({ data }: { data: DashboardResponse }) {
             <Pitch
               starters={optimo.titulares.map((j) => j.player)}
               proyecciones={prediccion.proyecciones}
+              reales={prediccion.reales}
               destacados={entran}
               onSelect={setSelected}
             />
@@ -65,10 +67,12 @@ export function MySquadView({ data }: { data: DashboardResponse }) {
             <Info size={14} className="shrink-0" />
             <span>
               El número verde son los puntos previstos: combina la media, la forma reciente, si juega en casa, las cuotas del
-              partido y la probabilidad de titular (el %). Con aro, los que entran respecto a tu once más probable. Es una
-              estimación y no cambia tu alineación en LALIGA.
+              partido y la probabilidad de titular (el %). Lesionados y sancionados cuentan cero. En morado con ✓, los que ya
+              jugaron: son sus puntos reales. Con aro, los que entran respecto a tu once más probable. Es una estimación y no
+              cambia tu alineación en LALIGA.
             </span>
           </p>
+          <Precision leagueId={data.league.id} prediccion={prediccion} listo={prediccion.listo} />
         </section>
       ) : (
         <section key="jornadas" className="ll-enter glass-strong rounded-[28px] p-4 text-white">
