@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   debeCerrarse,
   desplazamientoDe,
@@ -167,7 +168,16 @@ export function BottomSheet({
     else setOffset(0);
   }
 
-  return (
+  /*
+   * La hoja se pinta directamente en <body>, no donde la declara la pantalla.
+   *
+   * Si se queda dentro, cualquier antepasado con animación o transformación
+   * (el fundido de entrada de cada sección, por ejemplo) pasa a ser su marco:
+   * `fixed inset-0` deja de ser la pantalla y la barra de abajo queda ENCIMA,
+   * tapando media ficha. Con el portal no depende de lo que haya alrededor.
+   */
+  if (typeof document === "undefined") return null;
+  return createPortal(
     <div
       className="fixed inset-0 z-50 grid place-items-end sm:place-items-center sm:p-4"
       role="dialog"
@@ -219,6 +229,7 @@ export function BottomSheet({
           {children}
         </div>
       </section>
-    </div>
+    </div>,
+    document.body,
   );
 }

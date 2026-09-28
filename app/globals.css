@@ -318,8 +318,13 @@
   from { background-position: -200% 0; }
   to { background-position: 200% 0; }
 }
-.ll-enter { animation: ll-enter 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
-.ll-stagger > * { animation: ll-enter 0.36s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+/*
+ * `backwards` y NO `both`: al terminar, la animación no deja nada puesto. Con
+ * `both` se quedaba aplicada para siempre y convertía cada pantalla en marco de
+ * sus hijos `fixed`: la ficha del jugador acababa debajo de la barra inferior.
+ */
+.ll-enter { animation: ll-enter 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
+.ll-stagger > * { animation: ll-enter 0.36s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
 .ll-stagger > *:nth-child(2) { animation-delay: 40ms; }
 .ll-stagger > *:nth-child(3) { animation-delay: 80ms; }
 .ll-stagger > *:nth-child(4) { animation-delay: 120ms; }

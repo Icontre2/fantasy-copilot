@@ -12,6 +12,8 @@ import { BottomSheet } from "./BottomSheet";
 import { useLeagueId } from "./league-context";
 import type { Propiedad } from "@/src/server/laliga/ownership";
 import { tonoDeDificultad, useDificultad, type DificultadDeEquipo } from "./difficulty";
+import { projectPlayerPoints } from "./projection";
+import type { PlayerWithProbability } from "./types";
 
 export function PlayerDetails({ player, onClose }: { player: Player; onClose: () => void }) {
   const [history, setHistory] = useState<MarketValuePoint[]>([]);
@@ -43,6 +45,7 @@ export function PlayerDetails({ player, onClose }: { player: Player; onClose: ()
         <dl className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <Stat label="Valor" value={millions(player.marketValue)} /><Stat label="Puntos" value={String(player.points)} /><Stat label="Media" value={String(player.averagePoints)} /><Stat label="Año pasado" value={player.lastSeasonPoints === undefined ? UNKNOWN : String(player.lastSeasonPoints)} />
         </dl>
+        <Prevision player={player} dificultad={dificultad} />
         <Clausula player={player} onDone={onClose} />
         <ProximoPartido player={player} dificultad={dificultad} />
         <Forma player={player} />
@@ -349,4 +352,57 @@ const MAX_DIAS_FRESCA = 7;
 
 function fecha(iso: string) {
   return new Date(iso).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+const ESTADO: Record<string, { texto: string; tono: string }> = {
+  ok: { texto: "Disponible", tono: "bg-emerald-500/15 text-emerald-300 ring-emerald-500/25" },
+  doubtful: { texto: "En duda", tono: "bg-amber-400/15 text-amber-200 ring-amber-400/30" },
+  injured: { texto: "Lesionado", tono: "bg-rose-500/15 text-rose-300 ring-rose-500/30" },
+  suspended: { texto: "Sancionado", tono: "bg-rose-500/15 text-rose-300 ring-rose-500/30" },
+  out_of_league: { texto: "Fuera de la liga", tono: "bg-white/10 text-neutral-300 ring-white/15" },
+};
+
+/**
+ * Previsión de la próxima jornada, igual desde cualquier pantalla.
+ *
+ * Pide al servidor lo que falte (probabilidad de titular, estado, racha): la
+ * ficha se abre desde seis sitios y no todos lo traen. Mientras llega se usa
+ * lo que ya hay, así que nunca se queda en blanco.
+ */
+function Prevision({ player, dificultad }: { player: Player; dificultad: ReturnType<typeof useDificultad> }) {
+  const [completo, setCompleto] = useState<PlayerWithProbability | null>(null);
+  useEffect(() => {
+    let cancelado = false;
+    get<{ player?: PlayerWithProbability }>(`/api/fantasy/players/${encodeURIComponent(player.id)}/titularidad`)
+      .then((r) => { if (!cancelado && r.player) setCompleto(r.player); })
+      .catch(() => undefined);
+    return () => { cancelado = true; };
+  }, [player.id]);
+
+  const base = player as PlayerWithProbability;
+  const j: PlayerWithProbability = completo
+    ? { ...completo, ...base, lineupProbability: base.lineupProbability ?? completo.lineupProbability, lineupExpectedStarter: base.lineupExpectedStarter ?? completo.lineupExpectedStarter, teamId: base.teamId ?? completo.teamId, status: completo.status ?? base.status }
+    : base;
+  const partido = j.teamId && dificultad ? dificultad.byTeam[j.teamId] : undefined;
+  const p = projectPlayerPoints(j, partido);
+  const estado = ESTADO[j.status] ?? ESTADO.ok!;
+  const titular = j.lineupProbability !== undefined ? `${j.lineupProbability} %` : j.lineupExpectedStarter ? "Titular probable" : UNKNOWN;
+
+  return (
+    <div className="mt-5 rounded-2xl bg-[linear-gradient(145deg,rgba(124,58,237,.22),rgba(255,255,255,.04))] p-4 ring-1 ring-[#8b5cf6]/25">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#c4b5fd]">Previsión{dificultad ? ` · jornada ${dificultad.week}` : ""}</p>
+          <p className="mt-1 text-3xl font-bold tabular-nums text-white">{p ? `≈ ${p.points.toFixed(1).replace(".", ",")}` : UNKNOWN} <span className="text-sm font-semibold text-white/55">pts</span></p>
+          {p && p.high > 0 && <p className="text-xs text-white/55">entre {p.low.toFixed(1).replace(".", ",")} y {p.high.toFixed(1).replace(".", ",")} · confianza {p.confidence.toLowerCase()}</p>}
+        </div>
+        <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 ${estado.tono}`}>{estado.texto}</span>
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+        <div className="rounded-xl bg-black/20 px-3 py-2"><p className="text-white/45">Titular</p><p className="mt-0.5 font-bold text-white">{titular}</p></div>
+        <div className="rounded-xl bg-black/20 px-3 py-2"><p className="text-white/45">Rival</p><p className="mt-0.5 truncate font-bold text-white">{partido ? `${partido.enCasa ? "vs" : "en"} ${partido.rivalShortName}` : UNKNOWN}</p></div>
+      </div>
+      {p && p.factors.length > 0 && <p className="mt-2 text-[11px] leading-4 text-white/50">{p.factors.join(" · ")}</p>}
+    </div>
+  );
 }
