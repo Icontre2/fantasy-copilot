@@ -68,26 +68,26 @@ function clauseStatus(player: LeagueSquadRow['player'], nowMs: number) {
 
 function leagueColumns(exportNowMs: number): CsvColumn<LeagueSquadRow>[] {
   return [
-  { header: 'manager_id', value: ({ team }) => team.manager.id },
-  { header: 'manager_name', value: ({ team }) => team.manager.name },
-  { header: 'team_id', value: ({ team }) => team.teamId },
-  { header: 'team_money', value: ({ team }) => team.teamMoney },
-  { header: 'player_id', value: ({ player }) => player.id },
-  { header: 'player_name', value: ({ player }) => player.name },
-  { header: 'real_team', value: ({ player }) => player.team },
-  { header: 'position', value: ({ player }) => player.position },
-  { header: 'market_value', value: ({ player }) => player.marketValue },
-  // Vacio cuando LALIGA no publica la clausula de ese jugador.
-  { header: 'clause', value: ({ player }) => player.buyoutClause },
-  { header: 'clause_locked', value: ({ player }) => clauseStatus(player, exportNowMs).locked },
-  { header: 'clause_unlock_date', value: ({ player }) => clauseStatus(player, exportNowMs).unlockDate },
-  { header: 'days_to_unlock', value: ({ player }) => clauseStatus(player, exportNowMs).daysToUnlock },
-  // Alias compatible: refleja el bloqueo calculado a partir de la fecha oficial.
-  { header: 'is_shielded', value: ({ player }) => clauseStatus(player, exportNowMs).locked },
-  { header: 'fantasy_points', value: ({ player }) => player.points },
-  { header: 'average_points', value: ({ player }) => player.averagePoints },
-  { header: 'last_season_points', value: ({ player }) => player.lastSeasonPoints },
-  { header: 'player_status', value: ({ player }) => player.status },
+    { header: 'manager_id', value: ({ team }) => team.manager.id },
+    { header: 'manager_name', value: ({ team }) => team.manager.name },
+    { header: 'team_id', value: ({ team }) => team.teamId },
+    { header: 'team_money', value: ({ team }) => team.teamMoney },
+    { header: 'player_id', value: ({ player }) => player.id },
+    { header: 'player_name', value: ({ player }) => player.name },
+    { header: 'real_team', value: ({ player }) => player.team },
+    { header: 'position', value: ({ player }) => player.position },
+    { header: 'market_value', value: ({ player }) => player.marketValue },
+    // Vacio cuando LALIGA no publica la clausula de ese jugador.
+    { header: 'clause', value: ({ player }) => player.buyoutClause },
+    { header: 'clause_locked', value: ({ player }) => clauseStatus(player, exportNowMs).locked ? 'true' : 'false' },
+    { header: 'clause_unlock_date', value: ({ player }) => clauseStatus(player, exportNowMs).unlockDate },
+    { header: 'days_to_unlock', value: ({ player }) => clauseStatus(player, exportNowMs).daysToUnlock },
+    // Alias compatible: refleja el bloqueo calculado a partir de la fecha oficial.
+    { header: 'is_shielded', value: ({ player }) => clauseStatus(player, exportNowMs).locked ? 'true' : 'false' },
+    { header: 'fantasy_points', value: ({ player }) => player.points },
+    { header: 'average_points', value: ({ player }) => player.averagePoints },
+    { header: 'last_season_points', value: ({ player }) => player.lastSeasonPoints },
+    { header: 'player_status', value: ({ player }) => player.status },
   ];
 }
 
