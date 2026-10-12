@@ -66,7 +66,7 @@ function clauseStatus(player: LeagueSquadRow['player'], nowMs: number) {
   };
 }
 
-const LEAGUE_COLUMNS: CsvColumn<LeagueSquadRow>[] = [
+function leagueColumns(exportNowMs: number): CsvColumn<LeagueSquadRow>[] { return [
   { header: 'manager_id', value: ({ team }) => team.manager.id },
   { header: 'manager_name', value: ({ team }) => team.manager.name },
   { header: 'team_id', value: ({ team }) => team.teamId },
@@ -87,9 +87,7 @@ const LEAGUE_COLUMNS: CsvColumn<LeagueSquadRow>[] = [
   { header: 'average_points', value: ({ player }) => player.averagePoints },
   { header: 'last_season_points', value: ({ player }) => player.lastSeasonPoints },
   { header: 'player_status', value: ({ player }) => player.status },
-];
-
-let exportNowMs = Date.now();
+]; }
 
 /** Devuelve los jugadores bloqueados, ordenados por tiempo restante. */
 export function getLockedPlayersSummary(teams: LeagueTeam[], now = new Date()): LockedPlayerSummary[] {
@@ -109,9 +107,8 @@ export function getLockedPlayersSummary(teams: LeagueTeam[], now = new Date()): 
 
 /** Un CSV con todos los jugadores de todos los participantes: una fila por jugador. */
 export function buildLeagueCsv(teams: LeagueTeam[], now = new Date()): string {
-  exportNowMs = now.getTime();
   const rows = teams.flatMap((team) => team.players.map((player) => ({ team, player })));
-  return toCsv(rows, LEAGUE_COLUMNS);
+  return toCsv(rows, leagueColumns(now.getTime()));
 }
 
 export type MarketRow = {
