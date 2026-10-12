@@ -4,7 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import { post } from "./api";
 
-import { millions, shortDate, UNKNOWN } from "./format";
+import { millions, percent, shortDate, UNKNOWN } from "./format";
+import { puntosPorMillon, salidaSobreValor } from "./market-metrics";
 import type { MarketResponse } from "./types";
 import { Empty } from "./ui";
 import { PlayerDetails } from "./PlayerDetails";
@@ -23,15 +24,22 @@ type SourceFilter = "TODOS" | "MERCADO" | "MANAGER";
  * que tu plantilla (`projection.ts`): media, forma, casa/fuera, cuotas y
  * titularidad. Es una estimación y se marca con ≈ en cada tarjeta.
  */
-type Orden = "CIERRE" | "SALIDA" | "PROY" | "MEDIA";
+type Orden = "CIERRE" | "SALIDA" | "PROY" | "MEDIA" | "PPM";
 /** Lesionado, sancionado o fuera de la liga: su previsión es cero y se dice con palabras. */
 const NO_JUEGA = new Set(["injured", "suspended", "out_of_league"]);
 const ORDENES: Array<{ id: Orden; label: string }> = [
-  { id: "CIERRE", label: "Cierra antes" },
+  { id: "CIERRE", label: "Cierre" },
   { id: "SALIDA", label: "Precio" },
   { id: "PROY", label: "Proy." },
   { id: "MEDIA", label: "Media" },
+  { id: "PPM", label: "Pts/M€" },
 ];
+
+/** «2,4 pts/M€», o el guion si no hay valor con el que dividir. */
+function textoPpm(points: number, marketValue: number): string {
+  const ppm = puntosPorMillon(points, marketValue);
+  return ppm === null ? UNKNOWN : `${ppm.toFixed(1).replace(".", ",")} pts/M€`;
+}
 
 /**
  * "1 puja" y no "1 pujas". Cuando LALIGA no publica el numero se dice que no se
@@ -94,6 +102,12 @@ export function MarketView({ data, leagueId, onChanged }: { data: MarketResponse
     if (orden === "SALIDA") return a.salePrice - b.salePrice;
     if (orden === "PROY") return (proyeccion.get(b.marketId) ?? -1) - (proyeccion.get(a.marketId) ?? -1);
     if (orden === "MEDIA") return b.player.averagePoints - a.player.averagePoints;
+    if (orden === "PPM") {
+      // Sin valor publicado va al final: desconocido no es «el peor».
+      const pa = puntosPorMillon(a.player.points, a.player.marketValue) ?? -Infinity;
+      const pb = puntosPorMillon(b.player.points, b.player.marketValue) ?? -Infinity;
+      return pb - pa;
+    }
     // Por cierre: primero lo que expira antes. Lo que no tiene fecha va al final,
     // no al principio: sin fecha no es urgente, es desconocido.
     const ha = horasParaCierre(a.expiresAt, now);
@@ -134,19 +148,21 @@ export function MarketView({ data, leagueId, onChanged }: { data: MarketResponse
         cortado por el borde de la pantalla: parecia texto mal recortado, no un
         carrusel. Con `grid` cabe todo y no hay nada escondido.
       */}
-      <div className="grid grid-cols-4 gap-1.5" aria-label="Ordenar">
+      <div className="grid grid-cols-5 gap-1.5" aria-label="Ordenar">
         {ORDENES.map((item) => <button key={item.id} type="button" onClick={() => setOrden(item.id)} aria-pressed={orden === item.id} className={`min-h-11 rounded-xl px-1 text-[11px] font-bold ${orden === item.id ? "bg-white/10 text-white ring-1 ring-white/20" : "glass text-neutral-500"}`}>{item.label}</button>)}
       </div>
       {message && <p className="rounded-2xl glass p-4 text-sm text-neutral-200" role="status">{message}</p>}
       {visible.length === 0 ? <Empty>No hay jugadores que coincidan con estos filtros.</Empty> : visible.map((entry) => <article key={entry.marketId} className="rounded-[26px] glass p-4">
-        <button type="button" onClick={() => setSelected(entry.player)} className="flex w-full items-center gap-3 text-left"><PlayerImage player={entry.player} size={58}/><div className="min-w-0 flex-1"><p className="truncate font-bold text-white">{entry.player.name}</p><p className="text-xs text-neutral-500">{entry.player.position} · {entry.player.team} · media {entry.player.averagePoints > 0 ? entry.player.averagePoints.toFixed(1).replace(".", ",") : UNKNOWN} · {pujas(entry.numberOfBids)}</p></div><div className="text-right"><p className="text-[10px] uppercase text-neutral-500">Salida</p><p className="font-bold text-white">{millions(entry.salePrice)}</p></div></button>
+        <button type="button" onClick={() => setSelected(entry.player)} className="flex w-full items-center gap-3 text-left"><PlayerImage player={entry.player} size={58}/><div className="min-w-0 flex-1"><p className="truncate font-bold text-white">{entry.player.name}</p><p className="text-xs text-neutral-500">{entry.player.position} · {entry.player.team} · media {entry.player.averagePoints > 0 ? entry.player.averagePoints.toFixed(1).replace(".", ",") : UNKNOWN} · {pujas(entry.numberOfBids)}</p><p className="text-xs text-neutral-500">{entry.player.points} pts · {textoPpm(entry.player.points, entry.player.marketValue)}</p></div><div className="text-right"><p className="text-[10px] uppercase text-neutral-500">Salida</p><p className="font-bold text-white">{millions(entry.salePrice)}</p><SobreValor salePrice={entry.salePrice} marketValue={entry.player.marketValue}/></div></button>
         <div className="mt-3 grid grid-cols-4 gap-2 text-center text-xs"><MarketMetric label="Valor" value={millions(entry.player.marketValue)}/><MarketMetric label="Proy." value={NO_JUEGA.has(entry.player.status) ? "No juega" : proyeccion.get(entry.marketId) == null ? UNKNOWN : `≈ ${proyeccion.get(entry.marketId)!.toFixed(1).replace(".", ",")}`} accent/><MarketMetric label="Tu puja" value={entry.myBid ? millions(entry.myBid.amount) : UNKNOWN}/><MarketMetric label="Expira" value={shortDate(entry.expiresAt)}/></div>
         <Cierre horas={horasParaCierre(entry.expiresAt, now)}/>
         <div className="mt-3 flex gap-2">{entry.myBid ? <><button disabled={busy === entry.marketId} type="button" onClick={() => act(entry, "modify")} className="min-h-11 flex-1 rounded-2xl bg-[#7c3aed] px-3 text-sm font-bold text-white">Cambiar puja</button><button disabled={busy === entry.marketId} type="button" onClick={() => act(entry, "cancel")} className="min-h-11 rounded-2xl border border-red-500/30 px-4 text-sm font-semibold text-red-400">Cancelar</button></> : <button disabled={busy === entry.marketId} type="button" onClick={() => act(entry, "create")} className="min-h-12 w-full rounded-2xl bg-[#7c3aed] px-4 text-sm font-black text-white">Pujar ahora</button>}</div>
       </article>)}
       <p className="px-2 text-xs leading-5 text-neutral-400">
         &laquo;Pujas&raquo; es cuántas hay, no de quién ni de cuánto: LALIGA no publica las pujas
-        ajenas. La columna &laquo;Tu puja&raquo; solo muestra la tuya.
+        ajenas. La columna &laquo;Tu puja&raquo; solo muestra la tuya. &laquo;Pts/M€&raquo; son sus
+        puntos de la temporada divididos por su valor de hoy, y el porcentaje bajo el precio es
+        cuánto pide de más o de menos respecto a ese valor: dos cuentas nuestras, no consejos.
       </p>
       {selected && <PlayerDetails player={selected} onClose={() => setSelected(null)} />}
     </div>
@@ -177,4 +193,20 @@ function Cierre({ horas }: { horas: number | null }) {
       ? `Cierra en ${Math.max(1, Math.round(horas * 60))} min`
       : `Cierra en ${Math.round(horas)} h`;
   return <p className={`mt-2 rounded-xl border px-3 py-1.5 text-center text-[11px] font-semibold ${tono}`}>{texto}</p>;
+}
+
+/**
+ * Cuánto pide de más o de menos respecto a su valor de mercado. Los fichajes de
+ * la propia liga salen a su valor; los de otros managers, a lo que quieran.
+ * Por debajo de ±1 % no se dice nada: sería ruido.
+ */
+function SobreValor({ salePrice, marketValue }: { salePrice: number; marketValue: number }) {
+  const diferencia = salidaSobreValor(salePrice, marketValue);
+  if (diferencia === null || Math.abs(diferencia) < 0.01) return null;
+  const caro = diferencia > 0;
+  return (
+    <p className={`mt-0.5 text-[10px] font-semibold tabular-nums ${caro ? "text-rose-300" : "text-emerald-300"}`}>
+      {caro ? "+" : ""}{percent(diferencia, 0)} {caro ? "sobre" : "bajo"} valor
+    </p>
+  );
 }

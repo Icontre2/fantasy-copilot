@@ -159,6 +159,27 @@ export const apiMatchSchema = z.object({
 
 export const apiCalendarSchema = z.array(apiMatchSchema);
 
+/**
+ * GET /api/v1/competition/{c}/player/{id} — sin token.
+ *
+ * Cada métrica llega como par `[valor, puntos]`: lo que hizo y lo que le dio.
+ * Las claves se aceptan todas (`record`), no una lista cerrada: si LALIGA añade
+ * una métrica nueva, se enseña con su clave en vez de reventar la ficha.
+ */
+export const apiPlayerWeekStatsSchema = z.object({
+  weekNumber: numeric,
+  totalPoints: numeric,
+  isInIdealFormation: z.boolean().optional(),
+  stats: z.record(z.string(), z.tuple([numeric, numeric])),
+});
+
+export const apiPlayerDetailSchema = z.object({
+  id: z.union([z.string(), z.number()]).transform(String),
+  playerStats: z.array(apiPlayerWeekStatsSchema),
+});
+
+export type ApiPlayerWeekStats = z.infer<typeof apiPlayerWeekStatsSchema>;
+
 export type ApiMatch = z.infer<typeof apiMatchSchema>;
 export type ApiManagerLike = z.infer<typeof apiManagerSchema>;
 export type ApiPlayer = z.infer<typeof apiPlayerSchema>;

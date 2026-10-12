@@ -13,7 +13,8 @@ import { COMPETITION_ID } from './config';
 import { apiActivitySchema } from './schemas';
 import { equiposSinCaja, mezclarCajas } from './team-money.ts';
 import { construirIndice, enriquecerJugador, enriquecerJugadores } from './catalog-enrich.ts';
-import { mapCalendar, type Match } from './calendar.ts';
+import { mapCalendar, partidosDeEquipo, type Match, type PartidoDeEquipo } from './calendar.ts';
+import { desglosar, type DesgloseJugador } from './player-breakdown.ts';
 import { leerJornadas } from './week-points.ts';
 import {
   mapLeague,
@@ -34,6 +35,7 @@ import {
   apiWeekSchema,
   apiPlayersSchema,
   apiCalendarSchema,
+  apiPlayerDetailSchema,
 } from './schemas';
 import { toPosition } from './mappers';
 import { FALLBACK_TEAMS } from './teams';
@@ -155,9 +157,66 @@ export async function getCurrentWeekPublic(): Promise<{ weekNumber: number; isLi
  * Si un id no estuviera en el mapa se devuelve `null` y la pantalla lo dice,
  * en vez de pintar un partido contra un equipo sin nombre.
  */
+const CALENDARIO_TTL_MS = 10 * 60_000;
+const calendariosEnMemoria = new Map<number, { at: number; partidos: Match[] }>();
+
+/*
+ * Se guarda unos minutos por jornada, por el mismo motivo que el catálogo: es
+ * público, igual para todo el mundo, y ahora lo piden también las fichas de
+ * jugador (sus próximos partidos son varias jornadas de golpe). Un fallo no se
+ * guarda.
+ */
 export async function getCalendar(weekNumber: number): Promise<Match[]> {
+  const guardado = calendariosEnMemoria.get(weekNumber);
+  if (guardado && Date.now() - guardado.at < CALENDARIO_TTL_MS) return guardado.partidos;
   const matches = await seasonFetch(`${CMP}/calendar?weekNumber=${weekNumber}`, apiCalendarSchema);
-  return mapCalendar(matches, FALLBACK_TEAMS);
+  const partidos = mapCalendar(matches, FALLBACK_TEAMS);
+  calendariosEnMemoria.set(weekNumber, { at: Date.now(), partidos });
+  return partidos;
+}
+
+/** Última jornada de la liga; fuera de rango LALIGA responde 500. */
+const ULTIMA_JORNADA = 38;
+
+/**
+ * Partidos de un equipo desde la jornada `desde`, como mucho `cuantas`.
+ *
+ * Una jornada que falle se salta en vez de tumbar la lista entera: son datos de
+ * apoyo y cada partido que sí llega sigue siendo cierto.
+ */
+export async function getTeamFixtures(
+  teamId: string,
+  desde: number,
+  cuantas: number,
+): Promise<PartidoDeEquipo[]> {
+  const semanas = Array.from({ length: cuantas }, (_, i) => desde + i).filter(
+    (semana) => semana >= 1 && semana <= ULTIMA_JORNADA,
+  );
+  const resultados = await Promise.allSettled(semanas.map((semana) => getCalendar(semana)));
+  const jornadas = resultados.flatMap((resultado, i) =>
+    resultado.status === 'fulfilled' ? [{ jornada: semanas[i]!, partidos: resultado.value }] : [],
+  );
+  return partidosDeEquipo(teamId, jornadas);
+}
+
+const DESGLOSE_TTL_MS = 10 * 60_000;
+const desglosesEnMemoria = new Map<string, { at: number; desglose: DesgloseJugador }>();
+
+/**
+ * De dónde salen los puntos de un jugador, métrica a métrica y jornada a
+ * jornada. Sin token: es la misma ficha que publica LALIGA para cualquiera, así
+ * que se guarda unos minutos igual que el histórico de cotización.
+ */
+export async function getPlayerBreakdown(playerId: string): Promise<DesgloseJugador> {
+  const guardado = desglosesEnMemoria.get(playerId);
+  if (guardado && Date.now() - guardado.at < DESGLOSE_TTL_MS) return guardado.desglose;
+  const detalle = await seasonFetch(
+    `${CMP}/player/${encodeURIComponent(playerId)}`,
+    apiPlayerDetailSchema,
+  );
+  const desglose = desglosar(detalle.playerStats);
+  desglosesEnMemoria.set(playerId, { at: Date.now(), desglose });
+  return desglose;
 }
 
 /**

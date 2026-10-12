@@ -56,3 +56,23 @@ test("los partidos salen ordenados por hora de inicio", () => {
   ).map((match) => match.id);
   assert.deepEqual(orden, ["pronto", "medio", "tarde"]);
 });
+
+test("partidosDeEquipo: rival, casa o fuera y marcador desde su lado", async () => {
+  const { partidosDeEquipo } = await import("./calendar.ts");
+  const j1 = mapCalendar([partido("1", "2026-08-25T21:00:00+02:00", "3", "4", { localScore: 2, visitorScore: 1 })], EQUIPOS);
+  const j2 = mapCalendar([partido("2", "2026-09-01T21:00:00+02:00", "4", "3")], EQUIPOS);
+  const lista = partidosDeEquipo("4", [{ jornada: 2, partidos: j2 }, { jornada: 1, partidos: j1 }]);
+  assert.deepEqual(lista.map((p) => p.jornada), [1, 2]);
+  assert.equal(lista[0]?.enCasa, false);
+  assert.equal(lista[0]?.rival?.shortName, "ATH");
+  assert.equal(lista[0]?.golesPropios, 1);
+  assert.equal(lista[0]?.golesRival, 2);
+  assert.equal(lista[1]?.enCasa, true);
+  assert.equal(lista[1]?.golesPropios, null);
+});
+
+test("partidosDeEquipo: una jornada en la que no aparece no se inventa", async () => {
+  const { partidosDeEquipo } = await import("./calendar.ts");
+  const j1 = mapCalendar([partido("1", "2026-08-25T21:00:00+02:00", "3", "999")], EQUIPOS);
+  assert.deepEqual(partidosDeEquipo("4", [{ jornada: 1, partidos: j1 }]), []);
+});

@@ -4,7 +4,9 @@ import { Download } from "lucide-react";
 import { Card, SectionTitle } from "./ui";
 
 /**
- * Exportar: descarga de los CSV.
+ * Exportar: un único CSV con equipos y mercado juntos (ver `full-export.ts`).
+ * Las rutas antiguas `export/teams` y `export/market` siguen existiendo por si
+ * alguien tenía un enlace guardado, pero ya no se ofrecen aquí.
  *
  * Los CSV se generan en servidor. Estos enlaces son navegaciones normales, no
  * fetch: el navegador recibe `Content-Disposition: attachment` y guarda el
@@ -18,20 +20,35 @@ export function ExportView({ leagueId }: { leagueId: string }) {
 
         <div className="space-y-3">
           <ExportLink
-            href={`/api/fantasy/leagues/${leagueId}/export/teams`}
-            title="Todos los equipos de la liga"
-            description="Una fila por jugador: manager, equipo, valor, cláusula, puntos y estado."
-          />
-          <ExportLink
-            href={`/api/fantasy/leagues/${leagueId}/export/market`}
-            title="Mercado actual"
-            description="Los jugadores a la venta ahora mismo, con precio de salida, expiración y tendencia de valor."
+            href={`/api/fantasy/leagues/${leagueId}/export/full`}
+            title="Equipos y mercado en un solo archivo"
+            description="Todos los jugadores del juego en un CSV: su dueño en tu liga con cláusula y blindaje, si están en el mercado con precio y pujas, y sus puntos jornada a jornada."
           />
         </div>
       </Card>
 
       <Card>
-        <SectionTitle>Qué no traen estos CSV</SectionTitle>
+        <SectionTitle>Cómo leer el archivo</SectionTitle>
+        <ul className="list-disc space-y-1 pl-5 text-sm leading-5 text-neutral-400 marker:text-[#7c3aed]">
+          <li>
+            <code>situation</code> dice dónde está cada jugador en tu liga: <code>owned</code> (en un
+            equipo), <code>owned_on_market</code> (su dueño lo vende), <code>market</code> (lo vende la
+            liga) o <code>free</code> (libre).
+          </li>
+          <li>
+            Las columnas que empiezan por <code>calc_</code> son cálculos nuestros (puntos por millón,
+            precio frente a valor, tendencia). Todas las demás son datos de LALIGA tal cual.
+          </li>
+          <li>
+            <code>points_w1</code>, <code>points_w2</code>… son los puntos de cada jornada. Una celda
+            vacía significa que no tiene puntuación publicada, no que hiciera cero.
+          </li>
+          <li>Se abre en Excel o Google Sheets; el separador es punto y coma.</li>
+        </ul>
+      </Card>
+
+      <Card>
+        <SectionTitle>Qué no trae el CSV</SectionTitle>
         <p className="text-sm leading-5 text-neutral-400">
           Estas columnas se han pedido y <strong className="text-neutral-200">no se emiten</strong>,
           porque LALIGA no las publica en ningún endpoint. Se omiten en vez de salir siempre vacías,

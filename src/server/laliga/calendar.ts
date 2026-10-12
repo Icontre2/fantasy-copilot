@@ -51,3 +51,41 @@ export function mapCalendar(
     }))
     .sort((a, b) => a.kickoff.localeCompare(b.kickoff));
 }
+
+export type PartidoDeEquipo = {
+  jornada: number;
+  kickoff: string;
+  enCasa: boolean;
+  /** `null` si LALIGA trae un id de rival que no está en el mapa. */
+  rival: Team | null;
+  /** Goles de SU equipo y del rival. `null` mientras no se haya jugado. */
+  golesPropios: number | null;
+  golesRival: number | null;
+};
+
+/**
+ * Los partidos de un equipo, uno por jornada, en orden de jornada.
+ *
+ * Una jornada en la que el equipo no aparece (aplazado, o un id que no cuadra)
+ * simplemente no sale: no se inventa un descanso ni un rival.
+ */
+export function partidosDeEquipo(
+  teamId: string,
+  jornadas: { jornada: number; partidos: Match[] }[],
+): PartidoDeEquipo[] {
+  return jornadas
+    .flatMap(({ jornada, partidos }) => {
+      const partido = partidos.find((p) => p.local?.id === teamId || p.visitor?.id === teamId);
+      if (!partido) return [];
+      const enCasa = partido.local?.id === teamId;
+      return [{
+        jornada,
+        kickoff: partido.kickoff,
+        enCasa,
+        rival: enCasa ? partido.visitor : partido.local,
+        golesPropios: enCasa ? partido.localScore : partido.visitorScore,
+        golesRival: enCasa ? partido.visitorScore : partido.localScore,
+      }];
+    })
+    .sort((a, b) => a.jornada - b.jornada);
+}

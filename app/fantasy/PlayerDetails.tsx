@@ -7,6 +7,7 @@ import { millions, UNKNOWN } from "./format";
 import type { MarketValuePoint, Player } from "./types";
 import { PlayerImage } from "./PlayerImage";
 import { TrendChart } from "./TrendChart";
+import { DesglosePuntos, ProximosPartidos, VariacionValor } from "./PlayerInsights";
 import { Dificultad } from "./Odds";
 import { BottomSheet } from "./BottomSheet";
 import { useLeagueId } from "./league-context";
@@ -48,8 +49,11 @@ export function PlayerDetails({ player, onClose }: { player: Player; onClose: ()
         <Prevision player={player} dificultad={dificultad} />
         <Clausula player={player} onDone={onClose} />
         <ProximoPartido player={player} dificultad={dificultad} />
+        <ProximosPartidos player={player} />
         <Forma player={player} />
+        <DesglosePuntos player={player} />
         <div className="mt-6"><p className="text-[10px] font-semibold uppercase tracking-[.14em] text-neutral-500">Mercado</p><h3 className="font-bold text-white">Evolución del valor</h3><div className="mt-3 grid grid-cols-4 gap-1 rounded-xl bg-white/[.04] p-1">{([7, 30, 90, "MAX"] as const).map((option) => <button key={String(option)} type="button" onClick={() => setDays(option)} aria-pressed={days === option} className={`min-h-11 rounded-lg px-2 text-xs font-bold ${days === option ? "bg-[#7c3aed] text-white" : "text-neutral-500"}`}>{option === "MAX" ? "Todo" : `${option}D`}</button>)}</div></div>
+        {history.length > 1 && <VariacionValor history={history} />}
         {visible.length > 1 ? <HistoryChart points={visible} marketValue={player.marketValue} /> : <p className="mt-3 glass-soft rounded-2xl p-5 text-center text-sm leading-5 text-neutral-500">{error ?? "Cargando histórico…"}</p>}
       </div>
     </BottomSheet>
