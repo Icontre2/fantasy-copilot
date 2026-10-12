@@ -50,8 +50,8 @@ function madridDateTime(timestamp: number): string {
     minute: '2-digit',
     hourCycle: 'h23',
   }).formatToParts(new Date(timestamp));
-  const value = Object.fromEntries(parts.map((part) => [part.type, part.value]));
-  return `${value.year}-${value.month}-${value.day} ${value.hour}:${value.minute}`;
+  const value: Record<string, string> = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${value.year ?? ''}-${value.month ?? ''}-${value.day ?? ''} ${value.hour ?? ''}:${value.minute ?? ''}`;
 }
 
 function clauseStatus(player: LeagueSquadRow['player'], nowMs: number) {
@@ -66,7 +66,8 @@ function clauseStatus(player: LeagueSquadRow['player'], nowMs: number) {
   };
 }
 
-function leagueColumns(exportNowMs: number): CsvColumn<LeagueSquadRow>[] { return [
+function leagueColumns(exportNowMs: number): CsvColumn<LeagueSquadRow>[] {
+  return [
   { header: 'manager_id', value: ({ team }) => team.manager.id },
   { header: 'manager_name', value: ({ team }) => team.manager.name },
   { header: 'team_id', value: ({ team }) => team.teamId },
@@ -87,7 +88,8 @@ function leagueColumns(exportNowMs: number): CsvColumn<LeagueSquadRow>[] { retur
   { header: 'average_points', value: ({ player }) => player.averagePoints },
   { header: 'last_season_points', value: ({ player }) => player.lastSeasonPoints },
   { header: 'player_status', value: ({ player }) => player.status },
-]; }
+  ];
+}
 
 /** Devuelve los jugadores bloqueados, ordenados por tiempo restante. */
 export function getLockedPlayersSummary(teams: LeagueTeam[], now = new Date()): LockedPlayerSummary[] {
