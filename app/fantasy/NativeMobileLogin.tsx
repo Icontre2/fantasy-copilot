@@ -3,13 +3,14 @@
 import { useEffect, useState } from "react";
 import { KeyRound, ShieldCheck } from "lucide-react";
 import { get } from "./api";
-import { hasNativeLaligaOAuth, loginWithLaligaOnIOS } from "./mobile-auth";
+import { hasNativeLaligaOAuth, loginWithLaligaNative, nativePlatform } from "./mobile-auth";
 
 type SessionState = { authenticated?: boolean };
 
 /**
- * Solo existe visualmente dentro del contenedor iOS que registra LaligaOAuth.
- * En Safari, PWA, escritorio y Android devuelve null y no altera el login web.
+ * Solo existe visualmente dentro de la app nativa (iPhone o Android) que
+ * registra LaligaOAuth. En el navegador, PWA y escritorio devuelve null y no
+ * altera el login web.
  */
 export default function NativeMobileLogin() {
   const [visible, setVisible] = useState(false);
@@ -37,7 +38,7 @@ export default function NativeMobileLogin() {
     setBusy(true);
     setError(null);
     try {
-      await loginWithLaligaOnIOS();
+      await loginWithLaligaNative();
       // FantasyApp volverá a leer la cookie HttpOnly recién creada.
       window.location.reload();
     } catch (caught) {
@@ -68,6 +69,12 @@ export default function NativeMobileLogin() {
       >
         {busy ? "Abriendo LALIGA…" : "Entrar con Google, Apple o Facebook"}
       </button>
+
+      {nativePlatform() === "android" && (
+        <p className="mt-3 text-[10px] leading-4 text-neutral-400">
+          Si tienes instalada la app oficial de LALIGA Fantasy, al terminar Android te preguntará con qué app abrirlo: elige <strong className="text-neutral-200">LigaLab</strong>.
+        </p>
+      )}
 
       {error && <p className="mt-3 rounded-xl bg-red-500/10 p-3 text-[11px] leading-4 text-red-300">{error}</p>}
 

@@ -3,8 +3,9 @@ name: iOS verify
 on:
   pull_request:
     paths:
-      - "mobile/**"
+      - "ios/**"
       - "mobile-shell/**"
+      - "app/fantasy/mobile-auth.ts"
       - "capacitor.config.json"
       - ".github/workflows/ios-verify.yml"
   workflow_dispatch:
@@ -30,27 +31,10 @@ jobs:
       - name: Install web dependencies
         run: npm ci
 
-      - name: Install Capacitor for verification
-        run: npm install --no-save --package-lock=false @capacitor/core@8.5.0 @capacitor/ios@8.5.0 @capacitor/cli@8.5.0
-
-      - name: Generate iOS project
-        run: npx cap add ios
-
-      - name: Add native LALIGA OAuth plugin to target
-        run: |
-          cp mobile/ios/LaligaOAuthPlugin.swift ios/App/App/LaligaOAuthPlugin.swift
-          sudo gem install xcodeproj --no-document
-          ruby <<'RUBY'
-          require 'xcodeproj'
-          project = Xcodeproj::Project.open('ios/App/App.xcodeproj')
-          target = project.targets.find { |t| t.name == 'App' } or abort 'No App target'
-          app_group = project.main_group.groups.find { |g| g.display_name == 'App' } or abort 'No App group'
-          ref = app_group.files.find { |f| f.path == 'LaligaOAuthPlugin.swift' } || app_group.new_file('LaligaOAuthPlugin.swift')
-          unless target.source_build_phase.files_references.include?(ref)
-            target.source_build_phase.add_file_reference(ref)
-          end
-          project.save
-          RUBY
+      # El proyecto iOS vive en el repo (ios/), con el plugin y el controlador
+      # que lo registra ya dentro del target. Solo hay que copiar la web.
+      - name: Sync Capacitor
+        run: npx cap sync ios
 
       - name: Build for iPhone simulator
         shell: bash

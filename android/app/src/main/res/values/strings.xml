@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">LigaLab</string>
+    <string name="title_activity_main">LigaLab</string>
+    <string name="package_name">com.inigo.ligalab</string>
+    <string name="custom_url_scheme">com.inigo.ligalab</string>
+</resources>

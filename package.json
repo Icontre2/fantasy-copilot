@@ -11,6 +11,9 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
+    "mobile:sync": "cap sync",
+    "mobile:ios": "cap open ios",
+    "mobile:android": "cap open android",
     "test": "node --experimental-strip-types --test \"app/**/*.test.ts\" \"src/**/*.test.ts\"",
     "marketing:radar": "node --experimental-strip-types scripts/marketing/run-radar.ts",
     "marketing:queue": "node --experimental-strip-types scripts/marketing/prepare-agent-queue.ts",
@@ -30,6 +33,10 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@capacitor/android": "8.5.3",
+    "@capacitor/cli": "8.5.3",
+    "@capacitor/core": "8.5.3",
+    "@capacitor/ios": "8.5.3",
     "@cloudflare/vite-plugin": "1.47.0",
     "@cloudflare/workers-types": "5.20260726.1",
     "@tailwindcss/postcss": "4.2.1",
