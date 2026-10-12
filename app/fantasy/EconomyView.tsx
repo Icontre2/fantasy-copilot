@@ -7,6 +7,7 @@ import { DataNotes, Empty } from "./ui";
 
 export function EconomyView({ data }: { data: EconomyResponse }) {
   const [abierto, setAbierto] = useState<string | null>(null);
+  const nombresManager = new Map(data.economies.map((economy) => [economy.managerId, economy.managerName]));
 
   if (data.economies.length === 0) {
     return <Empty>No se ha podido leer ningún manager de esta liga.</Empty>;
@@ -78,7 +79,7 @@ export function EconomyView({ data }: { data: EconomyResponse }) {
                   </div>
                 </button>
 
-                {abiertoAqui && <LibroCard economy={economy} saldoInicial={data.saldoInicial} />}
+                {abiertoAqui && <LibroCard economy={economy} saldoInicial={data.saldoInicial} nombresManager={nombresManager} />}
               </li>
             );
           })}
@@ -103,12 +104,12 @@ const KIND_LABEL: Record<ManagerEconomy["entries"][number]["kind"], string> = {
   CLAUSULA_COBRADA: "Cláusula cobrada",
 };
 
-function LibroCard({ economy, saldoInicial }: { economy: ManagerEconomy; saldoInicial: number }) {
+function LibroCard({ economy, saldoInicial, nombresManager }: { economy: ManagerEconomy; saldoInicial: number; nombresManager: ReadonlyMap<string, string> }) {
   const [busqueda, setBusqueda] = useState("");
   const [tipo, setTipo] = useState<ManagerEconomy["entries"][number]["kind"] | "TODAS">("TODAS");
   const entradasFiltradas = economy.entries.filter((entry) => {
     const query = busqueda.trim().toLocaleLowerCase();
-    const texto = `${entry.playerName ?? ""} ${entry.playerId ?? ""} ${KIND_LABEL[entry.kind]} ${entry.occurredAt}`.toLocaleLowerCase();
+    const texto = `${entry.playerName ?? ""} ${entry.playerId ?? ""} ${KIND_LABEL[entry.kind]} ${entry.occurredAt} ${nombresManager.get(entry.counterpartyId ?? "") ?? ""}`.toLocaleLowerCase();
     return (tipo === "TODAS" || entry.kind === tipo) && (!query || texto.includes(query));
   });
 
@@ -223,6 +224,7 @@ function LibroCard({ economy, saldoInicial }: { economy: ManagerEconomy; saldoIn
                 <span className="block text-xs text-neutral-500">
                   {shortDate(entry.occurredAt)}
                   {entry.playerName ? ` · ${entry.playerName}` : entry.playerId ? ` · jugador ${entry.playerId}` : ""}
+                  {entry.counterpartyId ? ` · con ${nombresManager.get(entry.counterpartyId) ?? `manager ${entry.counterpartyId}`}` : ""}
                 </span>
               </span>
               <span
