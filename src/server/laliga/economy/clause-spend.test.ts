@@ -19,7 +19,7 @@ function activity(overrides: Partial<ActivityEntry>): ActivityEntry {
   };
 }
 
-test("clausula por encima del suelo descuenta la mitad de la subida", () => {
+test("la subida estimada de cláusula se muestra aparte y no altera la caja base", () => {
   const marketValue = 10_000_000;
   const baseline = automaticClauseBaseline(marketValue);
   assert.equal(baseline, 16_600_000);
@@ -31,7 +31,7 @@ test("clausula por encima del suelo descuenta la mitad de la subida", () => {
 
   assert.equal(economy?.gastoClausulasEstimado, 10_000_000);
   assert.equal(economy?.clauseInvestments[0]?.estimatedManualIncrease, 20_000_000);
-  assert.equal(economy?.cajaReconstruida, SALDO_INICIAL - 10_000_000);
+  assert.equal(economy?.cajaReconstruida, SALDO_INICIAL);
 });
 
 test("un precio de compra alto actua como suelo y evita contar fichaje como blindaje", () => {
@@ -45,14 +45,14 @@ test("un precio de compra alto actua como suelo y evita contar fichaje como blin
   assert.equal(economy?.cajaReconstruida, SALDO_INICIAL - 30_000_000);
 });
 
-test("si despues de comprar se eleva la clausula, solo se descuenta el exceso", () => {
+test("la cláusula estimada no se vuelve a descontar de la caja junto al fichaje", () => {
   const [economy] = buildEconomy({
     managers: [manager([{ id: "P", name: "Jugador", marketValue: 10_000_000, buyoutClause: 50_000_000 }])],
     activity: [activity({ user1Id: "A", playerMasterId: "P", amount: 30_000_000 })],
   });
 
   assert.equal(economy?.gastoClausulasEstimado, 10_000_000);
-  assert.equal(economy?.cajaReconstruida, SALDO_INICIAL - 30_000_000 - 10_000_000);
+  assert.equal(economy?.cajaReconstruida, SALDO_INICIAL - 30_000_000);
 });
 
 test("jugador sin clausula publicada no inventa gasto", () => {
