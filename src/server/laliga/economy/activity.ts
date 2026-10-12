@@ -104,7 +104,7 @@ export type ManagerEconomy = {
   gastoClausulasEstimado: number;
   clauseInvestments: ClauseInvestment[];
 
-  /** Ventas − compras + puntos − blindajes estimados. */
+  /** Ventas − compras + bonus por puntos. No incluye recompensas diarias ni blindajes estimados. */
   flujoConocido: number;
   /** `inicial + flujoConocido`. */
   cajaReconstruida: number;
@@ -240,7 +240,7 @@ export function buildEconomy(input: BuildInput): ManagerEconomy[] {
     const gastoClausulasEstimado = clauseInvestments.reduce((sum, item) => sum + item.estimatedSpend, 0);
 
     const bonusPuntos = manager.puntos * EUROS_POR_PUNTO;
-    const flujoConocido = -compras + ventas + bonusPuntos - gastoClausulasEstimado;
+    const flujoConocido = -compras + ventas + bonusPuntos;
     const cajaReconstruida = SALDO_INICIAL + flujoConocido;
     const diferencia = manager.cajaOficial === null ? null : manager.cajaOficial - cajaReconstruida;
 
