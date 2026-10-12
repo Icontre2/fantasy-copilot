@@ -55,11 +55,11 @@ export async function GET(request: Request, { params }: { params: Promise<{ leag
       actividadDesde: fechas[0] ?? null,
       actividadHasta: fechas.at(-1) ?? null,
       operaciones: activity.length,
-      economies: economies.sort((a, b) => b.cajaReconstruida - a.cajaReconstruida),
+      economies: economies.sort((a, b) => (b.cajaOficial ?? b.cajaReconstruida) - (a.cajaOficial ?? a.cajaReconstruida)),
       dataNotes: [
         `La caja base parte de ${(SALDO_INICIAL / 1_000_000).toFixed(0)} M€ y suma/resta operaciones publicadas y bonus por puntos. No incluye recompensas diarias no verificables ni descuenta el gasto estimado en blindajes.`,
         "Los importes de compras y ventas los PUBLICA LALIGA en la actividad de la liga: son exactos, no estimados.",
-        "Subir una cláusula consume presupuesto en proporción 1:2: cada 1 M€ gastado aumenta 2 M€ la cláusula. Ese coste sí se descuenta de la caja reconstruida.",
+        "Subir una cláusula consume presupuesto en proporción 1:2: cada 1 M€ gastado aumenta 2 M€ la cláusula. El coste se estima y se muestra aparte; no se descuenta de la caja base.",
         "El gasto en cláusulas se etiqueta como ESTIMADO: se toma solo la parte de la cláusula actual que supera el mayor entre la cláusula automática esperable y el último precio de adquisición conocido. Así se evita atribuir a blindaje una cláusula alta que pueda venir del propio fichaje.",
         fechas[0]
           ? `Historial paginado completo: ${activity.length} entradas desde el ${fechas[0].slice(0, 10)}. Se recorren /activity/0, /1, /2… hasta la primera página vacía.`
