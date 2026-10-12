@@ -1,12 +1,48 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { get } from "./api";
 import { millions, shortDate, signedMillions, UNKNOWN } from "./format";
 import type { EconomyResponse, ManagerEconomy } from "./types";
 import { DataNotes, Empty } from "./ui";
 
-export function EconomyView({ data }: { data: EconomyResponse }) {
+type ClauseHistoryItem = {
+  playerId: string;
+  playerName: string;
+  managerName: string;
+  previousManagerName: string | null;
+  previousClause: number | null;
+  currentClause: number | null;
+  changeAmount: number | null;
+  eventType: "INCREASE" | "DECREASE" | "ADDED" | "REMOVED";
+  marketValue: number;
+  previousSnapshotAt: string;
+  currentSnapshotAt: string;
+};
+type ClauseHistoryResponse = { changes: ClauseHistoryItem[]; available: boolean; message?: string };
+
+export function EconomyView({ data, leagueId }: { data: EconomyResponse; leagueId: string }) {
   const [abierto, setAbierto] = useState<string | null>(null);
+  const [clauseChanges, setClauseChanges] = useState<ClauseHistoryItem[]>([]);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
+  const [historyAvailable, setHistoryAvailable] = useState(true);
+  const [historyError, setHistoryError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    get<ClauseHistoryResponse>(`/api/fantasy/leagues/${encodeURIComponent(leagueId)}/clause-history`)
+      .then((response) => {
+        if (cancelled) return;
+        setClauseChanges(Array.isArray(response.changes) ? response.changes : []);
+        setHistoryAvailable(response.available);
+        setHistoryError(null);
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) setHistoryError(error instanceof Error ? error.message : "No se pudo cargar el histórico de cláusulas.");
+      })
+      .finally(() => { if (!cancelled) setHistoryLoaded(true); });
+    return () => { cancelled = true; };
+  }, [leagueId]);
   const nombresManager = new Map(data.economies.map((economy) => [economy.managerId, economy.managerName]));
 
   if (data.economies.length === 0) {
@@ -89,6 +125,50 @@ export function EconomyView({ data }: { data: EconomyResponse }) {
         <p className="mt-3 text-xs leading-4 text-white/45">
           Toca un manager para ver su libro. Las compras y ventas publicadas son importes exactos; el gasto en cláusulas se estima y se muestra aparte, sin descontarlo de la caja base. Las recompensas diarias no se suman porque no se conoce quién las reclama. El valor de la plantilla no cuenta como caja.
         </p>
+      </section>
+
+      <section className="glass-strong rounded-[28px] p-5 text-white">
+        <p className="text-xs font-semibold uppercase tracking-[.14em] text-[#a78bfa]">Seguimiento real</p>
+        <h2 className="mt-1 text-xl font-bold tracking-tight">Histórico de cláusulas</h2>
+        <p className="mt-1 text-xs leading-5 text-neutral-500">
+          Compara capturas diarias de LALIGA. Solo se registran cambios observados entre dos capturas; no se deducen subidas a partir del valor de mercado.
+        </p>
+        {historyError ? (
+          <p className="mt-3 rounded-2xl border border-amber-500/20 bg-amber-500/[.06] p-3 text-xs text-amber-200">{historyError}</p>
+        ) : !historyLoaded ? (
+          <p className="mt-3 rounded-2xl bg-white/[.03] p-3 text-xs text-neutral-500">Cargando histórico…</p>
+        ) : !historyAvailable ? (
+          <p className="mt-3 rounded-2xl bg-white/[.03] p-3 text-xs text-neutral-500">El histórico requiere almacenamiento persistente.</p>
+        ) : clauseChanges.length === 0 ? (
+          <p className="mt-3 rounded-2xl bg-white/[.03] p-3 text-xs leading-5 text-neutral-500">
+            Aún no hay cambios observados. Se ha empezado a guardar el estado actual; las subidas o bajadas aparecerán tras una nueva captura diaria si la cláusula cambia.
+          </p>
+        ) : (
+          <ul className="mt-3 space-y-2">
+            {clauseChanges.slice(0, 30).map((change) => {
+              const increase = change.eventType === "INCREASE";
+              const decrease = change.eventType === "DECREASE";
+              const title = increase ? "Subida detectada" : decrease ? "Bajada detectada" : change.eventType === "ADDED" ? "Cláusula publicada" : "Cláusula retirada";
+              return (
+                <li key={`${change.playerId}-${change.currentSnapshotAt}`} className="rounded-2xl border border-white/[.07] bg-white/[.025] p-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-bold text-white">{change.playerName}</p>
+                      <p className="mt-0.5 truncate text-[11px] text-neutral-500">{change.managerName}{change.previousManagerName && change.previousManagerName !== change.managerName ? ` · antes: ${change.previousManagerName}` : ""}</p>
+                    </div>
+                    <span className={`shrink-0 text-right text-xs font-bold ${increase ? "text-emerald-300" : decrease ? "text-rose-300" : "text-neutral-300"}`}>
+                      {change.changeAmount == null ? title : `${change.changeAmount > 0 ? "+" : ""}${millions(change.changeAmount)}`}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-[11px] text-neutral-400">
+                    {title} · {change.previousClause == null ? "—" : millions(change.previousClause)} → {change.currentClause == null ? "—" : millions(change.currentClause)}
+                  </p>
+                  <p className="mt-1 text-[10px] text-neutral-600">Detectada el {shortDate(change.currentSnapshotAt)} · valor de mercado {millions(change.marketValue)}</p>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </section>
 
       <DataNotes notes={data.dataNotes} />
