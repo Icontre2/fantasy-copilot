@@ -179,7 +179,7 @@ function SectionData({ section, leagueId, onSynced, onNavigate }: { section: Dat
     case "subidas": return <RisersView data={data as AlertsResponse} />;
     case "defensa": return <DefensaView data={data as DashboardResponse} />;
     case "ataque": return <AtaqueView data={data as TeamsResponse} leagueId={leagueId} onChanged={onSynced} />;
-    case "economia": return <EconomyView data={data as EconomyResponse} />;
+    case "economia": return <EconomyView data={data as EconomyResponse} leagueId={leagueId} />;
     case "mercado": return <MarketView data={data as MarketResponse} leagueId={leagueId} onChanged={onSynced} />;
     case "comparar": return <CompareView data={data as TeamsResponse} />;
     case "onces": return <LineupsView data={data as LineupsResponse} />;
