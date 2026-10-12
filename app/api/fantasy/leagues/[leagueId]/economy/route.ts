@@ -9,13 +9,13 @@ export const maxDuration = 60;
 /**
  * GET /api/fantasy/leagues/{leagueId}/economy
  *
- * Reconstruye la caja con:
- *   saldo inicial + ventas - compras + puntos - inversión estimada en cláusulas.
+ * Reconstruye una caja base con:
+ *   saldo inicial + ventas - compras + puntos.
  *
  * Compras/ventas salen del historial exacto publicado por LALIGA. La inversión
- * en subir cláusulas se estima desde la plantilla actual y se etiqueta siempre
- * como tal, porque LALIGA no publica de forma fiable ese movimiento económico
- * como una operación separada en el historial.
+ * en subir cláusulas se estima desde la plantilla actual y se muestra aparte,
+ * porque no se puede reconstruir como movimiento histórico exacto. Tampoco se
+ * suman recompensas diarias si no se conoce qué manager las reclamó.
  */
 export async function GET(request: Request, { params }: { params: Promise<{ leagueId: string }> }) {
   const auth = await requireSession(request);
