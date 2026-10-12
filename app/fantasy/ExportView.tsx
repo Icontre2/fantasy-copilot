@@ -18,6 +18,12 @@ export function ExportView({ leagueId }: { leagueId: string }) {
 
         <div className="space-y-3">
           <ExportLink
+            href={`/api/fantasy/leagues/${leagueId}/export/full`}
+            title="Todo el juego en un archivo"
+            description="Todos los jugadores de LALIGA Fantasy: su dueño en tu liga con cláusula y blindaje, si están en el mercado con precio y pujas, y sus puntos jornada a jornada."
+            destacado
+          />
+          <ExportLink
             href={`/api/fantasy/leagues/${leagueId}/export/teams`}
             title="Todos los equipos de la liga"
             description="Una fila por jugador: manager, equipo, valor, cláusula, puntos y estado."
@@ -28,6 +34,26 @@ export function ExportView({ leagueId }: { leagueId: string }) {
             description="Los jugadores a la venta ahora mismo, con precio de salida, expiración y tendencia de valor."
           />
         </div>
+      </Card>
+
+      <Card>
+        <SectionTitle>Cómo leer «Todo el juego»</SectionTitle>
+        <ul className="list-disc space-y-1 pl-5 text-sm leading-5 text-neutral-400 marker:text-[#7c3aed]">
+          <li>
+            <code>situation</code> dice dónde está cada jugador en tu liga: <code>owned</code> (en un
+            equipo), <code>owned_on_market</code> (su dueño lo vende), <code>market</code> (lo vende la
+            liga) o <code>free</code> (libre).
+          </li>
+          <li>
+            Las columnas que empiezan por <code>calc_</code> son cálculos nuestros (puntos por millón,
+            precio frente a valor, tendencia). Todas las demás son datos de LALIGA tal cual.
+          </li>
+          <li>
+            <code>points_w1</code>, <code>points_w2</code>… son los puntos de cada jornada. Una celda
+            vacía significa que no tiene puntuación publicada, no que hiciera cero.
+          </li>
+          <li>Se abre en Excel o Google Sheets; el separador es punto y coma.</li>
+        </ul>
       </Card>
 
       <Card>
@@ -61,15 +87,17 @@ function ExportLink({
   href,
   title,
   description,
+  destacado = false,
 }: {
   href: string;
   title: string;
   description: string;
+  destacado?: boolean;
 }) {
   return (
     <a
       href={href}
-      className="flex min-h-14 items-center gap-3 rounded-2xl border border-[#7c3aed]/25 bg-[#7c3aed]/10 p-3.5 active:scale-[.99]"
+      className={`flex min-h-14 items-center gap-3 rounded-2xl border p-3.5 active:scale-[.99] ${destacado ? "border-[#8b5cf6]/60 bg-[#7c3aed]/25" : "border-[#7c3aed]/25 bg-[#7c3aed]/10"}`}
     >
       <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[#7c3aed] text-white">
         <Download size={19} />

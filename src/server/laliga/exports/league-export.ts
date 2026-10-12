@@ -1,5 +1,5 @@
 import type { LeagueTeam, MarketEntry } from '@/src/domain/fantasy';
-import { toCsv, type CsvColumn } from './csv';
+import { toCsv, type CsvColumn } from './csv.ts';
 
 /**
  * Exportaciones CSV de la liga.
@@ -54,7 +54,7 @@ function madridDateTime(timestamp: number): string {
   return `${value.year ?? ''}-${value.month ?? ''}-${value.day ?? ''} ${value.hour ?? ''}:${value.minute ?? ''}`;
 }
 
-function clauseStatus(player: LeagueSquadRow['player'], nowMs: number) {
+export function clauseStatus(player: LeagueSquadRow['player'], nowMs: number) {
   const unlockMs = unlockTimestamp(player);
   const locked = unlockMs !== null && unlockMs > nowMs;
   return {
