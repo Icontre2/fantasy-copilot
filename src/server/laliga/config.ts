@@ -1,16 +1,16 @@
 /**
  * Configuracion del conector de LALIGA Fantasy.
  *
- * Dos hosts distintos, a proposito:
- *  - publico  (`api-fantasy.llt-services.com`): catalogo y cotizaciones, sin token.
- *  - privado  (`fantasy-api.llt-services.com`): tu liga, requiere Bearer de sesion.
+ * Un solo host, `fantasy-api.llt-services.com`, con dos tipos de lectura:
+ *  - sin token: catalogo, cotizaciones, ficha de jugador, calendario, jornada.
+ *  - con Bearer de sesion: tu liga, plantillas, mercado, actividad.
+ *
+ * El antiguo `api-fantasy.llt-services.com` servia la temporada anterior y desde
+ * octubre de 2026 responde 502 en cualquier ruta: no se usa.
  *
  * Ningun secreto se hardcodea aqui: `clientId` es el identificador publico de la
  * app oficial (viaja en claro en cualquier login) y todo lo demas sale de entorno.
  */
-
-export const LALIGA_PUBLIC_BASE_URL =
-  process.env.LALIGA_FANTASY_BASE_URL ?? 'https://api-fantasy.llt-services.com';
 
 /** Host de la temporada 26/27: aqui viven ligas, plantillas y mercado. */
 export const LALIGA_PRIVATE_BASE_URL =

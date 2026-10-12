@@ -68,12 +68,23 @@ Serie diaria desde el inicio de temporada (106 puntos para el id 2443: del 2026-
 Escrituras que existen en `writes.ts` (fuera del alcance de solo lectura del README):
 `{c}/league/{leagueId}/market/{marketId}` y `{c}/league/{leagueId}/buyout/{playerId}/pay`.
 
-## Hallazgos accionables para el repo
+## Qué usa la app de todo esto
 
-1. **`LALIGA_PUBLIC_BASE_URL` apunta a un host muerto.** Hoy no rompe nada porque `publicFetch` no se llama desde ningún sitio (todo pasa por `privateFetch`), pero es código muerto con una URL muerta. Las rutas públicas responden en `fantasy-api` sin token: conviene borrar `publicFetch` o cambiar el valor por defecto.
-2. **Tipos inconsistentes** entre `/players` (strings) y `/player/{id}` (números): los esquemas zod deben coaccionar.
-3. **`docs/laliga-readonly-integration.md` está desactualizado**: dice "no se invoca la API privada", pero el conector ya la usa (ROPC + sesión cifrada).
-4. **Riesgo legal:** las condiciones limitan el uso a "personal y privado" y exigen consentimiento escrito para fines comerciales. Un producto con marketing (LigaLab) choca con eso.
+| Endpoint | Dónde se ve |
+| --- | --- |
+| `player/{id}` | Ficha de jugador → «De dónde salen sus puntos»: desglose por métrica y jornada, once ideal, valoración de Marca, reparto por tipo de acción (cálculo nuestro). Ruta `/api/fantasy/players/{id}/breakdown`. |
+| `players` | Lo anterior + puntos por millón y puesto dentro de su posición (cálculo nuestro). |
+| `player/{id}/market-value` | Ficha → variación en 7 y 30 días sobre la curva existente. |
+| `calendar` | Ficha → «Sus próximos partidos» (jornada en curso + 4). Ruta `/api/fantasy/teams/{teamId}/fixtures`. El calendario se guarda 10 min en memoria. |
+
+`bids` del histórico no se usa: en todas las respuestas observadas vale 0.
+
+## Hallazgos y estado
+
+1. ~~`LALIGA_PUBLIC_BASE_URL` apunta a un host muerto~~ — **resuelto**: se ha borrado junto con `publicFetch`, que no se usaba.
+2. Tipos inconsistentes entre `/players` (strings) y `/player/{id}` (números): ya los absorbe `numeric` en `schemas.ts`. Ahora lo cubren tests de contrato con respuestas reales (`src/server/laliga/fixtures/`, `contract.test.ts`).
+3. `docs/laliga-readonly-integration.md` sigue desactualizado (dice que no se invoca la API privada). Se deja como registro de la decisión original.
+4. Riesgo legal: las condiciones limitan el uso a «personal y privado» y exigen consentimiento escrito para fines comerciales.
 
 ## Lo que queda sin mapear
 

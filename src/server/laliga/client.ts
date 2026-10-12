@@ -1,5 +1,5 @@
 import type { z } from 'zod';
-import { DEFAULT_HEADERS, LALIGA_PRIVATE_BASE_URL, LALIGA_PUBLIC_BASE_URL, REQUEST_TIMEOUT_MS } from './config';
+import { DEFAULT_HEADERS, LALIGA_PRIVATE_BASE_URL, REQUEST_TIMEOUT_MS } from './config';
 import { LaligaError } from './errors';
 
 /**
@@ -80,11 +80,6 @@ async function fetchAndParse<T>(
   }
 
   throw new LaligaError('network', `Fallo al consultar ${path}.`, path);
-}
-
-/** GET al host publico (`api-fantasy`). Sin credenciales. */
-export function publicFetch<T>(path: string, schema: z.ZodType<T>): Promise<T> {
-  return fetchAndParse(LALIGA_PUBLIC_BASE_URL, path, schema);
 }
 
 /**
