@@ -54,6 +54,7 @@ test("el CSV junta dueño, cláusula, mercado y puntos por jornada en la misma f
   const propio = fila("1");
   assert.equal(propio.manager_name, "Ana");
   assert.equal(propio.manager_rank, "1");
+  assert.equal(propio.team_id, "t1");
   assert.equal(propio.clause, "15000000");
   assert.equal(propio.clause_locked, "true");
   assert.equal(propio.market_sale_price, "");

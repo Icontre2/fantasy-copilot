@@ -4,7 +4,9 @@ import { Download } from "lucide-react";
 import { Card, SectionTitle } from "./ui";
 
 /**
- * Exportar: descarga de los CSV.
+ * Exportar: un único CSV con equipos y mercado juntos (ver `full-export.ts`).
+ * Las rutas antiguas `export/teams` y `export/market` siguen existiendo por si
+ * alguien tenía un enlace guardado, pero ya no se ofrecen aquí.
  *
  * Los CSV se generan en servidor. Estos enlaces son navegaciones normales, no
  * fetch: el navegador recibe `Content-Disposition: attachment` y guarda el
@@ -19,25 +21,14 @@ export function ExportView({ leagueId }: { leagueId: string }) {
         <div className="space-y-3">
           <ExportLink
             href={`/api/fantasy/leagues/${leagueId}/export/full`}
-            title="Todo el juego en un archivo"
-            description="Todos los jugadores de LALIGA Fantasy: su dueño en tu liga con cláusula y blindaje, si están en el mercado con precio y pujas, y sus puntos jornada a jornada."
-            destacado
-          />
-          <ExportLink
-            href={`/api/fantasy/leagues/${leagueId}/export/teams`}
-            title="Todos los equipos de la liga"
-            description="Una fila por jugador: manager, equipo, valor, cláusula, puntos y estado."
-          />
-          <ExportLink
-            href={`/api/fantasy/leagues/${leagueId}/export/market`}
-            title="Mercado actual"
-            description="Los jugadores a la venta ahora mismo, con precio de salida, expiración y tendencia de valor."
+            title="Equipos y mercado en un solo archivo"
+            description="Todos los jugadores del juego en un CSV: su dueño en tu liga con cláusula y blindaje, si están en el mercado con precio y pujas, y sus puntos jornada a jornada."
           />
         </div>
       </Card>
 
       <Card>
-        <SectionTitle>Cómo leer «Todo el juego»</SectionTitle>
+        <SectionTitle>Cómo leer el archivo</SectionTitle>
         <ul className="list-disc space-y-1 pl-5 text-sm leading-5 text-neutral-400 marker:text-[#7c3aed]">
           <li>
             <code>situation</code> dice dónde está cada jugador en tu liga: <code>owned</code> (en un
@@ -57,7 +48,7 @@ export function ExportView({ leagueId }: { leagueId: string }) {
       </Card>
 
       <Card>
-        <SectionTitle>Qué no traen estos CSV</SectionTitle>
+        <SectionTitle>Qué no trae el CSV</SectionTitle>
         <p className="text-sm leading-5 text-neutral-400">
           Estas columnas se han pedido y <strong className="text-neutral-200">no se emiten</strong>,
           porque LALIGA no las publica en ningún endpoint. Se omiten en vez de salir siempre vacías,
@@ -87,17 +78,15 @@ function ExportLink({
   href,
   title,
   description,
-  destacado = false,
 }: {
   href: string;
   title: string;
   description: string;
-  destacado?: boolean;
 }) {
   return (
     <a
       href={href}
-      className={`flex min-h-14 items-center gap-3 rounded-2xl border p-3.5 active:scale-[.99] ${destacado ? "border-[#8b5cf6]/60 bg-[#7c3aed]/25" : "border-[#7c3aed]/25 bg-[#7c3aed]/10"}`}
+      className="flex min-h-14 items-center gap-3 rounded-2xl border border-[#7c3aed]/25 bg-[#7c3aed]/10 p-3.5 active:scale-[.99]"
     >
       <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[#7c3aed] text-white">
         <Download size={19} />

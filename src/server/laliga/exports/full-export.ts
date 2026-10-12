@@ -114,6 +114,7 @@ function columnas(rows: FullExportRow[], nowMs: number): CsvColumn<FullExportRow
     // Su dueño en tu liga.
     { header: 'manager_id', value: (r) => r.team?.manager.id },
     { header: 'manager_name', value: (r) => r.team?.manager.name },
+    { header: 'team_id', value: (r) => r.team?.teamId },
     { header: 'manager_rank', value: (r) => r.standing?.position },
     { header: 'manager_points', value: (r) => r.standing?.points },
     { header: 'manager_team_value', value: (r) => r.standing?.teamValue ?? r.team?.teamValue },
