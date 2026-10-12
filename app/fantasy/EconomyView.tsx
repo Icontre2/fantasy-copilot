@@ -19,7 +19,7 @@ export function EconomyView({ data }: { data: EconomyResponse }) {
         <h2 className="mt-1 text-2xl font-bold tracking-tight">Economía</h2>
 
         <p className="mt-2 text-sm leading-5 text-white/55">
-          Todos empezaron con <strong>{millions(data.saldoInicial)}</strong>.{" "}
+          La caja base parte de <strong>{millions(data.saldoInicial)}</strong> y suma operaciones publicadas y puntos. No incluye recompensas diarias ni descuenta blindajes estimados.{" "}
           {data.actividadDesde
             ? `Historial completo desde el ${shortDate(data.actividadDesde)} (${data.operaciones} entradas).`
             : "LALIGA no ha devuelto operaciones de esta liga."}
@@ -85,8 +85,7 @@ export function EconomyView({ data }: { data: EconomyResponse }) {
         </ul>
 
         <p className="mt-3 text-xs leading-4 text-white/45">
-          Toca un manager para ver su libro. El gasto de cláusulas es una estimación separada de los
-          fichajes y se descuenta de la caja reconstruida. El valor de la plantilla no cuenta como caja.
+          Toca un manager para ver su libro. Las compras y ventas publicadas son importes exactos; el gasto en cláusulas se estima y se muestra aparte, sin descontarlo de la caja base. Las recompensas diarias no se suman porque no se conoce quién las reclama. El valor de la plantilla no cuenta como caja.
         </p>
       </section>
 
@@ -105,6 +104,14 @@ const KIND_LABEL: Record<ManagerEconomy["entries"][number]["kind"], string> = {
 };
 
 function LibroCard({ economy, saldoInicial }: { economy: ManagerEconomy; saldoInicial: number }) {
+  const [busqueda, setBusqueda] = useState("");
+  const [tipo, setTipo] = useState<ManagerEconomy["entries"][number]["kind"] | "TODAS">("TODAS");
+  const entradasFiltradas = economy.entries.filter((entry) => {
+    const query = busqueda.trim().toLocaleLowerCase();
+    const texto = `${entry.playerName ?? ""} ${entry.playerId ?? ""} ${KIND_LABEL[entry.kind]} ${entry.occurredAt}`.toLocaleLowerCase();
+    return (tipo === "TODAS" || entry.kind === tipo) && (!query || texto.includes(query));
+  });
+
   return (
     <section className="glass-soft mt-2 rounded-[22px] p-4 text-white">
       <h3 className="mb-3 text-[15px] font-bold tracking-tight">Libro de {economy.managerName}</h3>
@@ -124,7 +131,7 @@ function LibroCard({ economy, saldoInicial }: { economy: ManagerEconomy; saldoIn
           tone={economy.gastoClausulasEstimado > 0 ? "rose" : undefined}
         />
         <Linea label="Saldo de operaciones" value={signedMillions(economy.flujoConocido)} strong />
-        <Linea label="Caja reconstruida" value={millions(economy.cajaReconstruida)} />
+        <Linea label="Caja base (sin recompensas)" value={millions(economy.cajaReconstruida)} />
 
         {economy.cajaOficial !== null ? (
           <>
@@ -137,8 +144,7 @@ function LibroCard({ economy, saldoInicial }: { economy: ManagerEconomy; saldoIn
           </>
         ) : (
           <p className="pt-2 text-xs text-neutral-500">
-            LALIGA no publica la caja de otros managers. La reconstrucción usa operaciones, puntos y una
-            estimación del dinero invertido en blindar cláusulas.
+            LALIGA no publica la caja de otros managers. La caja base usa operaciones publicadas y puntos; no incluye recompensas diarias no verificables ni el gasto estimado en blindajes.
           </p>
         )}
       </dl>
@@ -181,11 +187,33 @@ function LibroCard({ economy, saldoInicial }: { economy: ManagerEconomy; saldoIn
         </p>
       )}
 
+      <div className="mb-3 grid gap-2 sm:grid-cols-[1fr_220px]">
+        <input
+          value={busqueda}
+          onChange={(event) => setBusqueda(event.target.value)}
+          placeholder="Buscar jugador, fecha o tipo…"
+          aria-label="Buscar en las operaciones del manager"
+          className="w-full rounded-xl border border-white/10 bg-white/[.04] px-3 py-2 text-sm text-white placeholder:text-neutral-500 outline-none focus:border-violet-400/50"
+        />
+        <select
+          value={tipo}
+          onChange={(event) => setTipo(event.target.value as typeof tipo)}
+          aria-label="Filtrar operaciones por tipo"
+          className="w-full rounded-xl border border-white/10 bg-neutral-900 px-3 py-2 text-sm text-white outline-none focus:border-violet-400/50"
+        >
+          <option value="TODAS">Todos los movimientos</option>
+          {Object.entries(KIND_LABEL).map(([key, label]) => <option key={key} value={key}>{label}</option>)}
+        </select>
+      </div>
+      <p className="mb-2 text-[11px] text-neutral-500">{entradasFiltradas.length} de {economy.entries.length} movimientos</p>
+
       {economy.entries.length === 0 ? (
         <Empty>Sin operaciones publicadas para este manager.</Empty>
+      ) : entradasFiltradas.length === 0 ? (
+        <Empty>No hay movimientos que coincidan con la búsqueda.</Empty>
       ) : (
         <ul className="space-y-2">
-          {economy.entries.map((entry) => (
+          {entradasFiltradas.map((entry) => (
             <li
               key={entry.activityId}
               className="flex items-start justify-between gap-3 border-b border-white/5 pb-2 text-sm"
