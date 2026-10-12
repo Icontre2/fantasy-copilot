@@ -52,8 +52,10 @@ export function DashboardView({ data, onNavigate }: { data: DashboardResponse; o
   const alertEntries = Array.isArray(alerts?.alerts) ? alerts.alerts.slice(0, 3) : [];
   const alertCount = alerts?.alerts?.length ?? 0;
   const myEconomy = economies.find((item) => item.managerId === data.me.manager.id);
-  const poderCompra = myEconomy?.cajaReconstruida;
-  const defensa = economiaCargada ? resumirDefensa(analizarDefensa(Array.isArray(data.me.players) ? data.me.players : [], compradoresDeLiga(competitors, economies), data.me.teamMoney ?? poderCompra ?? null, new Date())) : null;
+  const cajaReconstruidaPropia = myEconomy?.cajaReconstruida ?? data.me.estimatedCash;
+  const cajaMostradaPropia = data.me.teamMoney ?? cajaReconstruidaPropia;
+  const cajaEsOficialPropia = data.me.teamMoney != null;
+  const defensa = economiaCargada ? resumirDefensa(analizarDefensa(Array.isArray(data.me.players) ? data.me.players : [], compradoresDeLiga(competitors, economies), data.me.teamMoney ?? cajaReconstruidaPropia ?? null, new Date())) : null;
 
   return (
     <div className="space-y-5">
@@ -74,7 +76,7 @@ export function DashboardView({ data, onNavigate }: { data: DashboardResponse; o
           </div>
         </div>
         <div className="mt-4">
-          <Metric icon={<Coins size={16} />} label="Poder de compra" value={poderCompra == null ? "—" : millions(poderCompra)} accent />
+          <Metric icon={<Coins size={16} />} label={cajaEsOficialPropia ? "Caja oficial" : "Caja reconstruida (est.)"} value={millions(cajaMostradaPropia)} accent />
         </div>
         <div className="mt-3 flex justify-end">
           <ShareCardButton
@@ -113,8 +115,8 @@ export function DashboardView({ data, onNavigate }: { data: DashboardResponse; o
 
       <section>
         <div className="mb-3 flex items-center justify-between"><div><p className="text-xs font-semibold uppercase tracking-[.12em] text-neutral-400">Tu liga</p><h2 className="mt-1 text-xl font-bold tracking-tight text-white">Competidores</h2></div><span className="flex items-center gap-1 rounded-full bg-white/[.06] px-3 py-1.5 text-xs font-semibold text-neutral-300"><Users size={14} /> {competitors.length + 1}</span></div>
-        <div className="ll-stagger grid gap-3 sm:grid-cols-2">{competitors.map((competitor) => { const economy = economies.find((item) => item.managerId === competitor.manager.id); const cash = competitor.teamMoney ?? economy?.cajaOficial; const reconstructed = economy?.cajaReconstruida ?? competitor.estimatedCash; return <article key={competitor.teamId} className="overflow-hidden rounded-[26px] border border-white/[.08] bg-white/[.045]"><button type="button" onClick={() => setAbierto(competitor.teamId)} className="w-full p-4 text-left transition active:scale-[.99]" aria-label={`Ver la ficha de ${competitor.manager.name}`}><div className="flex items-center gap-3"><Avatar name={competitor.manager.name} image={competitor.manager.avatar} /><div className="min-w-0 flex-1"><p className="truncate font-semibold text-white">{competitor.manager.name}</p><p className="text-xs text-neutral-400">#{competitor.position ?? "—"} · {competitor.points ?? "—"} pts</p></div><div className="text-right"><p className="text-sm font-bold text-white">{millions(competitor.teamValue)}</p><p className="text-[9px] text-neutral-600">valor</p></div><ChevronRight size={16} className="text-neutral-500" /></div><div className="mt-3 grid grid-cols-3 gap-2 text-xs"><SmallMetric label={cash !== undefined ? "Caja" : "Caja aprox."} value={cash !== undefined ? millions(cash) : `≈ ${millions(reconstructed)}`} /><SmallMetric label="Cláusulas" value={economy ? millions(economy.gastoClausulasEstimado) : "—"} warning={Boolean(economy?.gastoClausulasEstimado)} /><SmallMetric label="Poder compra" value={economy ? millions(economy.cajaReconstruida) : `≈ ${millions(reconstructed)}`} /></div></button></article>; })}</div>
-        <p className="mt-3 text-[11px] leading-4 text-neutral-500">La caja reconstruida parte de 100 M€ y suma/resta operaciones y puntos. El gasto en subir cláusulas es una <strong>estimación</strong>.</p>
+        <div className="ll-stagger grid gap-3 sm:grid-cols-2">{competitors.map((competitor) => { const economy = economies.find((item) => item.managerId === competitor.manager.id); const cash = competitor.teamMoney ?? economy?.cajaOficial; const reconstructed = economy?.cajaReconstruida ?? competitor.estimatedCash; return <article key={competitor.teamId} className="overflow-hidden rounded-[26px] border border-white/[.08] bg-white/[.045]"><button type="button" onClick={() => setAbierto(competitor.teamId)} className="w-full p-4 text-left transition active:scale-[.99]" aria-label={`Ver la ficha de ${competitor.manager.name}`}><div className="flex items-center gap-3"><Avatar name={competitor.manager.name} image={competitor.manager.avatar} /><div className="min-w-0 flex-1"><p className="truncate font-semibold text-white">{competitor.manager.name}</p><p className="text-xs text-neutral-400">#{competitor.position ?? "—"} · {competitor.points ?? "—"} pts</p></div><div className="text-right"><p className="text-sm font-bold text-white">{millions(competitor.teamValue)}</p><p className="text-[9px] text-neutral-600">valor</p></div><ChevronRight size={16} className="text-neutral-500" /></div><div className="mt-3 grid grid-cols-3 gap-2 text-xs"><SmallMetric label="Caja oficial" value={cash == null ? "—" : millions(cash)} /><SmallMetric label="Blindaje est." value={economy ? `−${millions(economy.gastoClausulasEstimado)}` : "—"} warning={Boolean(economy?.gastoClausulasEstimado)} /><SmallMetric label="Caja reconstruida" value={`≈ ${millions(reconstructed)}`} /></div></button></article>; })}</div>
+        <p className="mt-3 text-[11px] leading-4 text-neutral-500">La caja oficial solo se muestra cuando LALIGA la publica. La caja reconstruida es una estimación (100 M€ + operaciones publicadas + puntos); el blindaje estimado va aparte y no se descuenta de esa cifra.</p>
       </section>
 
       {rivalAbierto && <ManagerSheet key={rivalAbierto.teamId} competitor={rivalAbierto} leagueId={data.league.id} onClose={() => setAbierto(null)} />}
