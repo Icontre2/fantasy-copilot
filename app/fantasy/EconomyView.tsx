@@ -29,7 +29,7 @@ export function EconomyView({ data }: { data: EconomyResponse }) {
         <ul className="mt-4 space-y-2">
           {data.economies.map((economy) => {
             const abiertoAqui = abierto === economy.managerId;
-            const displayedCash = economy.cajaOficial ?? economy.cajaReconstruida;
+            const displayedCash = economy.cajaOficial;
             return (
               <li key={economy.managerId}>
                 <button
@@ -45,28 +45,29 @@ export function EconomyView({ data }: { data: EconomyResponse }) {
                       <span className="block truncate font-bold text-white">{economy.managerName}</span>
                       {economy.cajaOficial === null && (
                         <span className="block truncate text-[10px] text-neutral-500">
-                          Reconstrucción propia · no usa valor de equipo
+                          Caja oficial no disponible
                         </span>
                       )}
                     </span>
                     <span className="shrink-0 text-right">
                       <span className="block text-[9px] uppercase tracking-wider text-neutral-500">
-                        {economy.cajaOficial === null ? "Caja aprox." : "Caja oficial"}
+                        Caja oficial
                       </span>
                       <span
                         className={`block tabular-nums font-bold ${
-                          displayedCash >= 0 ? "text-emerald-400" : "text-rose-400"
+                          displayedCash === null ? "text-neutral-500" : displayedCash >= 0 ? "text-emerald-400" : "text-rose-400"
                         }`}
                       >
-                        {economy.cajaOficial === null ? "≈ " : ""}{millions(displayedCash)}
+                        {displayedCash === null ? UNKNOWN : millions(displayedCash)}
                       </span>
                     </span>
                   </div>
 
-                  <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-5 text-[11px]">
+                  <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6 text-[11px]">
                     <Dato label="Compras" value={millions(economy.compras)} tone="rose" />
                     <Dato label="Ventas" value={millions(economy.ventas)} tone="emerald" />
                     <Dato label="Puntos" value={millions(economy.bonusPuntos)} />
+                    <Dato label="Caja reconstruida" value={`≈ ${millions(economy.cajaReconstruida)}`} />
                     <Dato
                       label="Cláusulas est."
                       value={economy.gastoClausulasEstimado > 0 ? `−${millions(economy.gastoClausulasEstimado)}` : millions(0)}
