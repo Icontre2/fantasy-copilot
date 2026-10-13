@@ -2,12 +2,14 @@ import { errorJson, privateJson, privateJsonWithCookies } from "@/src/server/htt
 import { exchangeAuthorizationCode } from "@/src/server/laliga/auth";
 import { getMyProfile } from "@/src/server/laliga/read";
 import { buildSessionCookies, createSession } from "@/src/server/laliga/session";
+import { extraerCallback } from "@/src/server/laliga/callback-url";
+import { guardarEnlaceSiProcede } from "@/src/server/auth/enlace-tras-login";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 const OAUTH_COOKIE = "llf_mobile_oauth";
-const OAUTH_TTL_MS = 5 * 60 * 1000;
+const OAUTH_TTL_MS = 15 * 60 * 1000;
 
 type OAuthState = {
   verifier: string;
@@ -62,9 +64,14 @@ export async function POST(request: Request) {
     return privateJson({ error: "Falta el callback de LALIGA." }, 400);
   }
 
+  // Se acepta la dirección sola o la frase entera de la consola del navegador.
+  const extraida = extraerCallback(body.callbackUrl);
+  if (!extraida) {
+    return privateJson({ error: "No encuentro la dirección «authredirect://…» en lo que has pegado. Cópiala entera." }, 400);
+  }
   let callback: URL;
   try {
-    callback = new URL(body.callbackUrl);
+    callback = new URL(extraida);
   } catch {
     return privateJson({ error: "El callback de LALIGA no es una URL válida." }, 400);
   }
@@ -100,6 +107,8 @@ export async function POST(request: Request) {
     // La sesión solo se crea si el token realmente abre el perfil privado.
     const manager = await getMyProfile(tokens.accessToken);
     const sessionId = await createSession(tokens);
+    // Si ya habías entrado con Google, queda enlazado para la próxima vez.
+    await guardarEnlaceSiProcede(request, tokens, null);
     const response = privateJsonWithCookies({ manager }, buildSessionCookies(sessionId));
     return clearOAuthCookie(response);
   } catch (error) {

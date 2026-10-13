@@ -1,6 +1,7 @@
 import { evaluarYAvisar } from "@/src/server/alerts/notify-run";
 import { ligasConSuscripcion } from "@/src/server/alerts/push-store";
 import { hasPersistentStorage } from "@/src/server/laliga/session";
+import { mantenerEnlacesVivos } from "@/src/server/auth/mantener-enlaces";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -38,6 +39,9 @@ export async function GET(request: Request) {
     return Response.json({ error: "Sin base de datos persistente no hay sesiones que evaluar." }, { status: 501 });
   }
 
+  // Antes que nada, que el enlace Google ↔ LALIGA no caduque por no usarse.
+  const enlaces = await mantenerEnlacesVivos().catch((error: unknown) => ({ error: error instanceof Error ? error.message : String(error) }));
+
   const objetivos = await ligasConSuscripcion();
   const resultados: Array<{ leagueId: string; estado: string; avisos?: number; error?: string }> = [];
 
@@ -56,6 +60,7 @@ export async function GET(request: Request) {
   }
 
   return Response.json({
+    enlaces,
     evaluadas: objetivos.length,
     avisosEnviados: resultados.reduce((total, r) => total + (r.avisos ?? 0), 0),
     resultados,

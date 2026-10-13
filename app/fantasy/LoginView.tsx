@@ -5,6 +5,7 @@ import { Clock, ExternalLink, KeyRound, LockKeyhole, Mail, ShieldCheck } from "l
 import { post } from "./api";
 import type { DiagnosticoDeSesion, Manager, Proveedor } from "./types";
 import { ErrorBox } from "./ui";
+import { ConectarLaliga } from "./ConectarLaliga";
 
 export function LoginView({
   onLogin,
@@ -130,8 +131,10 @@ export function LoginView({
             {busy ? "Entrando…" : social?.identificado ? "Conectar mi cuenta de LALIGA" : "Entrar"}
           </button>
 
+          <ConectarLaliga onLogin={onLogin} />
+
           <button type="button" onClick={() => { setShowSocialToken((current) => !current); setTokenError(null); }} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[#7c3aed]/25 bg-white px-4 py-3.5 text-sm font-bold text-[#6d28d9] shadow-sm" aria-expanded={showSocialToken}>
-            <KeyRound size={17} /> Entrar con mi cuenta de LALIGA
+            <KeyRound size={17} /> Pegar una respuesta de token (avanzado)
           </button>
 
           {showSocialToken && (
@@ -147,7 +150,7 @@ export function LoginView({
             </div>
           )}
 
-          <p className="flex gap-2 rounded-2xl bg-emerald-50 p-3 text-[11px] leading-4 text-emerald-700"><ShieldCheck size={16} className="mt-px shrink-0" /><span>La contraseña se usa una vez y no se guarda.</span></p>
+          <p className="flex gap-2 rounded-2xl bg-emerald-50 p-3 text-[11px] leading-4 text-emerald-700"><ShieldCheck size={16} className="mt-px shrink-0" /><span>LALIGA ha cerrado el acceso con email y contraseña para apps externas. Usa «Continuar con Google» o conecta desde un ordenador. Tu contraseña nunca se guarda.</span></p>
 
           {sesion?.degradado && (
             <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3 text-[11px] leading-4 text-amber-800">
