@@ -2,10 +2,8 @@ import { errorJson, privateJson, privateJsonWithCookies } from "@/src/server/htt
 import { passwordLogin } from "@/src/server/laliga/auth";
 import { getMyProfile } from "@/src/server/laliga/read";
 import { buildSessionCookies, createSession } from "@/src/server/laliga/session";
-import { claveDeEnlace, credencialAdmin, credencialDeUsuario, guardarEnlace } from "@/src/server/auth/links";
-import { identidadDePeticion } from "@/src/server/auth/identity";
+import { guardarEnlaceSiProcede } from "@/src/server/auth/enlace-tras-login";
 import { registrarAcceso, registrarFallo, registrarIntento } from "@/src/server/observability/login-metrics";
-import type { TokenSet } from "@/src/server/laliga/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -65,34 +63,3 @@ export async function POST(request: Request) {
   }
 }
 
-/**
- * Deja la cuenta de LALIGA enlazada con la identidad social, si la hay.
- *
- * No lanza nunca: quien acaba de escribir bien su contraseña entra, pase lo que
- * pase con el enlace. Lo peor que ocurre es que la próxima vez toque repetirlo.
- *
- * Se prefiere la credencial del propio usuario a la administrativa: hace lo
- * mismo y solo alcanza su fila.
- */
-async function guardarEnlaceSiProcede(request: Request, tokens: TokenSet, email: string): Promise<void> {
-  try {
-    const quien = await identidadDePeticion(request);
-    if (!quien) return;
-
-    const credencial = credencialDeUsuario(quien.accessToken) ?? credencialAdmin();
-    if (!credencial) return;
-
-    /*
-     * Se dice de quién es la clave incluso yendo con la credencial del propio
-     * usuario: para él es redundante —la base ya lo sabe— pero es lo único que
-     * hace funcionar el respaldo administrativo, donde no hay nadie delante. La
-     * base rechaza pedir la de otro, así que decirlo no abre ninguna puerta.
-     */
-    const clave = await claveDeEnlace(credencial, quien.uuid);
-    if (!clave) return;
-
-    await guardarEnlace(credencial, quien.identidad, tokens, email, clave);
-  } catch {
-    return;
-  }
-}

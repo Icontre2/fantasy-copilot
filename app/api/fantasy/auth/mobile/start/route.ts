@@ -6,7 +6,12 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 const OAUTH_COOKIE = "llf_mobile_oauth";
-const OAUTH_TTL_SECONDS = 5 * 60;
+/*
+ * Quince minutos y no cinco: además de la app de iPhone, esto lo usa la vuelta
+ * pegada a mano desde un ordenador (entrar en LALIGA, copiar la dirección,
+ * volver y pegarla), que no cabe con holgura en cinco.
+ */
+const OAUTH_TTL_SECONDS = 15 * 60;
 
 function base64url(input: Buffer | string): string {
   const buffer = typeof input === "string" ? Buffer.from(input, "utf8") : input;
