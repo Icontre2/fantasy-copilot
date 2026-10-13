@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { X } from "lucide-react";
+import { Star, X } from "lucide-react";
+import { alternarSeguido, useSeguidos } from "./seguimiento";
 import { get, post } from "./api";
 import { millions, UNKNOWN } from "./format";
 import type { MarketValuePoint, Player } from "./types";
@@ -41,7 +42,10 @@ export function PlayerDetails({ player, onClose }: { player: Player; onClose: ()
       <div className="pt-2">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3"><PlayerImage player={player} size={72} /><div><p className="text-[10px] font-semibold uppercase tracking-[.14em] text-neutral-500">Ficha de jugador</p><h2 className="text-xl font-bold text-white">{player.name}</h2><p className="text-sm text-neutral-500">{player.position} · {player.team}</p></div></div>
-          <button type="button" onClick={onClose} className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/8 text-white" aria-label="Cerrar"><X size={18}/></button>
+          <div className="flex shrink-0 gap-2">
+            <BotonSeguir id={player.id} />
+            <button type="button" onClick={onClose} className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/8 text-white" aria-label="Cerrar"><X size={18}/></button>
+          </div>
         </div>
         <dl className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <Stat label="Valor" value={millions(player.marketValue)} /><Stat label="Puntos" value={String(player.points)} /><Stat label="Media" value={String(player.averagePoints)} /><Stat label="Año pasado" value={player.lastSeasonPoints === undefined ? UNKNOWN : String(player.lastSeasonPoints)} />
@@ -408,5 +412,15 @@ function Prevision({ player, dificultad }: { player: Player; dificultad: ReturnT
       </div>
       {p && p.factors.length > 0 && <p className="mt-2 text-[11px] leading-4 text-white/50">{p.factors.join(" · ")}</p>}
     </div>
+  );
+}
+
+function BotonSeguir({ id }: { id: string }) {
+  const seguidos = useSeguidos();
+  const sigue = seguidos.includes(id);
+  return (
+    <button type="button" onClick={() => alternarSeguido(id)} aria-pressed={sigue} aria-label={sigue ? "Dejar de seguir" : "Seguir jugador"} className={`grid h-11 w-11 place-items-center rounded-full transition ${sigue ? "bg-amber-300/20 text-amber-300" : "bg-white/8 text-white/70"}`}>
+      <Star size={18} fill={sigue ? "currentColor" : "none"} />
+    </button>
   );
 }

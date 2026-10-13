@@ -118,7 +118,7 @@ export type ScheduleStatus = {
   message: string;
 };
 
-export type Section = "inicio" | "plantilla" | "liga" | "alertas" | "defensa" | "ataque" | "subidas" | "economia" | "mercado" | "onces" | "comparar" | "exportar" | "jornadas" | "mas";
+export type Section = "inicio" | "plantilla" | "liga" | "alertas" | "defensa" | "ataque" | "subidas" | "economia" | "mercado" | "onces" | "comparar" | "exportar" | "jornadas" | "bajas" | "estadisticas" | "clasificacion" | "seguimiento" | "mas";
 
 export const SECTIONS: { id: Section; label: string }[] = [
   { id: "inicio", label: "Inicio" },

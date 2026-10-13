@@ -8,6 +8,10 @@ import { AlertsView } from "./AlertsView";
 import { RisersView } from "./RisersView";
 import { DefensaView } from "./DefensaView";
 import { AtaqueView } from "./AtaqueView";
+import { BajasView, type BajasResponse } from "./BajasView";
+import { EstadisticasView } from "./EstadisticasView";
+import { ClasificacionView, type ClasificacionResponse } from "./ClasificacionView";
+import { SeguimientoView } from "./SeguimientoView";
 import { EconomyView } from "./EconomyView";
 import { ExportView } from "./ExportView";
 import { CalendarView } from "./CalendarView";
@@ -32,6 +36,7 @@ import {
   type LeaguesResponse,
   type Manager,
   type MarketResponse,
+  type Player,
   type Section,
   type TeamsResponse,
 } from "./types";
@@ -118,7 +123,7 @@ export default function FantasyApp() {
   );
 }
 
-const SECCIONES_VALIDAS: readonly Section[] = ["inicio", "plantilla", "liga", "alertas", "defensa", "ataque", "subidas", "economia", "mercado", "onces", "comparar", "exportar", "jornadas", "mas"];
+const SECCIONES_VALIDAS: readonly Section[] = ["inicio", "plantilla", "liga", "alertas", "defensa", "ataque", "bajas", "estadisticas", "clasificacion", "seguimiento", "subidas", "economia", "mercado", "onces", "comparar", "exportar", "jornadas", "mas"];
 
 function leerDestino(): { league: string | null; section: Section | null } {
   if (typeof window === "undefined") return { league: null, section: null };
@@ -160,8 +165,8 @@ function SectionContent({ section, leagueId, onNavigate, social }: { section: Se
 }
 
 type DataSection = Exclude<Section, "exportar" | "mas" | "jornadas">;
-const ENDPOINT: Record<DataSection, (leagueId: string) => string> = { inicio: (id) => `/api/fantasy/leagues/${id}/dashboard`, plantilla: (id) => `/api/fantasy/leagues/${id}/dashboard`, liga: (id) => `/api/fantasy/leagues/${id}/teams`, alertas: (id) => `/api/fantasy/leagues/${id}/alerts`, economia: (id) => `/api/fantasy/leagues/${id}/economy`, mercado: (id) => `/api/fantasy/leagues/${id}/market`, subidas: (id) => `/api/fantasy/leagues/${id}/alerts`, defensa: (id) => `/api/fantasy/leagues/${id}/dashboard`, ataque: (id) => `/api/fantasy/leagues/${id}/teams`, comparar: (id) => `/api/fantasy/leagues/${id}/teams`, onces: () => `/api/fantasy/lineups`, };
-const LOADING_LABEL: Record<DataSection, string> = { inicio: "Preparando tu resumen…", plantilla: "Montando tu once probable…", liga: "Cargando plantillas de la liga…", alertas: "Calculando alertas de cláusula…", subidas: "Midiendo quién sube más…", defensa: "Revisando las cláusulas de tu plantilla…", ataque: "Buscando cláusulas a tu alcance…", economia: "Reconstruyendo la contabilidad…", mercado: "Cargando el mercado…", comparar: "Cargando jugadores…", onces: "Consultando onces probables…", };
+const ENDPOINT: Record<DataSection, (leagueId: string) => string> = { inicio: (id) => `/api/fantasy/leagues/${id}/dashboard`, plantilla: (id) => `/api/fantasy/leagues/${id}/dashboard`, liga: (id) => `/api/fantasy/leagues/${id}/teams`, alertas: (id) => `/api/fantasy/leagues/${id}/alerts`, economia: (id) => `/api/fantasy/leagues/${id}/economy`, mercado: (id) => `/api/fantasy/leagues/${id}/market`, subidas: (id) => `/api/fantasy/leagues/${id}/alerts`, defensa: (id) => `/api/fantasy/leagues/${id}/dashboard`, ataque: (id) => `/api/fantasy/leagues/${id}/teams`, bajas: (id) => `/api/fantasy/leagues/${id}/bajas`, estadisticas: () => `/api/fantasy/players`, clasificacion: () => `/api/fantasy/clasificacion`, seguimiento: () => `/api/fantasy/players`, comparar: (id) => `/api/fantasy/leagues/${id}/teams`, onces: () => `/api/fantasy/lineups`, };
+const LOADING_LABEL: Record<DataSection, string> = { inicio: "Preparando tu resumen…", plantilla: "Montando tu once probable…", liga: "Cargando plantillas de la liga…", alertas: "Calculando alertas de cláusula…", subidas: "Midiendo quién sube más…", defensa: "Revisando las cláusulas de tu plantilla…", ataque: "Buscando cláusulas a tu alcance…", bajas: "Revisando lesionados y sancionados…", estadisticas: "Cargando todos los jugadores…", clasificacion: "Calculando la clasificación…", seguimiento: "Cargando tus jugadores…", economia: "Reconstruyendo la contabilidad…", mercado: "Cargando el mercado…", comparar: "Cargando jugadores…", onces: "Consultando onces probables…", };
 
 function SectionData({ section, leagueId, onSynced, onNavigate }: { section: DataSection; leagueId: string; onSynced: () => void; onNavigate: (section: Section) => void }) {
   const [data, setData] = useState<unknown>(null);
@@ -179,6 +184,10 @@ function SectionData({ section, leagueId, onSynced, onNavigate }: { section: Dat
     case "subidas": return <RisersView data={data as AlertsResponse} />;
     case "defensa": return <DefensaView data={data as DashboardResponse} />;
     case "ataque": return <AtaqueView data={data as TeamsResponse} leagueId={leagueId} onChanged={onSynced} />;
+    case "bajas": return <BajasView data={data as BajasResponse} />;
+    case "estadisticas": return <EstadisticasView data={data as { players: Player[] }} />;
+    case "clasificacion": return <ClasificacionView data={data as ClasificacionResponse} />;
+    case "seguimiento": return <SeguimientoView data={data as { players: Player[] }} />;
     case "economia": return <EconomyView data={data as EconomyResponse} leagueId={leagueId} />;
     case "mercado": return <MarketView data={data as MarketResponse} leagueId={leagueId} onChanged={onSynced} />;
     case "comparar": return <CompareView data={data as TeamsResponse} />;
