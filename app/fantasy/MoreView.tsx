@@ -1,13 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarDays, Crosshair, Download, LogOut, Scale, ShieldAlert, TableProperties, TrendingUp, Users, WalletCards } from "lucide-react";
+import { BarChart3, CalendarDays, Crosshair, Download, HeartPulse, ListOrdered, Star, LogOut, Scale, ShieldAlert, TableProperties, TrendingUp, Users, WalletCards } from "lucide-react";
 import { post } from "./api";
 import type { Section } from "./types";
 
 const ITEMS: Array<{ id: Section; label: string; description: string; icon: React.ReactNode }> = [
   { id: "defensa", label: "Defensa", description: "Quién puede pagar tus cláusulas hoy", icon: <ShieldAlert size={19}/> },
   { id: "ataque", label: "Ataque", description: "Cláusulas rivales que puedes pagar ya", icon: <Crosshair size={19}/> },
+  { id: "bajas", label: "Bajas", description: "Lesionados, sancionados y apercibidos", icon: <HeartPulse size={19}/> },
+  { id: "estadisticas", label: "Estadísticas", description: "Rankings de todos los jugadores", icon: <BarChart3 size={19}/> },
+  { id: "seguimiento", label: "Seguimiento", description: "Los jugadores que sigues", icon: <Star size={19}/> },
+  { id: "clasificacion", label: "Clasificación", description: "Tabla de LaLiga", icon: <ListOrdered size={19}/> },
   { id: "economia", label: "Economía", description: "Caja, ingresos y movimientos", icon: <WalletCards size={19}/> },
   { id: "subidas", label: "Subidas", description: "Quién sube más al día, en € y en %", icon: <TrendingUp size={19}/> },
   { id: "onces", label: "Onces probables", description: "Fotos y porcentajes", icon: <Users size={19}/> },
