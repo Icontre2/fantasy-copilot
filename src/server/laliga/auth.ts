@@ -44,6 +44,10 @@ function toTokenSet(payload: B2CTokenResponse): TokenSet {
   };
 }
 
+export const LOGIN_RETIRADO =
+  'LALIGA ha cerrado el acceso con email y contraseña para apps externas. ' +
+  'Entra con «Continuar con Google» si ya enlazaste tu cuenta de LALIGA; tu contraseña está bien.';
+
 async function postToken(policy: string, body: Record<string, string>): Promise<B2CTokenResponse> {
   let response: Response;
   try {
@@ -63,6 +67,16 @@ async function postToken(policy: string, body: Record<string, string>): Promise<
   }
 
   const payload = (await response.json().catch(() => ({}))) as B2CTokenResponse;
+
+  /*
+   * 404 = la política de login ya no existe. Pasó en octubre de 2026 con
+   * `B2C_1A_ResourceOwnerv2` (email + contraseña): LALIGA la retiró y solo deja
+   * su login web, que devuelve a su propia app. No es una contraseña mala, y
+   * decir «HTTP 404» no ayudaba a nadie.
+   */
+  if (response.status === 404) {
+    throw new LaligaError('unauthorized', LOGIN_RETIRADO, 'auth', 401, 'POLITICA_RETIRADA');
+  }
 
   if (!response.ok || payload.error) {
     const detail = payload.error_description?.split('\n')[0] ?? payload.error ?? `HTTP ${response.status}`;
