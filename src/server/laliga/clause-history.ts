@@ -135,6 +135,21 @@ export async function captureClauseSnapshot(
   return { capturedAt, playersCaptured: players.length, changes: mappedChanges };
 }
 
+/** Devuelve la última captura guardada, incluso cuando todavía no hay cambios de cláusula. */
+export async function readLatestClauseSnapshotAt(sessionId: string, leagueId: string): Promise<string | null> {
+  const { data, error } = await supabaseAdmin()
+    .from('fantasy_clause_snapshots')
+    .select('captured_at')
+    .eq('session_id', sessionId)
+    .eq('league_id', leagueId)
+    .order('captured_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw new Error(`No se pudo consultar la última captura de cláusulas: ${error.message}`);
+  return data?.captured_at ?? null;
+}
+
 export async function readClauseChanges(sessionId: string, leagueId: string, limit = 100): Promise<ClauseChange[]> {
   const { data, error } = await supabaseAdmin()
     .from('fantasy_clause_changes')

@@ -19,11 +19,12 @@ type ClauseHistoryItem = {
   previousSnapshotAt: string;
   currentSnapshotAt: string;
 };
-type ClauseHistoryResponse = { changes: ClauseHistoryItem[]; available: boolean; message?: string };
+type ClauseHistoryResponse = { changes: ClauseHistoryItem[]; lastSnapshotAt: string | null; available: boolean; message?: string };
 
 export function EconomyView({ data, leagueId }: { data: EconomyResponse; leagueId: string }) {
   const [abierto, setAbierto] = useState<string | null>(null);
   const [clauseChanges, setClauseChanges] = useState<ClauseHistoryItem[]>([]);
+  const [lastSnapshotAt, setLastSnapshotAt] = useState<string | null>(null);
   const [historyLoaded, setHistoryLoaded] = useState(false);
   const [historyAvailable, setHistoryAvailable] = useState(true);
   const [historyError, setHistoryError] = useState<string | null>(null);
@@ -34,6 +35,7 @@ export function EconomyView({ data, leagueId }: { data: EconomyResponse; leagueI
       .then((response) => {
         if (cancelled) return;
         setClauseChanges(Array.isArray(response.changes) ? response.changes : []);
+        setLastSnapshotAt(response.lastSnapshotAt ?? null);
         setHistoryAvailable(response.available);
         setHistoryError(null);
       })
@@ -139,9 +141,13 @@ export function EconomyView({ data, leagueId }: { data: EconomyResponse; leagueI
           <p className="mt-3 rounded-2xl bg-white/[.03] p-3 text-xs text-neutral-500">Cargando histórico…</p>
         ) : !historyAvailable ? (
           <p className="mt-3 rounded-2xl bg-white/[.03] p-3 text-xs text-neutral-500">El histórico requiere almacenamiento persistente.</p>
+        ) : lastSnapshotAt === null ? (
+          <p className="mt-3 rounded-2xl bg-white/[.03] p-3 text-xs leading-5 text-neutral-500">
+            Aún no se ha guardado ninguna captura. El histórico empezará cuando la primera captura automática se ejecute correctamente.
+          </p>
         ) : clauseChanges.length === 0 ? (
           <p className="mt-3 rounded-2xl bg-white/[.03] p-3 text-xs leading-5 text-neutral-500">
-            Aún no hay cambios observados. Se ha empezado a guardar el estado actual; las subidas o bajadas aparecerán tras una nueva captura diaria si la cláusula cambia.
+            Última captura guardada el {shortDate(lastSnapshotAt)}. No se han observado cambios de cláusula desde que empezó el seguimiento.
           </p>
         ) : (
           <ul className="mt-3 space-y-2">

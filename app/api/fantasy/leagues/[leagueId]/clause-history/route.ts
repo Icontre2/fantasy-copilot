@@ -2,7 +2,7 @@ import { requireSession } from '@/src/server/http/session-guard';
 import { privateJson, errorJson } from '@/src/server/http/responses';
 import { readSessionId } from '@/src/server/laliga/session-cookie';
 import { hasPersistentStorage } from '@/src/server/laliga/session';
-import { readClauseChanges } from '@/src/server/laliga/clause-history';
+import { readClauseChanges, readLatestClauseSnapshotAt } from '@/src/server/laliga/clause-history';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,8 +17,11 @@ export async function GET(request: Request, { params }: { params: Promise<{ leag
 
   try {
     const { leagueId } = await params;
-    const changes = await readClauseChanges(sessionId, leagueId, 100);
-    return privateJson({ changes, available: true });
+    const [changes, lastSnapshotAt] = await Promise.all([
+      readClauseChanges(sessionId, leagueId, 100),
+      readLatestClauseSnapshotAt(sessionId, leagueId),
+    ]);
+    return privateJson({ changes, lastSnapshotAt, available: true });
   } catch (error) {
     return errorJson(error);
   }
