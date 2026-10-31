@@ -7,6 +7,7 @@ Public search-URL patterns the `job-search` skill uses. `<q>` = URL-encoded quer
 | Board | Pattern | Notes |
 |---|---|---|
 | LinkedIn Jobs (guest) | `https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=<q>&location=<loc>&f_TPR=r604800&start=0` | Global, no auth. Detail: `.../jobs-guest/jobs/api/jobPosting/<jobId>`. Low volume, personal use only. |
+| Tecnoempleo | `https://www.tecnoempleo.com/ofertas-trabajo/?te=<q>` | España (tech). Plain HTML, no auth. Cards: `<h3 class="fs-5 mb-2">` with an `<a href=... title="<role>">`; open the `href` for the full posting. Verified 2026-10-31. |
 
 ## Search-engine patterns (via web search)
 
@@ -19,9 +20,8 @@ Public search-URL patterns the `job-search` skill uses. `<q>` = URL-encoded quer
 | Greenhouse boards | `site:boards.greenhouse.io "<q>"` | Direct company postings |
 | Lever boards | `site:jobs.lever.co "<q>"` | Direct company postings |
 | EURES | `site:eures.europa.eu "<q>" <loc>` | EU cross-border |
-| InfoJobs | `site:infojobs.net "<q>" <loc>` | España |
-| Tecnoempleo | `site:tecnoempleo.com "<q>" <loc>` | España (tech) |
-| Indeed España | `site:es.indeed.com "<q>" <loc>` | España |
+| InfoJobs | `site:infojobs.net "<q>" <loc>` | España. Direct fetch returns 405 (bot wall): search-engine only. |
+| Indeed España | `site:es.indeed.com "<q>" <loc>` | España. Direct fetch returns 401: search-engine only. |
 
 ## Direct search URLs (for the honest-degradation path: hand these to the user)
 
