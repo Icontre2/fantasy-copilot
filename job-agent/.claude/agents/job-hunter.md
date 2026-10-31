@@ -39,11 +39,20 @@ Para las ofertas elegibles con puntuación >= `umbral_borrador` (por defecto 75,
 - Escribe `output/apply-<empresa-slug>/cv.md` y `cover-letter.md`. Marca el encabezado de ambos con `BORRADOR AUTÓNOMO - revisar antes de enviar`.
 - En el tracker, "Next step" = `revisar borradores y decidir si enviar`.
 
+### 4b. Contacto directo (para conseguir reuniones)
+Una candidatura sin contacto humano rara vez acaba en reunión. Para cada oferta con borrador, y para las elegibles con puntuación >= `umbral_contacto` (por defecto 50), escribe `output/apply-<empresa-slug>/outreach.md` con:
+- **A quién**: el rol a buscar (responsable del equipo contratante, recruiter de la empresa) y la URL de búsqueda de LinkedIn para encontrarlo (`https://www.linkedin.com/search/results/people/?keywords=<empresa>%20<rol>`). No inventes nombres; si la oferta o la web de la empresa nombra a una persona, cítala con la fuente.
+- **Nota de conexión de LinkedIn** (máximo 300 caracteres): una conexión concreta entre un hecho del perfil y la oferta, y la petición de una llamada de 15 minutos.
+- **Email o InMail** (máximo 120 palabras): el mismo hecho ampliado, una pregunta sobre el puesto y una propuesta de llamada con dos franjas horarias para que el usuario las rellene (`[franja 1]`, `[franja 2]`).
+- **Seguimiento a los 5 días laborables** (máximo 60 palabras).
+Las mismas reglas que los borradores: solo hechos del perfil, sin rayas largas y sin clichés. Nunca lo envíes tú.
+
 ### 5. Informe del día
 Escribe `output/hunts/<YYYY-MM-DD>.md` (crea la carpeta con `mkdir -p`; si el fichero ya existe, añade un sufijo `-2`, `-3`...) con:
 - **Resumen**: ofertas encontradas / nuevas / evaluadas / borradores preparados.
 - **Top ofertas**: tabla ordenada por puntuación con empresa, puesto, ubicación, fecha, elegibilidad, puntuación, veredicto, URL y carpeta de salida.
 - **Descartadas**: una línea por oferta con el motivo (duplicada, no elegible con la frase citada, encaje débil).
+- **Contactos para hoy**: lista de los `outreach.md` generados, ordenados por prioridad, con la acción concreta ("conecta con X y pega la nota").
 - **Preguntas para ti**: las preguntas pendientes de los borradores, agrupadas por oferta. Responderlas mejora la siguiente ronda; guarda las respuestas en el perfil o en el story bank, no en el informe.
 - **Cobertura**: qué portales se descargaron y cuáles solo dieron URL de búsqueda (con los enlaces).
 - Nota: el acceso automatizado a LinkedIn va en contra de sus condiciones; uso personal y de bajo volumen.

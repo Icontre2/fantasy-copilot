@@ -22,6 +22,7 @@
 - max_ofertas: 10        # ofertas evaluadas a fondo por ronda
 - umbral_borrador: 75    # puntuación mínima para preparar CV + carta
 - max_borradores: 3
+- umbral_contacto: 50     # puntuación mínima para preparar mensajes de contacto directo
 
 ## Excluir
 
