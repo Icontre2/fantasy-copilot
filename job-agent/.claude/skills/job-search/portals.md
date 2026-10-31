@@ -6,8 +6,8 @@ Public search-URL patterns the `job-search` skill uses. `<q>` = URL-encoded quer
 
 | Board | Pattern | Notes |
 |---|---|---|
-| LinkedIn Jobs (guest) | `https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=<q>&location=<loc>&f_TPR=r604800&start=0` | Global, no auth. Detail: `.../jobs-guest/jobs/api/jobPosting/<jobId>`. Low volume, personal use only. |
-| Tecnoempleo | `https://www.tecnoempleo.com/ofertas-trabajo/?te=<q>` | España (tech). Plain HTML, no auth. Cards: `<h3 class="fs-5 mb-2">` with an `<a href=... title="<role>">`; open the `href` for the full posting. Verified 2026-10-31. |
+| LinkedIn Jobs (guest) | `https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=<q>&location=<loc>&f_TPR=r604800&start=0` | Global, no auth. Detail: `.../jobs-guest/jobs/api/jobPosting/<jobId>`. Low volume, personal use only. Use a city name for `location` (`Bilbao` works; `Vizcaya, País Vasco, España` returned empty results on 2026-10-31). |
+| Tecnoempleo | `https://www.tecnoempleo.com/ofertas-trabajo/?te=<q>` | España (tech). Plain HTML, no auth. Cards: `<h3 class="fs-5 mb-2">` with an `<a href=... title="<role>">`; open the `href` for the full posting. Verified 2026-10-31. Do not guess a province filter parameter (a wrong one silently returns national or foreign results): filter by the location shown on each card instead. |
 
 ## Search-engine patterns (via web search)
 
